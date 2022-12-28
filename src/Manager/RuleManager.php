@@ -509,6 +509,8 @@ class rulecore
         if (!empty($read['fields'])) {
             $connect = $this->connexionSolution('source');
             if (true === $connect) {
+                // Call source to add data into $send array if a call has to be done
+					$send = $this->checkSourceBeforeSend($send);
                 $this->dataSource = $this->solutionSource->readData($read);
                 // If Myddleware has reached the limit, we validate data to make sure no doto won't be lost
                 if (
@@ -543,6 +545,27 @@ class rulecore
 
         return ['error' => 'No field to read in source system. '];
     }
+
+    protected function checkSourceBeforeSend($send) {	
+		if (empty($this->solutionSource)) {		
+			$this->solutionSource = $this->solutionManager->get($this->rule['solution_source_name']);
+		}
+		if($this->solutionSource->sourceCallRequestedBeforeSend($send)) {
+			$connect = $this->connexionSolution('source');
+			if ($connect) {		
+				// Add source data into send array
+				if (!empty($send['data'])) {
+					foreach ($send['data'] as $documentId => $record) {		
+						$send['source'][$documentId] = $this->getDocumentData($documentId, 'S');						
+					}
+				}	
+				$send = $this->solutionSource->sourceActionBeforeSend($send);
+			} else {	
+				throw new \Exception('Failed to connect to the source solution before sending data.');
+			}
+		}
+		return $send;
+	}
 
     // Check every record haven't the same reference date
     // Make sure the next record hasn't the same date modified, so we delete at least the last one
@@ -1651,7 +1674,7 @@ class rulecore
     /**
      * @throws \Doctrine\DBAL\Exception
      */
-    public function getSendDocuments($type, $documentId, $table = 'target', $parentDocId = '', $parentRuleId = ''): ?array
+    public function getSendDocuments($type, $documentId=null, $table = 'target', $parentDocId = '', $parentRuleId = ''): ?array
     {
         // Init $limit parameter
         $limit = ' LIMIT '.$this->limit;
