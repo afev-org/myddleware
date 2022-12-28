@@ -966,6 +966,44 @@ class solutioncore
         // Result is sorted, the last one is the oldest one
         return end($result['values'])['date_modified'];
     }
+
+    // Action to be done into the source solution before sending data
+	public function sourceActionBeforeSend($send) {
+		// If at least one source field has been changed, then we calculate the corresponding target field
+		if (
+				!empty($this->fieldsChangedBeforeSend)
+			AND !empty($send['data']) 
+		) {
+			// List all fields of the rule		
+			$query = 'SELECT * FROM rulefield WHERE rule_id = :ruleId';
+			$stmt = $this->connection->prepare($query);
+			$stmt->bindValue(':ruleId', $send['ruleId']);
+			$result = $stmt->executeQuery();
+			$ruleFields = $result->fetchAllAssociative();
+			
+			if (!empty($ruleFields)) {
+				// For each record to be sent
+				foreach ($send['data'] as $docId => $record) {
+					// Loop on source fields and get the corresponding target field
+					foreach ($this->fieldsChangedBeforeSend as $field) {
+						// Check if the source field exists into one or several target field
+						foreach ($ruleFields as $ruleField) {
+							$fieldsArray = explode(';',$ruleField['source_field_name']);
+							// Calculation of all target fields where the source field exists
+							if(array_search($field, $fieldsArray) !== false) {
+								$param['id_doc_myddleware'] = $docId;
+								$param['api'] = $this->api;				
+								$documentManager = new DocumentManager($this->logger, $this->connection, $this->entityManager, $this->documentRepository, $this->ruleRelationshipsRepository, $this->formulaManager);
+								$documentManager->setParam($param);			
+								$send['data'][$docId][$ruleField['target_field_name']] = $documentManager->getTransformValue($send['source'][$docId], $ruleField);			
+							}
+						}
+					}
+				}
+            }
+		}
+		return $send;
+	}
 }
 class solution extends solutioncore
 {
