@@ -283,6 +283,12 @@ class suitecrmcustom extends suitecrm
 						if (empty($convertCoupon->contact_id)) {
 							throw new \Exception('error : '.$convertCoupon->error);
 						}
+
+						// Check if mission_selectionnee_c matches est_volontaire_en_c
+						if ($data['mission_selectionnee_c'] !== $convertCoupon->est_volontaire_en_c) {
+							throw new \Exception('Lead Selected mision and Contact Selected Volunteering are not the same.');
+						}
+
 						// Add the contact id in the result
 						$result[$idDoc] = array(
 							'id' => $convertCoupon->contact_id,
