@@ -49,6 +49,13 @@ class suitecrmcustom extends suitecrm
 				'required' => 0,
 				'relate' => false
 			);
+			$this->moduleFields['est_volontaire_en_c'] = array(
+				'label' => 'Est Volontaire en',
+				'type' => 'varchar(255)',
+				'type_bdd' => 'varchar(255)',
+				'required' => 0,
+				'relate' => false
+			);
 			// No standard call because the module doesn't exist in SuiteCRM
 			return $this->moduleFields;
 		}
@@ -276,7 +283,7 @@ class suitecrmcustom extends suitecrm
 						// Send the coupon conversion
 						$get_parameters = array(
 							'session' => $this->session,
-							'coupon_id' => $data['coupon_id']
+							'coupon_id' => $data['coupon_id'],
 						);
 						$convertCoupon = json_decode($this->call("convert_coupon", $get_parameters));
 						// Error if no contact id
@@ -284,9 +291,38 @@ class suitecrmcustom extends suitecrm
 							throw new \Exception('error : '.$convertCoupon->error);
 						}
 
-						// Check if mission_selectionnee_c matches est_volontaire_en_c
-						if ($data['mission_selectionnee_c'] !== $convertCoupon->est_volontaire_en_c) {
-							throw new \Exception('Lead Selected mision and Contact Selected Volunteering are not the same.');
+						if($data['est_volontaire_en_c'] === 'pas_de_preference' || $data['est_volontaire_en_c'] === 'ver') {
+							continue;
+						} else {
+							$convertedVolontaireField = array(
+								'mentorat' => 'programme_mentorat',
+								'kaps' => 'programme_kaps',
+								'demo_campus' => 'demo_campus',
+								'promo_enga_anim_camp' => 'promo_engagement',
+								'apprenti_solidaire' => 'apprenti_volontaire',
+							);
+
+							$update_contact_parameters = array(
+								'session' => $this->session,
+								'module_name' => 'Contacts',
+								'name_value_list' => array(
+									array(
+										'name' => 'id',
+										'value' => $convertCoupon->contact_id
+									),
+									array(
+										'name' => 'est_volontaire_en_c',
+										'value' => $convertedVolontaireField[$data['est_volontaire_en_c']]
+									)
+								)
+							);
+							$update_result = $this->call("set_entry", $update_contact_parameters);
+						}
+
+
+						// Check if the update was successful
+						if (isset($update_result->error) && $update_result->error->number != 0) {
+							throw new \Exception('Error updating contact: ' . $update_result->error->description);
 						}
 
 						// Add the contact id in the result
