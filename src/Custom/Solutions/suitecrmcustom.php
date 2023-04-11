@@ -292,7 +292,7 @@ class suitecrmcustom extends suitecrm
 						}
 
 						// If there is data about the mission, we update the contact
-						if (isset($data['est_volontaire_en_c']))
+						if (!empty($data['est_volontaire_en_c']))
 						{
 							if($data['est_volontaire_en_c'] === 'pas_de_preference' || $data['est_volontaire_en_c'] === 'ver') {
 								continue;
