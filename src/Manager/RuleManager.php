@@ -84,7 +84,6 @@ class rulecore
     private ?RuleOrderRepository $ruleOrderRepository;
     private ?SessionInterface $session;
     protected FormulaManager $formulaManager;
-    private $dataSource;
 
     public function __construct(
         LoggerInterface $logger,
@@ -560,7 +559,7 @@ class rulecore
 
             // Order data in the date_modified order
             $modified = array_column($dataSourceValues, 'date_modified');
-            array_multisort($modified, SORT_ASC, $dataSourceValues);
+            array_multisort($modified, SORT_DESC, $dataSourceValues);
             foreach ($dataSourceValues as $value) {
                 // Check if the previous record has the same date_modified than the current record
                 // Check only if offset isn't managed into the source application connector
@@ -698,7 +697,7 @@ class rulecore
      *
      * @throws \Doctrine\DBAL\Exception
      */
-    public function checkParentDocument($documents = null): array
+    public function checkParentDocuments($documents = null): array
     {
         // include_once 'document.php';
         // Permet de charger dans la classe toutes les relations de la règle
@@ -1160,7 +1159,7 @@ class rulecore
                 throw new \Exception($this->tools->getTranslation(['messages', 'rule', 'failed_create_directory']));
             }
             if ($documentId !== null) {
-                exec($php.' '.__DIR__.'/../../bin/console myddleware:readrecord '.$ruleId.' id '.$documentId.' 1 --env='.$this->env.' > '.$fileTmp.' &', $output);
+                exec($php.' '.__DIR__.'/../../bin/console myddleware:readrecord '.$ruleId.' id '.$documentId.' --env='.$this->env.' > '.$fileTmp.' &', $output);
             }
             //if user clicked on cancel all transfers of a rule
             elseif ('cancelDocumentJob' === $event) {
@@ -1270,7 +1269,7 @@ class rulecore
             $status = $this->documentManager->getStatus();
         }
         if (in_array($status, ['Predecessor_OK', 'Relate_KO'])) {
-            $response = $this->checkParentDocument([['id' => $id_document]]);
+            $response = $this->checkParentDocuments([['id' => $id_document]]);
             if (true === $response[$id_document]) {
                 $msg_success[] = 'Transfer id '.$id_document.' : Status change => Relate_OK';
             } else {
@@ -1413,7 +1412,7 @@ class rulecore
             }
         }
         if (in_array($status, ['Predecessor_OK', 'Relate_KO'])) {
-            $response = $this->checkParentDocument($arrayIdDocument);
+            $response = $this->checkParentDocuments($arrayIdDocument);
             if (true === $this->verifyMultiIdResponse($response)) {
                 // Update status if an action has been executed
                 $status = 'Relate_OK';
@@ -1510,14 +1509,13 @@ class rulecore
         if (!empty($sendData)) {
             foreach ($sendData as $key => $value) {
                 if (isset($value['source_date_modified'])) {
-                    unset($sendData->{$key}['source_date_modified']);
+                    unset($value['source_date_modified']);
                 }
                 if (isset($value['id_doc_myddleware'])) {
-                    unset($sendData->{$key}['id_doc_myddleware']);
+                    unset($value['id_doc_myddleware']);
                 }
-                
+                $sendData[$key] = $value;
             }
-            
 
             return $sendData;
         }
@@ -1727,9 +1725,10 @@ class rulecore
                     // Modification des données dans la cible
                     elseif ('U' == $type) {
                         $send['data'] = $this->clearSendData($send['data']);
-                        // permet de récupérer les champ d'historique, nécessaire pour l'update de SAP par exemple
-                        $send['dataHistory'][$documentId] = $this->getDocumentData($documentId, 'H');
-                        $send['dataHistory'][$documentId] = $this->clearSendData($send['dataHistory'][$documentId]);
+                        // Allows to get the history fields, necessary for updating the SAP for instance
+                        foreach ($send['data'] as $docId => $value) {
+                            $send['dataHistory'][$docId] = $this->getDocumentData($docId, 'H');
+                        }
                         $response = $this->solutionTarget->updateData($send);
                     }
                     // Delete data from target application
@@ -1761,6 +1760,7 @@ class rulecore
 
         return $response;
     }
+
 
     // Check before we send a record deletion
     protected function checkBeforeDelete($send)
@@ -2300,7 +2300,6 @@ class rulecore
                                 '14' => 'solution.params.14_day',
                                 '30' => 'solution.params.30_day',
                                 '60' => 'solution.params.60_day',
-                                '90' => 'solution.params.90_day',
                             ],
             ],
             [
