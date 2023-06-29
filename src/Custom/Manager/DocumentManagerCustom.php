@@ -161,6 +161,9 @@ class DocumentManagerCustom extends DocumentManager
 				$this->message .= utf8_decode('Le suivi mentorat provient de la COMET mais n\'est pas supposé aller vers Aiko. ');
 			}
 		}
+
+		// check new error
+
 		/* if (
 				!empty($this->document_data['rule_id'])
 			AND	$this->document_data['rule_id'] == '5cffd54c8842b' // Rule Formation - Engagé
