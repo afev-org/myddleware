@@ -162,7 +162,22 @@ class DocumentManagerCustom extends DocumentManager
 			}
 		}
 
-		// check new error
+		// On envoie l'ID du suivi dans aitable et tout va bien
+		// On passe en no send parce qu'il y a eu une maj dans la comet mais assez proche de la création donc le suivi existe tjrs dans aiko
+		// Aiko supprime le suivi qui a reçu son ID, une maj est faite dans la comet mais le suivi n'existe plus : erreur
+		// We cancel the document from COMET to aiko if it does not comes from aiko
+		if (
+			!empty($this->document_data['rule_id'])
+			and	$this->document_data['rule_id'] == '6493f82a6102a' // 	Aiko - Suivi Mentorat vers Aiko
+			and $new_status == 'Error_checking'
+		) {
+			if (
+				strpos($this->message, 'HTTP/2 404 returned for "https://api.airtable.com/v0/appdKFUpk2X2Ok8Dc/REPONSE/') !== false
+			) {
+				$new_status = 'Error_expected';
+				$this->message .= utf8_decode('Le suivi mentorat a été supprimé dans Aiko par un processus externe. ');
+			}
+		}
 
 		/* if (
 				!empty($this->document_data['rule_id'])
