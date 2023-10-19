@@ -102,6 +102,20 @@ class suitecrmcustom extends suitecrm
 			// Change a text field to a relate field
 			$this->moduleFields['poles_rattaches']['relate'] = true;
 		}
+		// Add the field to filter the id 1j1m
+		if ($module == 'Leads') {
+			$this->moduleFields['myd_filter_1j1m'] = array(
+				'label' => 'Filtre Myddleware 1j1m',
+				'type' => 'varchar(255)',
+				'type_bdd' => 'varchar(255)',
+				'required' => 0,
+				'relate' => true
+			);
+			// Change a text field to a relate field
+			$this->moduleFields['poles_rattaches']['relate'] = true;
+		}
+
+
 		return $this->moduleFields;
 	}
 
@@ -233,7 +247,26 @@ class suitecrmcustom extends suitecrm
 					$read[$key]['myd_filter_suivi'] = 1;
 				}
 			}
-		} 
+		}
+
+		// if not empty param rule id
+		if (
+			!empty($param['rule']['id'])
+			// 652e6cca39d0a is PREPROD Mobilisation - Coupons Airtable 1J1M, 6530c97bdce08 is PROD 1j1m - Coupons Airtable 1J1M
+			and	($param['rule']['id'] == '652e6cca39d0a' || $param['rule']['id'] == '5ce362b962b63')
+			and !empty($read)
+		) {
+			foreach ($read as $key => $record) {
+				// Record filtered by default
+				$read[$key]['myd_filter_1j1m'] = 0;
+				if (
+							!empty($record['id_1j1m_c'])
+				) {
+					$read[$key]['myd_filter_1j1m'] = 1;
+				}
+			}
+		}
+		
 
 		/* if (
 				!empty($param['rule']['id'])
