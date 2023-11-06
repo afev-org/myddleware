@@ -25,29 +25,30 @@
 
 namespace App\Manager;
 
-use App\Entity\Config;
-use App\Entity\DocumentData;
+use stdClass;
+use Exception;
 use App\Entity\Rule;
+use App\Entity\Config;
 use App\Entity\RuleParam;
-use App\Entity\RuleParamAudit as RuleParamAudit;
+use App\Entity\DocumentData;
+use Psr\Log\LoggerInterface;
+use Doctrine\DBAL\Connection;
+use App\Repository\RuleRepository;
 use App\Repository\DocumentRepository;
 use App\Repository\RuleOrderRepository;
-use App\Repository\RuleRelationShipRepository;
-use App\Repository\RuleRepository;
-use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
-use Exception;
-use Psr\Log\LoggerInterface;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
+use App\Repository\RuleRelationShipRepository;
+use Symfony\Component\Routing\RouterInterface;
+use App\Entity\RuleParamAudit as RuleParamAudit;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\Filesystem\Exception\IOException;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\HttpKernel\KernelInterface; // Tools
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Symfony\Component\HttpKernel\KernelInterface; // Tools
-use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 class rulecore
 {
@@ -1393,6 +1394,8 @@ class rulecore
         if (in_array($status, ['New', 'Filter_KO'])) {
             $response = $this->filterDocuments($arrayIdDocument);
             if (true === $this->verifyMultiIdResponse($response)) {
+                $arrayIdDocument = $this->removeFilteredDocuments($arrayIdDocument, $response);
+                $documentIds = $this->getFilteredIds($arrayIdDocument);
                 $msg_success[] = 'Transfer id '.$documentIds.' : Status change => Filter_OK';
                 // Update status if an action has been executed
                 $status = 'Filter_OK';
@@ -1509,23 +1512,69 @@ class rulecore
         return $atLeastOneDocumentValid;
     }
 
+    // funcion that remove the document from the array if the document state is -1. The returned data should be
+    // the same as the input data but without the documents that failed the filter.
+    // an example of a document id is $arrayIdDocument[0]["id"] = "6548d6d2ee8c80.11363994"
+    public function removeFilteredDocuments(array $arrayIdDocument, array $response){
+        foreach ($response as $documentId => $documentState) {
+            if ($documentState === -1) {
+                foreach ($arrayIdDocument as $key => $document) {
+                    if ($document["id"] === $documentId) {
+                        unset($arrayIdDocument[$key]);
+                    }
+                }
+            }
+        }
+        return $arrayIdDocument;
+    }
+
+    // Function to get the ids of the documents from the $arrayIdDocument, the ids are not the value but the key of the array, we return them as a string separated by commas
+    public function getFilteredIds(array $arrayIdDocument){
+        $documentIds = "";
+        foreach ($arrayIdDocument as $document) {
+            $documentIds .= $document["id"].",";
+        }
+        $documentIds = rtrim($documentIds, ",");
+        return $documentIds;
+    }
+
     protected function clearSendData($sendData)
     {
         if (!empty($sendData)) {
-            foreach ($sendData as $key => $value) {
+            // Check if $sendData is an object and convert it to an array.
+            if (is_object($sendData)) {
+                $sendData = (array) $sendData;
+            }
+    
+            foreach ($sendData as $key => &$value) {
+                // If the value is an object, convert it to an array to handle it like the array scenario.
+                if (is_object($value)) {
+                    $value = (array) $value;
+                }
+    
                 if (isset($value['source_date_modified'])) {
-                    unset($sendData[$key]['source_date_modified']);
+                    unset($value['source_date_modified']);
                 }
                 if (isset($value['id_doc_myddleware'])) {
-                    unset($sendData[$key]['id_doc_myddleware']);
+                    unset($value['id_doc_myddleware']);
                 }
                 if (isset($value['Myddleware_element_id'])) {
-                    unset($sendData[$key]['Myddleware_element_id']);
-                }     
+                    unset($value['Myddleware_element_id']);
+                }
+
+                // Use array_key_exists instead of isset.
+                if (array_key_exists('target_id',
+                    $value
+                )) {
+                    unset($value['target_id']);
+                }
+
             }
-            return $sendData;
+
         }
+        return $sendData;
     }
+    
 
     protected function beforeDelete($sendData)
     {
@@ -1686,18 +1735,26 @@ class rulecore
             // Le type peut-être vide das le cas d'un relancement de flux après une erreur
             if (empty($type)) {
                 foreach($arrayDocumentsIds as $documentId){
-                    $documentData = $this->getDocumentHeader($documentId);
+                    $documentData[$documentId] = $this->getDocumentHeader($documentId);
                 }
-                if (!empty($documentData['type'])) {
-                    $type = $documentData['type'];
+                if (!empty($documentData[$documentId]['type'])) {
+                    $type = $documentData[$documentId]['type'];
                 }
             }
 
-            foreach($arrayDocumentsIds as $documentId){
-                // $send['data'][$documentId] = $this->getSendDocuments($type, $documentId);
+            $send['data'] = new stdClass(); // Initialize $send['data'] as an object.
+
+            foreach ($arrayDocumentsIds as $documentId) {
+                // Retrieve the document data for the current $documentId.
                 $sendDataDocumentArrayElement = $this->getSendDocuments($type, $documentId);
-                $send['data'] = (object) [$documentId => $sendDataDocumentArrayElement[$documentId]];
+
+                // Check if the $documentId exists in the $sendDataDocumentArrayElement to avoid undefined index.
+                if (isset($sendDataDocumentArrayElement[$documentId])) {
+                    // Add a property to the $send['data'] object with the name of $documentId.
+                    $send['data']->{$documentId} = $sendDataDocumentArrayElement[$documentId];
+                }
             }
+
             // Récupération du contenu de la table target pour tous les documents à envoyer à la cible
             $send['module'] = $this->rule['module_target'];
             $send['ruleId'] = $this->rule['id'];
