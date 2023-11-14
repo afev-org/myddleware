@@ -528,7 +528,7 @@ class jobcore
 
     // In order to add extra components to the function without disturbing its regular use, we added a flag argument.
     // This $usesDocumentIds flag is either null or 1
-    public function readRecord($ruleId, $filterQuery, $filterValues, $usesDocumentIds = null): bool
+    public function readRecord($rule, $filterQuery, $filterValues, $usesDocumentIds = null): bool
     {
         try {
             // Get the filter values
@@ -536,6 +536,9 @@ class jobcore
             if (empty($filterValuesArray)) {
                 throw new Exception('Invalide filter value. Failed to read data.');
             }
+
+            // Use the rule Id for the filter, not the whole rule entity
+            $ruleId = $rule->getId();
 
             // Check that the rule value is valid
             $sqlRule = 'SELECT * FROM rule WHERE id = :filter AND deleted = 0';
