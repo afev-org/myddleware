@@ -17,7 +17,7 @@ class suitecrmcustom extends suitecrm
 	// protected $moduleWithAnnee = array('Contacts', 'CRMC_binome', 'CRMC_Suivi','FP_events');
 	protected $moduleWithAnnee = array('FP_events', 'CRMC_Suivi', 'Leads');
 	protected $moduleWithAnnee2 = array('Contacts', 'CRMC_binome');
-	protected string $urlSuffix = '/custom/service/v4_1_custom/rest.php';
+	protected string $urlSuffix = '/service/v4_1/rest.php';
 	protected $currentRule;
 	protected array $FieldsDuplicate = ['Contacts' => ['email1', 'last_name', 'Myddleware_element_id'],
         'Accounts' => ['email1', 'name'],

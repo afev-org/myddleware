@@ -975,6 +975,11 @@ class suitecrmcore extends solution
             curl_setopt($curl_request, CURLOPT_RETURNTRANSFER, 1);
             curl_setopt($curl_request, CURLOPT_FOLLOWLOCATION, 0);
 
+            // if $parameters["query"] contains the string " AND leads_cstm.annee_scolaire_c LIKE '%2023_2024%' " then remove it
+            if (isset($parameters['query'])) {
+                $parameters['query'] = str_replace(" AND leads_cstm.annee_scolaire_c LIKE '%2023_2024%' ", '', $parameters['query']);
+            }
+
             $jsonEncodedData = json_encode($parameters);
             $post = [
                 'method' => $method,
@@ -984,7 +989,7 @@ class suitecrmcore extends solution
             ];
 
             curl_setopt($curl_request, CURLOPT_POSTFIELDS, $post);
-            $result = curl_exec($curl_request);
+                $result = curl_exec($curl_request);
             curl_close($curl_request);
             if (empty($result)) {
                 return false;
