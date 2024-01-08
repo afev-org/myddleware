@@ -106,11 +106,7 @@ class airtablecore extends solution
             $this->token = $this->paramConnexion['apikey'];
             // We test the connection to the API with a request on Module/Table (change the value of tableName to fit your needs)
             $client = HttpClient::create();
-            $options = [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $this->token,
-                ],
-            ];
+            $options = ['auth_bearer' => $this->token];
             $response = $client->request('GET', $this->airtableURL.$this->projectID.'/'.$this->tableName[$this->projectID], $options);
             $statusCode = $response->getStatusCode();
             $contentType = $response->getHeaders()['content-type'][0];
