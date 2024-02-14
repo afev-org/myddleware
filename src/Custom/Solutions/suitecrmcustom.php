@@ -83,7 +83,7 @@ class suitecrmcustom extends suitecrm
 		} */
 
 		// if module = crmc suivi
-		if ($module == 'CRMC_Suivi') {
+		if ($module == 'CRMC_suivi') {
 			$this->moduleFields['myd_filter_suivi'] = array(
 				'label' => 'Filtre Myddleware',
 				'type' => 'varchar(255)',
@@ -619,32 +619,6 @@ class suitecrmcustom extends suitecrm
 		$param = array();
 		try {
 			if ($type == 'source') {
-				if ($module == 'Contacts') {
-					$param[] = array(
-						'id' => 'contactType',
-						'name' => 'contactType',
-						'type' => 'option',
-						'label' => 'Contact type',
-						'required'	=> false,
-						'option'	=> array(
-							'' => '',
-							'Accompagne' => 'Jeune accompagné',
-							'Benevole' => 'Bénévole',
-							'contact_partenaire' => 'Contact partenaire',
-							'non_contact_partenaire' => 'Pas contact partenaire',
-							'non_accompagne' => 'Pas mentoré',
-						)
-					);
-				}
-				if ($module == 'Leads') {
-					$param[] = array(
-						'id' => 'leadType',
-						'name' => 'leadType',
-						'type' => 'text',
-						'label' => 'Coupon type',
-						'required'	=> false
-					);
-				}
 				// Annee annee scolaire as parameter 
 				if (in_array($module, $this->moduleWithAnnee)) {
 					$param[] = array(
@@ -693,25 +667,6 @@ class suitecrmcustom extends suitecrm
 			$query = "accounts_cstm.type_de_partenaire_c IN ('ecole_maternelle', '8', '10') ";
 		}	
 
-		if (
-			$param['module'] == 'Contacts'
-			and !empty($param['ruleParams']['contactType'])
-		) {
-			if ($param['ruleParams']['contactType'] == 'non_contact_partenaire') {
-				$query .= ' AND ' . strtolower($param['module']) . "_cstm.contact_type_c <> 'contact_partenaire' ";
-			} elseif ($param['ruleParams']['contactType'] == 'non_accompagne') {
-				$query .= ' AND ' . strtolower($param['module']) . "_cstm.contact_type_c <> 'Accompagne' ";
-			} else {
-				$query .= ' AND ' . strtolower($param['module']) . "_cstm.contact_type_c = '" . $param['ruleParams']['contactType'] . "' ";
-			}
-		}
-		// Add filter on lead type when the leads are read from SuiteCRM
-		if (
-			$param['module'] == 'Leads'
-			and !empty($param['ruleParams']['leadType'])
-		) {
-			$query .= " AND " . strtolower($param['module']) . "_cstm.coupon_type_c IN (" . $param['ruleParams']['leadType'] . ") ";
-		}
 		// filter by annee
 		// The rule parameter anneeScolaire override the genera parameter if exists
 		if (

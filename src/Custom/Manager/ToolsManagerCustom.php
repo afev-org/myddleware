@@ -77,9 +77,14 @@ class ToolsManagerCustom extends ToolsManager {
 		// Une règle avec le module accounts_contacts peut être liée aux module Composante et Contact partenaire
 		if (current(array_keys($data['source'])) == 'accounts_contacts') {
 			$data['lst_rule']['5ce362b962b63'] = 'REEC - Composante';
-			$data['lst_rule']['5d01a630c217c'] = 'REEC - Contact partenaire';
 			$data['lst_rule']['5ce3621156127'] = 'REEC - Engagé';
 			$data['lst_rule']['5cdf83721067d'] = 'REEC - Jeune accompagné';
+		}
+		
+		// Une règle avec le module accounts_crmc_contact_partenaire_1_c peut être liée aux module Composante et Contact partenaire
+		if (current(array_keys($data['source'])) == 'accounts_crmc_contact_partenaire_1_c') {
+			$data['lst_rule']['5ce362b962b63'] = 'REEC - Composante';
+			$data['lst_rule']['5d01a630c217c'] = 'REEC - Contact partenaire';
 			$data['lst_rule']['6273905a05cb2'] = 'Esp Rep - Contacts repérants';
 		}
 		
