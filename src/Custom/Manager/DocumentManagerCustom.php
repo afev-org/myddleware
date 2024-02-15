@@ -965,22 +965,6 @@ class DocumentManagerCustom extends DocumentManager
         }
     }
 
-    /* public function updateType($new_type) {
-		// Call standard
-		parent::updateType($new_type);
-		
-		// DO NOT create binome with chatbot_c = non 
-		if (
-				$this->ruleId ==  '61a930273441b'
-			AND $this->sourceData['chatbot_c'] == 'non'
-			AND $new_type == 'C'
-		) { 
-			$this->message .= utf8_decode('La création de binome avec chatbot = non dans Airtable n\'est pas autorisée. Ce document est annulé.');
-			$this->updateStatus('Cancel');
-			$this->doNotOverrideStatus = true;
-		}
-	} */
-
 	// Set the quartier parameters
 	public function setQuartierDocumentParams()
 	{

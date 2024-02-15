@@ -64,6 +64,9 @@ $moduleFields['apppq0nb5WI815V57'] = array ( //! the id was appdKFUpk2X2Ok8Dc an
     ),
 	'REPONSE' => array(
 		'fldEX5A3EY5i2IEVZ' => array('label' => 'LABEL', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+        'fld9IVWeQchm6ORQb' => array('label' => 'COMET', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 1, 'relate' => false),
+        'fldIWR9NpsUvVUsuw' => array('label' => 'TYPE DE REPONSE', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 1, 'relate' => false),
+        'fldMtaOTmMczbFnxq' => array('label' => 'DATE', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 1, 'relate' => false)
 		'fldjjHGW8g0SL9akr' => array('label' => 'seance_precedente_as_eu_lieux', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldTpr8qVL4yyU6KZ' => array('label' => 'motif_anulation', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldC7m6zch8Cz6KWQ' => array('label' => 'Notation seance precedente', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
@@ -77,6 +80,7 @@ $moduleFields['apppq0nb5WI815V57'] = array ( //! the id was appdKFUpk2X2Ok8Dc an
 		'fldusRI6ugEA14mAx' => array('label' => 'question', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldse5joo941orK8V' => array('label' => 'type_bilan', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldmxAFCFVeBRfyi0' => array('label' => 'DUREE', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldsDjV47nqA04Ttl' => array('label' => 'Last Modified', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => true),
 		'fld2Jh1qn4FBHsYUT' => array('label' => 'Type', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldnXtvp0b01XvgxN' => array('label' => 'Numéro', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fld8V7XnRYftHRxxq' => array('label' => 'BINOMES', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => true),
@@ -104,7 +108,6 @@ $moduleFields['apppq0nb5WI815V57'] = array ( //! the id was appdKFUpk2X2Ok8Dc an
 		'fldrwRQWnCJ21SaMU' => array('label' => 'las', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldM1SC5Q4OGFN5vK' => array('label' => 'Nom Théorique', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldWp6GVrW4vddPt2' => array('label' => 'ID TMP', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
-		'fldsDjV47nqA04Ttl' => array('label' => 'Last Modified', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => true),
 		'fldMtaOTmMczbFnxq' => array('label' => 'Date', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 	),
 	'BILAN' => array(
@@ -940,9 +943,9 @@ $moduleFields['apprA5JofsBBO1Kvj'] = array(
 		'fldvQcbgjzOSreRk4'=> array( 'label' => 'EMAIL', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fld5jYpKXyAS3k6Y0'=> array( 'label' => 'TELEPHONE', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fld5cxaTXNiLcHPI5'=> array( 'label' => 'RAISON DU REFUS', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
-		'fldhkUV1nypexJWcI'=> array( 'label' => 'STATUS' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
-		'fldl9nRBoeNa8BTnh'=> array( 'label' => 'TYPE' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
-		'fldud2ugr5y0xlKHe'=> array( 'label' => 'CONTACT' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => true),
-		'fldOJcPMgadtHi72K'=> array( 'label' => 'ID COMET' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldhkUV1nypexJWcI'=> array( 'label' => 'STATUS', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldl9nRBoeNa8BTnh'=> array( 'label' => 'TYPE', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldud2ugr5y0xlKHe'=> array( 'label' => 'CONTACT', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => true),
+		'fldOJcPMgadtHi72K'=> array( 'label' => 'ID COMET', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 	),
 );

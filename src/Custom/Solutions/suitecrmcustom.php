@@ -111,7 +111,6 @@ class suitecrmcustom extends suitecrm
 	{
 		if ($this->currentRule == '61a920fae25c5') {	// Aiko - Contact
 			$parameters['link_name_to_fields_array'][] = array('name' => 'crmc_binome_contacts', 'value' => array('id', 'statut_c', 'chatbot_c'));
-			$parameters['link_name_to_fields_array'][] = array('name' => 'crmc_binome_contacts_1', 'value' => array('id', 'statut_c', 'chatbot_c'));
 		}
 		$isRuleBilan = false;
 		$ruleactive = true;
@@ -207,7 +206,6 @@ class suitecrmcustom extends suitecrm
 				$result->total_count = 1;
 			}
 			
-			// ------------------------------------test
 			$result->entry_list = [];
 			$entry = new \stdClass();
 			$entry->name_value_list = new \stdClass();
@@ -243,34 +241,7 @@ class suitecrmcustom extends suitecrm
 								and $binome->link_value->statut_c->value <> 'termine'
 								and $binome->link_value->statut_c->value <> 'annule'
 								and $binome->link_value->statut_c->value <> 'accompagnement_termine'
-								// Send all binome even if chatbot = non
-								// and !empty($binome->link_value->chatbot_c->value)
-								// and $binome->link_value->chatbot_c->value <> 'non'
 							) {
-								// $result->entry_list[$key]->name_value_list->aiko->name = 'aiko';
-								$result->entry_list[$key]->name_value_list->aiko->value = '1';
-								break;
-							}
-						}
-					}
-					// Check the second relationship (should never happen because each contact type has its own relationship type)
-					if (
-							!empty($relationship)
-						and !empty($relationship->link_list[1]->records)
-						and empty($result->entry_list[$key]->name_value_list->aiko->value)
-					) {
-						foreach ($relationship->link_list[1]->records as $binome) {
-							// Use the same filter than Airtable
-							if (
-								!empty($binome->link_value->statut_c->value)
-								and $binome->link_value->statut_c->value <> 'termine'
-								and $binome->link_value->statut_c->value <> 'annule'
-								and $binome->link_value->statut_c->value <> 'accompagnement_termine'
-								// Send all binome even if chatbot = non
-								// and !empty($binome->link_value->chatbot_c->value)
-								// and $binome->link_value->chatbot_c->value <> 'non'
-							) {
-								// $result->entry_list[$key]->name_value_list->aiko->name = 'aiko';
 								$result->entry_list[$key]->name_value_list->aiko->value = '1';
 								break;
 							}
