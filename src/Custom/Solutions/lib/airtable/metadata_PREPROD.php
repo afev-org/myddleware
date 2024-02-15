@@ -66,7 +66,7 @@ $moduleFields['apppq0nb5WI815V57'] = array ( //! the id was appdKFUpk2X2Ok8Dc an
 		'fldEX5A3EY5i2IEVZ' => array('label' => 'LABEL', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
         'fld9IVWeQchm6ORQb' => array('label' => 'COMET', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 1, 'relate' => false),
         'fldIWR9NpsUvVUsuw' => array('label' => 'TYPE DE REPONSE', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 1, 'relate' => false),
-        'fldMtaOTmMczbFnxq' => array('label' => 'DATE', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 1, 'relate' => false)
+        'fldMtaOTmMczbFnxq' => array('label' => 'DATE', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 1, 'relate' => false),
 		'fldjjHGW8g0SL9akr' => array('label' => 'seance_precedente_as_eu_lieux', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldTpr8qVL4yyU6KZ' => array('label' => 'motif_anulation', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldC7m6zch8Cz6KWQ' => array('label' => 'Notation seance precedente', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
