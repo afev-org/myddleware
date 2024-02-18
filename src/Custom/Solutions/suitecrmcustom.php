@@ -14,18 +14,20 @@ class suitecrmcustom extends suitecrm
 	protected int $limitCall = 100;
 	public $anneeScolaire = '2023_2024';
 	public $anneeScolaire2 = '2023'; // used to select 2 years
-	// protected $moduleWithAnnee = array('Contacts', 'CRMC_binome', 'CRMC_Suivi','FP_events');
-	protected $moduleWithAnnee = array('FP_events', 'CRMC_Suivi', 'Leads');
-	protected $moduleWithAnnee2 = array('Contacts', 'CRMC_binome');
+	protected $moduleWithAnnee = array('FP_events', 'CRMC_suivi', 'Leads', 'CRMC_coupon_mentore');
+	protected $moduleWithAnnee2 = array('Contacts', 'CRMC_binome', 'CRMC_mentore');
 	protected string $urlSuffix = '/custom/service/v4_1_custom/rest.php';
 	protected $currentRule;
-	protected array $FieldsDuplicate = ['Contacts' => ['email1', 'last_name', 'Myddleware_element_id'],
+	protected array $FieldsDuplicate = [
+		'Contacts' => ['email1', 'last_name', 'Myddleware_element_id'],
+		'CRMC_mentore' => ['email1', 'last_name', 'Myddleware_element_id'],
         'Accounts' => ['email1', 'name'],
         'Users' => ['email1', 'last_name'],
         'Leads' => ['email1', 'last_name', 'Myddleware_element_id'],
+        'CRMC_coupon_mentore' => ['email1', 'last_name', 'Myddleware_element_id'],
         'Prospects' => ['email1', 'name'],
         'default' => ['name'],
-		'CRMC_Evaluation' => ['type_c', 'annee_scolaire_c', 'MydCustRelSugarcrmc_evaluation_contactscontacts_ida'],
+		'CRMC_Evaluation' => ['type_c', 'annee_scolaire_c', 'MydCustRelSugarcrmc_evaluation_crmc_mentorecrmc_mentore_ida'],
     ];
 	
 	// Redefine get_modules method
@@ -72,15 +74,6 @@ class suitecrmcustom extends suitecrm
 												'relate' => false
 											);
 		}
-		/* if ($module == 'Accounts') {
-			$this->moduleFields['myd_filtered'] = array(
-				'label' => 'Filtre Myddleware',
-				'type' => 'varchar(255)',
-				'type_bdd' => 'varchar(255)',
-				'required' => 0,
-				'relate' => false
-			);
-		} */
 
 		// if module = crmc suivi
 		if ($module == 'CRMC_suivi') {
@@ -139,7 +132,7 @@ class suitecrmcustom extends suitecrm
 			if (empty($filtersFinal['crmc_evaluation_cstm.annee_scolaire_c'])) {
 				throw new \Exception('Annee scolaire is empty. Failed to search the fiche evaluation into COMET. ');
 			}
-			if (empty($filtersFinal['crmc_evaluation.MydCustRelSugarcrmc_evaluation_contactscontacts_ida'])) {
+			if (empty($filtersFinal['crmc_evaluation.MydCustRelSugarcrmc_evaluation_crmc_mentorecrmc_mentore_ida'])) {
 				throw new \Exception('Contact ID is empty. Failed to search the fiche evaluation into COMET. ');
 			}
 
@@ -153,7 +146,7 @@ class suitecrmcustom extends suitecrm
 			$parameters['query'] = "SELECT
 				crmc_evaluation.id,
 				crmc_evaluation.date_modified,
-				crmc_evaluation_contacts_c.crmc_evaluation_contactscontacts_ida as MydCustRelSugarcrmc_evaluation_contactscontacts_ida,
+				crmc_evaluation_contacts_c.crmc_evaluation_contactscontacts_ida as MydCustRelSugarcrmc_evaluation_crmc_mentorecrmc_mentore_ida,
 				crmc_evaluation.name,
 				crmc_evaluation_cstm.type_c,
 				crmc_evaluation_cstm.annee_scolaire_c,
@@ -170,7 +163,7 @@ class suitecrmcustom extends suitecrm
 				AND crmc_evaluation_cstm.annee_scolaire_c = ".$filtersFinal['crmc_evaluation_cstm.annee_scolaire_c']."
 				AND crmc_evaluation_contacts_c.deleted = 0
 				AND crmc_evaluation.deleted = 0
-				AND crmc_evaluation_contacts_c.crmc_evaluation_contactscontacts_ida = ".$filtersFinal['crmc_evaluation.MydCustRelSugarcrmc_evaluation_contactscontacts_ida']."
+				AND crmc_evaluation_contacts_c.crmc_evaluation_contactscontacts_ida = ".$filtersFinal['crmc_evaluation.MydCustRelSugarcrmc_evaluation_crmc_mentorecrmc_mentore_ida']."
 			LIMIT 1;";
 		}
 	
@@ -300,7 +293,7 @@ class suitecrmcustom extends suitecrm
 
 		// Set the new filter to 1 if the interlocuteur is engage OR if the bilan type is SuivirattrapageREEC
 		if (
-				$param['module'] == 'CRMC_Suivi'
+				$param['module'] == 'CRMC_suivi'
 			AND $param['call_type'] == 'read'
 		) {
 			foreach ($read as $key => $record) {
@@ -319,32 +312,7 @@ class suitecrmcustom extends suitecrm
 					$read[$key]['myd_filter_suivi'] = 1;
 				}
 			}
-		} 
-
-		/* if (
-				!empty($param['rule']['id'])
-			AND	$param['rule']['id'] == '5ce362b962b63'
-			AND !empty($read)
-		) {
-			foreach ($read as $key => $record) {
-				// Record filtered by default
-				$read[$key]['myd_filtered'] = 1;
-				// Keep the composante if an university is link to it of if it has the type below
-				// Collège = 8
-				// École maternelle = ecole_maternelle
-				// École élémentaire = 10
-				// Lycée general et techno = 1
-				// Lycée professionnel = 11
-				// Lycée technique = 9
-				// Lycée polyvalent = lycee_polyvalent		
-				if (
-					!empty($record['MydCustRelSugarcrmc__etablissement_sup_accounts_1crmc__etablissement_sup_ida'])
-					or in_array($record['type_de_partenaire_c'], array('8', 'ecole_maternelle', '10', '1', '11', '9', 'lycee_polyvalent'))
-				) {
-					$read[$key]['myd_filtered'] = 0;
-				}
-			}
-		} */
+		}
 
 		// Split the result of the read for the pole, so that if we have 1 document with 3 poles, 
 		// 1 document with 2 poles, and 1 document with 5 poles, we end up with 10 records in the result
@@ -590,6 +558,15 @@ class suitecrmcustom extends suitecrm
 		$param = array();
 		try {
 			if ($type == 'source') {
+				if ($module == 'Leads') {
+					$param[] = array(
+						'id' => 'leadType',
+						'name' => 'leadType',
+						'type' => 'text',
+						'label' => 'Coupon type',
+						'required'	=> false
+					);
+				}
 				// Annee annee scolaire as parameter 
 				if (in_array($module, $this->moduleWithAnnee)) {
 					$param[] = array(
@@ -637,7 +614,13 @@ class suitecrmcustom extends suitecrm
 		if (strpos($query, 'type_de_partenaire_c') !== false && $param['module'] == 'Accounts' && $param['rule']['id'] == '63482d533bd4e') {
 			$query = "accounts_cstm.type_de_partenaire_c IN ('ecole_maternelle', '8', '10') ";
 		}	
-
+		// Add filter on lead type when the leads are read from SuiteCRM
+		if (
+				in_array($param['module'], array('Leads', 'CRMC_coupon_mentore'))
+			and !empty($param['ruleParams']['leadType'])
+		) {
+			$query .= " AND " . strtolower($param['module']) . "_cstm.coupon_type_c IN (" . $param['ruleParams']['leadType'] . ") ";
+		}
 		// filter by annee
 		// The rule parameter anneeScolaire override the genera parameter if exists
 		if (
@@ -708,6 +691,6 @@ class suitecrmcustom extends suitecrm
             $module = $rule->getModuleTarget();
             $recordId = $document->gettarget();
         }
-        return 'https://comet'.($_ENV['AFEV_ENV'] == 'PREPROD' ? '.preprod' : '').'.afev.org/index.php?module='.$module.'&action=DetailView&record='.$recordId;
+        return 'https://comet'.($_ENV['AFEV_ENV'] == 'PREPROD' ? '2.preprod' : '').'.afev.org/index.php?module='.$module.'&action=DetailView&record='.$recordId;
     }
 }

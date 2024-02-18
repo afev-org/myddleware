@@ -816,7 +816,7 @@ $moduleFields['appP31F11PgaT1f6H'] = array (
 		'fldvDZBAKSrNOH2Go'=> array( 'label' => 'IDA', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'flddhYWVVsmf3rCJU'=> array( 'label' => 'IDB', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldeYsPfTcSdQdmiz'=> array( 'label' => 'Statut invitation', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
-		'fldZA7RFzeon8In5T'=> array( 'label' => 'Statut acceptation', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldJ9G3Yhlz4RSFsI'=> array( 'label' => 'Statut acceptation', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fld2Z5qbghArdfNGx'=> array( 'label' => 'Réponse email', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldgP06QBzNR04Wux'=> array( 'label' => 'Date de modification 2', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldhFFsfW2a7wt3Q2'=> array( 'label' => 'COUPONS', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => true),
