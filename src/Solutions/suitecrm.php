@@ -649,7 +649,7 @@ class suitecrmcore extends solution
                 $setEntriesListParameters = [
                     'session' => $this->session,
                     'module_name' => $param['module'],
-                    'name_value_lists' => $dataSugar,
+                    'name_value_list' => $dataSugar,
                 ];
                 $get_entry_list_result = $this->call('set_entry', $setEntriesListParameters);
 
