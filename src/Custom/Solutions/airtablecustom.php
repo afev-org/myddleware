@@ -157,53 +157,61 @@ class airtablecustom extends airtable {
 		}
 
 		if ($aikoEmoji) {
-				if (!empty($result['values'])) {
-					foreach ($result['values'] as $docId => $values) {
-						if (!empty($values['fldqr1DNrnnwmlXuV'])) {
-							switch ($values['fldqr1DNrnnwmlXuV']) {
-								case '😡':
-									$result['values'][$docId]['fldqr1DNrnnwmlXuV'] = 1;
-									break;
-								case '🙁':
-									$result['values'][$docId]['fldqr1DNrnnwmlXuV'] = 2;
-									break;
-								case '😐':
-									$result['values'][$docId]['fldqr1DNrnnwmlXuV'] = 3;
-									break;
-								case '🙂':
-									$result['values'][$docId]['fldqr1DNrnnwmlXuV'] = 4;
-									break;
-								case '😍':
-									$result['values'][$docId]['fldqr1DNrnnwmlXuV'] = 5;
-									break;
-								default:
-									$result['values'][$docId]['fldqr1DNrnnwmlXuV'] = '';
-							}
+			$notationField = 'fldqr1DNrnnwmlXuV'; // PROD
+			if (isset($values['fldC7m6zch8Cz6KWQ'])) {
+				$notationField = 'fldC7m6zch8Cz6KWQ'; // PREPROD
+			}
+			if (!empty($result['values'])) {
+				foreach ($result['values'] as $docId => $values) {
+					if (!empty($values[$notationField])) {
+						switch ($values[$notationField]) {
+							case '😡':
+								$result['values'][$docId][$notationField] = 1;
+								break;
+							case '🙁':
+								$result['values'][$docId][$notationField] = 2;
+								break;
+							case '😐':
+								$result['values'][$docId][$notationField] = 3;
+								break;
+							case '🙂':
+								$result['values'][$docId][$notationField] = 4;
+								break;
+							case '😍':
+								$result['values'][$docId][$notationField] = 5;
+								break;
+							default:
+								$result['values'][$docId][$notationField] = '';
 						}
+					}
 
-						if (!empty($values['fldS4eJtB1hJVUgcb'])) {
-							switch ($values['fldS4eJtB1hJVUgcb']) {
-								case '⭐️':
-									$result['values'][$docId]['fldS4eJtB1hJVUgcb'] = 1;
-									break;
-								case '⭐️⭐️':
-									$result['values'][$docId]['fldS4eJtB1hJVUgcb'] = 2;
-									break;
-								case '⭐️⭐️⭐️':
-									$result['values'][$docId]['fldS4eJtB1hJVUgcb'] = 3;
-									break;
-								case '⭐️⭐️⭐️⭐️':
-									$result['values'][$docId]['fldS4eJtB1hJVUgcb'] = 4;
-									break;
-								case '⭐️⭐️⭐️⭐️⭐️':
-									$result['values'][$docId]['fldS4eJtB1hJVUgcb'] = 5;
-									break;
-								default:
-									$result['values'][$docId]['fldS4eJtB1hJVUgcb'] = '';
-							}
+					$ratingField = 'fldS4eJtB1hJVUgcb'; // PROD
+					if (isset($values['fld4KzcfmV2P8F3E6'])) {
+						$notationField = 'fld4KzcfmV2P8F3E6'; // PREPROD
+					}
+					if (!empty($values[$ratingField])) {
+						switch ($values[$ratingField]) {
+							case '⭐️':
+								$result['values'][$docId][$ratingField] = 1;
+								break;
+							case '⭐️⭐️':
+								$result['values'][$docId][$ratingField] = 2;
+								break;
+							case '⭐️⭐️⭐️':
+								$result['values'][$docId][$ratingField] = 3;
+								break;
+							case '⭐️⭐️⭐️⭐️':
+								$result['values'][$docId][$ratingField] = 4;
+								break;
+							case '⭐️⭐️⭐️⭐️⭐️':
+								$result['values'][$docId][$ratingField] = 5;
+								break;
+							default:
+								$result['values'][$docId][$ratingField] = '';
 						}
 					}
 				}
+			}
 		}
 
 
