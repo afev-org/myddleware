@@ -123,7 +123,6 @@ class airtablecustom extends airtable {
 		// if the rule id is 6491a6a34b732, we handle the conversion of the emoji to a format that will be fully compatible with the database encoding which is utf8_general_ci
 		//Todo: We will have to change the id on myddleware prod !!!
 
-
 		$aikoEmoji = false;
 		$simulationParams = false;
 		$readParams = false;
@@ -157,12 +156,13 @@ class airtablecustom extends airtable {
 		}
 
 		if ($aikoEmoji) {
-			$notationField = 'fldqr1DNrnnwmlXuV'; // PROD
-			if (isset($values['fldC7m6zch8Cz6KWQ'])) {
-				$notationField = 'fldC7m6zch8Cz6KWQ'; // PREPROD
-			}
 			if (!empty($result['values'])) {
 				foreach ($result['values'] as $docId => $values) {
+					$notationField = 'fldqr1DNrnnwmlXuV'; // PROD
+					if (isset($values['fldC7m6zch8Cz6KWQ'])) {
+						$notationField = 'fldC7m6zch8Cz6KWQ'; // PREPROD
+					}
+
 					if (!empty($values[$notationField])) {
 						switch ($values[$notationField]) {
 							case '😡':
@@ -187,7 +187,7 @@ class airtablecustom extends airtable {
 
 					$ratingField = 'fldS4eJtB1hJVUgcb'; // PROD
 					if (isset($values['fld4KzcfmV2P8F3E6'])) {
-						$notationField = 'fld4KzcfmV2P8F3E6'; // PREPROD
+						$ratingField = 'fld4KzcfmV2P8F3E6'; // PREPROD
 					}
 					if (!empty($values[$ratingField])) {
 						switch ($values[$ratingField]) {
