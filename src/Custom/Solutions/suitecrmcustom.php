@@ -659,6 +659,14 @@ class suitecrmcustom extends suitecrm
 			$query .= ' AND '.strtolower($param['module'])."_cstm.id_1j1m_c <> '' ";
 		}
 
+		// Add a filter on field situation_c = etudiant for Mentorés Accueil
+		if (
+				!empty($param['rule']['id'])
+			AND in_array($param['rule']['id'], array('66165525cb72d')) // Sendinblue - Mentorés Accueil
+		){
+			$query .= ' AND '.strtolower($param['module'])."_cstm.situation_c = 'etudiant' ";
+		}
+
 		return $query;
 	}
 
