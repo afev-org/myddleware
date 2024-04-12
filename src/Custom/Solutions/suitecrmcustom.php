@@ -549,6 +549,14 @@ class suitecrmcustom extends suitecrm
 			}
 		}
 		
+		// Do not send statut_volontaire_c if equal to 'DO_NOT_SEND'
+		if (
+				$param['rule']['id'] == '6437d9a9dcf76'	// 	Mobilisation - USC vers Contact
+			AND $data['statut_volontaire_c'] == 'DO_NOT_SEND'
+		) {
+			unset($data['statut_volontaire_c']);
+			return $data;
+		}
 		return parent::checkDataBeforeUpdate($param, $data, $idDoc);
 	}
 
