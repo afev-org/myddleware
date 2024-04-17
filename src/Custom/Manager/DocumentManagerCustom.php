@@ -755,7 +755,7 @@ class DocumentManagerCustom extends DocumentManager
 		return $matchingrows;
 	}
 	
-	public function checkParentDocument(): bool {
+	/* public function checkParentDocument(): bool {
 		try {				
 			// If the sendinblue contact is not found in the contact rule, we search in the coupon rule
 			if ($this->ruleId == '6210fcbe4d654') { 	// Sendinblue - email delivered		
@@ -828,9 +828,9 @@ class DocumentManagerCustom extends DocumentManager
 		}
 			
 		return $chekParent;
-	}
+	} */
 	
-	public function transformDocument(): bool {		
+	/* public function transformDocument(): bool {		
 		// If the sendinblue contact is not found in the contact rule, we search in the coupon rule
 		if ($this->ruleId == '6210fcbe4d654') { 	// Sendinblue - email delivered
 			$transform = parent::transformDocument();			
@@ -874,7 +874,7 @@ class DocumentManagerCustom extends DocumentManager
 		}
 			
 		return parent::transformDocument();
-	}
+	} */
 	
 	protected function insertDataTable($data, $type): bool {
 		if (
