@@ -548,7 +548,7 @@ class suitecrmcustom extends suitecrm
 				throw new \Exception(utf8_decode('History not available, the pair no longer exists in the COMET').'. Erreur code W0002.');
 			}
 		}
-		
+
 		// Do not send statut_volontaire_c if equal to 'DO_NOT_SEND'
 		if (
 				$param['rule']['id'] == '6437d9a9dcf76'	// 	Mobilisation - USC vers Contact
