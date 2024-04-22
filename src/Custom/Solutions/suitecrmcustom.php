@@ -27,7 +27,7 @@ class suitecrmcustom extends suitecrm
         'CRMC_coupon_mentore' => ['email1', 'last_name', 'Myddleware_element_id'],
         'Prospects' => ['email1', 'name'],
         'default' => ['name'],
-		'CRMC_Evaluation' => ['type_c', 'annee_scolaire_c', 'MydCustRelSugarcrmc_evaluation_crmc_mentorecrmc_mentore_ida'],
+		'CRMC_evaluation' => ['type_c', 'annee_scolaire_c', 'MydCustRelSugarcrmc_evaluation_crmc_mentorecrmc_mentore_ida'],
     ];
 	
 	// Redefine get_modules method
