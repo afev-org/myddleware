@@ -146,7 +146,7 @@ class suitecrmcustom extends suitecrm
 			$parameters['query'] = "SELECT
 				crmc_evaluation.id,
 				crmc_evaluation.date_modified,
-				crmc_evaluation_contacts_c.crmc_evaluation_contactscontacts_ida as MydCustRelSugarcrmc_evaluation_crmc_mentorecrmc_mentore_ida,
+				crmc_evaluation_crmc_mentore_c.crmc_evaluation_crmc_mentorecrmc_mentore_ida as MydCustRelSugarcrmc_evaluation_crmc_mentorecrmc_mentore_ida,
 				crmc_evaluation.name,
 				crmc_evaluation_cstm.type_c,
 				crmc_evaluation_cstm.annee_scolaire_c,
@@ -155,15 +155,15 @@ class suitecrmcustom extends suitecrm
 			FROM crmc_evaluation
 				INNER JOIN crmc_evaluation_cstm 
 					ON crmc_evaluation.id = crmc_evaluation_cstm.id_c
-				INNER JOIN crmc_evaluation_contacts_c 
-					ON crmc_evaluation.id = crmc_evaluation_contacts_c.crmc_evaluation_contactscrmc_evaluation_idb
+				INNER JOIN crmc_evaluation_crmc_mentore_c 
+					ON crmc_evaluation.id = crmc_evaluation_crmc_mentore_c.	crmc_evaluation_crmc_mentorecrmc_evaluation_idb
 			WHERE 
 				-- get the type from the variable $type
 				crmc_evaluation_cstm.type_c = ".$filtersFinal['crmc_evaluation_cstm.type_c']."
 				AND crmc_evaluation_cstm.annee_scolaire_c = ".$filtersFinal['crmc_evaluation_cstm.annee_scolaire_c']."
-				AND crmc_evaluation_contacts_c.deleted = 0
+				AND crmc_evaluation_crmc_mentore_c.deleted = 0
 				AND crmc_evaluation.deleted = 0
-				AND crmc_evaluation_contacts_c.crmc_evaluation_contactscontacts_ida = ".$filtersFinal['crmc_evaluation.MydCustRelSugarcrmc_evaluation_crmc_mentorecrmc_mentore_ida']."
+				AND crmc_evaluation_crmc_mentore_c.crmc_evaluation_crmc_mentorecrmc_mentore_ida = ".$filtersFinal['crmc_evaluation.MydCustRelSugarcrmc_evaluation_crmc_mentorecrmc_mentore_ida']."
 			LIMIT 1;";
 		}
 	
