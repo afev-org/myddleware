@@ -176,7 +176,7 @@ class ApiController extends AbstractController
 
             // Get the job statistics
             $job = $this->jobRepository->find($return['jobId']);
-            $this->jobManager->setId($job->getId());
+            $this->jobManager->setId($this->jobManager->getId());
             $jobData = $this->jobManager->getLogData();
             if (!empty($jobData['jobError'])) {
                 throw new Exception('Failed to get the job statistics. '.$jobData['jobError']);
