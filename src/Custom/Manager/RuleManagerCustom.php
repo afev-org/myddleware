@@ -23,7 +23,7 @@ class RuleManagerCustom extends RuleManager
 						$this->generatePoleRelationship('61a920fae25c5', $documentData['MydCustRelSugarcrmc_binome_contactscontacts_ida'], 'id'); // 	Aiko - engagé
 					}
 					if (!empty($documentData['MydCustRelSugarcrmc_binome_crmc_mentorecrmc_mentore_ida'])) {
-						$this->generatePoleRelationship('65ce290c4ac8a', $documentData['MydCustRelSugarcrmc_binome_crmc_mentorecrmc_mentore_ida'], 'id'); // Aiko - mentoré
+						$this->generatePoleRelationship('66449dbc4aab0', $documentData['MydCustRelSugarcrmc_binome_crmc_mentorecrmc_mentore_ida'], 'id'); // Aiko - mentoré
 					}
 				}
 			}
@@ -46,7 +46,7 @@ class RuleManagerCustom extends RuleManager
 							'5ce454613bb17', // Formation
 							'5cf98651a17f3', // REEC - Users
 							'61a920fae25c5', // Aiko - Engagé 
-							'65ce290c4ac8a', // Aiko - Mentoré 
+							'66449dbc4aab0', // Aiko - Mentoré 
 							'61a930273441b', // Aiko Binomes
 							'61a9190e40965', // Aiko Referent
 							'620e5520c62d6', // Sendinblue - coupon
@@ -168,9 +168,9 @@ class RuleManagerCustom extends RuleManager
 					$this->generatePoleRelationship('61a9329e6d6f2', $document['source_id'], 'record_id', true);  // Aiko - Engagé - pole
 				}
 				if (
-					$this->ruleId == '65ce290c4ac8a' // Aiko - mentoré 
+					$this->ruleId == '66449dbc4aab0' // Aiko - mentoré 
 				) {		
-					$this->generatePoleRelationship('65ce3afeaaa27', $document['source_id'], 'record_id', true);  // Aiko - Mentoré - pole
+					$this->generatePoleRelationship('66449e28a5dd7', $document['source_id'], 'record_id', true);  // Aiko - Mentoré - pole
 				}
 
 				// Si un binome est envoyé dans REEC, on recherche également son pôle (seulement pour la migration)
@@ -244,7 +244,7 @@ class RuleManagerCustom extends RuleManager
 				) {	
 					$sourceData = $this->getDocumentData($docId, 'S');
 					if (!empty($sourceData['MydCustRelSugarcrmc_binome_crmc_mentorecrmc_mentore_ida'])) { // Mentoré
-						$this->generatePoleRelationship('65ce290c4ac8a', $sourceData['MydCustRelSugarcrmc_binome_crmc_mentorecrmc_mentore_ida'], 'id', false);  // Aiko contact
+						$this->generatePoleRelationship('66449dbc4aab0', $sourceData['MydCustRelSugarcrmc_binome_crmc_mentorecrmc_mentore_ida'], 'id', false);  // Aiko contact
 					}
 					if (!empty($sourceData['MydCustRelSugarcrmc_binome_contactscontacts_ida'])) { // Mentor
 						$this->generatePoleRelationship('61a920fae25c5', $sourceData['MydCustRelSugarcrmc_binome_contactscontacts_ida'], 'id', false);  // Aiko contact
