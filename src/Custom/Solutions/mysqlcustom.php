@@ -20,6 +20,7 @@ class mysqlcustom extends mysql {
 	private $mysqlCometConnId = 3; 	// MySQL COMET connector ID
 	private $mysqlCometUser = 'middleware'; 	// MySQL connector ID
 	private $suitecrm;			 	// SuiteCRM connector object
+	private $suiteCRMConnexion = false;
 	
 	protected $FieldsDuplicate = array(	
 										'contact' => array('email','id_comet'),
@@ -44,9 +45,11 @@ class mysqlcustom extends mysql {
 						!empty($paramConnexion['ids']['login']['conn_id'])
 					AND $paramConnexion['ids']['login']['conn_id'] == $this->mysqlCometConnId
 				)
-			) {				
+			) {			
+				$this->suiteCRMConnexion = true;
 				return $this->connexionSuiteCRM();
 			} else {						
+				$this->suiteCRMConnexion = false;
 				return parent::login($paramConnexion);	
 			}
 		} catch (\Exception $e) {
@@ -410,13 +413,7 @@ class mysqlcustom extends mysql {
 	public function get_modules($type = 'source') {		
 		try{
 			// Call standard function in case of standard MySQL connector
-			if(
-					empty($paramConnexion['ids']['login']['conn_id'])
-				 OR (
-						!empty($paramConnexion['ids']['login']['conn_id'])
-					AND $paramConnexion['ids']['login']['conn_id'] != $this->mysqlCometConnId
-				)
-			) {
+			if (!$this->suiteCRMConnexion) {	
 				return parent::get_modules($type);	
 			} 
 			
@@ -448,22 +445,16 @@ class mysqlcustom extends mysql {
 	public function get_module_fields($module, $type = 'source', $param = null): array {
 		try{
 			// Call standard function in case of standard MySQL connector
-			if(
-					empty($paramConnexion['ids']['login']['conn_id'])
-				 OR (
-						!empty($paramConnexion['ids']['login']['conn_id'])
-					AND $paramConnexion['ids']['login']['conn_id'] != $this->mysqlCometConnId
-				)
-			) {		
+			if (!$this->suiteCRMConnexion) {		
 				return parent::get_module_fields($module, $type);	
 			} 
 			
 			// If SQL using SuiteCRM webservice
 			if (empty($this->suitecrm)) {
 				$this->connexionSuiteCRM();
-			}		
-			$res = $this->suitecrm->send_query($this->get_query_describe_table($module));			
-			$queryResult = json_decode($res);			
+			}
+			$res = $this->suitecrm->send_query($this->get_query_describe_table($module));	
+			$queryResult = json_decode($res);		
 			if ($queryResult->status != 'success') {
 				throw new \Exception('Error call function send_special_query : '.$queryResult->message);
 			}
@@ -542,10 +533,9 @@ class mysqlcustom extends mysql {
 		}
 		catch (\Exception $e){
 			$error = 'Error : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
-			$this->logger->error($error);
-            return [];
+			return false;
 		}
-	} // get_module_fields($module) 
+	} // get_module_fields($module)  
 	
 	// On se connecte à la base de données en lecture en utilisant l'accès à SuiteCRM etune fonction webservice custom
 	public function readData($param) {
