@@ -45,10 +45,10 @@ class mysqlcustom extends mysql {
 						!empty($paramConnexion['ids']['login']['conn_id'])
 					AND $paramConnexion['ids']['login']['conn_id'] == $this->mysqlCometConnId
 				)
-			) {				
+			) {			
 				$this->suiteCRMConnexion = true;
 				return $this->connexionSuiteCRM();
-			} else {		
+			} else {						
 				$this->suiteCRMConnexion = false;
 				return parent::login($paramConnexion);	
 			}
@@ -374,11 +374,15 @@ class mysqlcustom extends mysql {
 												'Calls' => 'Calls',
 												'Contacts' => 'Contacts',
 												'CRMC_binome' => 'CRMC_binome',
-												'CRMC_Evaluation' => 'CRMC_Evaluation',
-												'CRMC_Suivi' => 'CRMC_Suivi',
-												'CRMC__etablissement_sup' => 'CRMC__etablissement_sup',
-												'CRMD_dispositif_financement' => 'CRMD_dispositif_financement',
-												'CRMD_historique_engage' => 'CRMD_historique_engage',
+												'CRMC_contact_partenaire' => 'CRMC_contact_partenaire',
+												'CRMC_coupon_mentore' => 'CRMC_coupon_mentore',
+												'CRMC_dispositif_financement' => 'CRMC_dispositif_financement',
+												'CRMC_etablissement_sup' => 'CRMC_etablissement_sup',
+												'CRMC_evaluation' => 'CRMC_evaluation',
+												'CRMC_historique_engage' => 'CRMC_historique_engage',
+												'CRMC_mentore' => 'CRMC_mentore',
+												'CRMC_quartier' => 'CRMC_quartier',
+												'CRMC_suivi' => 'CRMC_suivi',
 												'Emails' => 'Emails',
 												'EmailTemplates' => 'EmailTemplates',
 												'FP_events' => 'FP_events',
@@ -386,9 +390,9 @@ class mysqlcustom extends mysql {
 												'jjwg_Markers' => 'jjwg_Markers',
 												'Leads' => 'Leads',
 												'Meetings' => 'Meetings',
-												'modcl_creation_volontaire' => 'modcl_creation_volontaire',
 												'modcl_objectifs_annuels' => 'modcl_objectifs_annuels',
-												'mod_2_quartiers' => 'mod_2_quartiers',
+												'Notes' => 'Notes',
+												'Notes' => 'Notes',
 												'Notes' => 'Notes',
 												'Project' => 'Project',
 												'ProjectTask' => 'ProjectTask',
@@ -531,7 +535,7 @@ class mysqlcustom extends mysql {
 			$error = 'Error : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
 			return false;
 		}
-	} // get_module_fields($module) 
+	} // get_module_fields($module)  
 	
 	// On se connecte à la base de données en lecture en utilisant l'accès à SuiteCRM etune fonction webservice custom
 	public function readData($param) {

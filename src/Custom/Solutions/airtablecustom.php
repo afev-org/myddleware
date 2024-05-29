@@ -123,7 +123,6 @@ class airtablecustom extends airtable {
 		// if the rule id is 6491a6a34b732, we handle the conversion of the emoji to a format that will be fully compatible with the database encoding which is utf8_general_ci
 		//Todo: We will have to change the id on myddleware prod !!!
 
-
 		$aikoEmoji = false;
 		$simulationParams = false;
 		$readParams = false;
@@ -157,53 +156,62 @@ class airtablecustom extends airtable {
 		}
 
 		if ($aikoEmoji) {
-				if (!empty($result['values'])) {
-					foreach ($result['values'] as $docId => $values) {
-						if (!empty($values['fldqr1DNrnnwmlXuV'])) {
-							switch ($values['fldqr1DNrnnwmlXuV']) {
-								case '😡':
-									$result['values'][$docId]['fldqr1DNrnnwmlXuV'] = 1;
-									break;
-								case '🙁':
-									$result['values'][$docId]['fldqr1DNrnnwmlXuV'] = 2;
-									break;
-								case '😐':
-									$result['values'][$docId]['fldqr1DNrnnwmlXuV'] = 3;
-									break;
-								case '🙂':
-									$result['values'][$docId]['fldqr1DNrnnwmlXuV'] = 4;
-									break;
-								case '😍':
-									$result['values'][$docId]['fldqr1DNrnnwmlXuV'] = 5;
-									break;
-								default:
-									$result['values'][$docId]['fldqr1DNrnnwmlXuV'] = '';
-							}
-						}
+			if (!empty($result['values'])) {
+				foreach ($result['values'] as $docId => $values) {
+					$notationField = 'fldqr1DNrnnwmlXuV'; // PROD
+					if (isset($values['fldC7m6zch8Cz6KWQ'])) {
+						$notationField = 'fldC7m6zch8Cz6KWQ'; // PREPROD
+					}
 
-						if (!empty($values['fldS4eJtB1hJVUgcb'])) {
-							switch ($values['fldS4eJtB1hJVUgcb']) {
-								case '⭐️':
-									$result['values'][$docId]['fldS4eJtB1hJVUgcb'] = 1;
-									break;
-								case '⭐️⭐️':
-									$result['values'][$docId]['fldS4eJtB1hJVUgcb'] = 2;
-									break;
-								case '⭐️⭐️⭐️':
-									$result['values'][$docId]['fldS4eJtB1hJVUgcb'] = 3;
-									break;
-								case '⭐️⭐️⭐️⭐️':
-									$result['values'][$docId]['fldS4eJtB1hJVUgcb'] = 4;
-									break;
-								case '⭐️⭐️⭐️⭐️⭐️':
-									$result['values'][$docId]['fldS4eJtB1hJVUgcb'] = 5;
-									break;
-								default:
-									$result['values'][$docId]['fldS4eJtB1hJVUgcb'] = '';
-							}
+					if (!empty($values[$notationField])) {
+						switch ($values[$notationField]) {
+							case '😡':
+								$result['values'][$docId][$notationField] = 1;
+								break;
+							case '🙁':
+								$result['values'][$docId][$notationField] = 2;
+								break;
+							case '😐':
+								$result['values'][$docId][$notationField] = 3;
+								break;
+							case '🙂':
+								$result['values'][$docId][$notationField] = 4;
+								break;
+							case '😍':
+								$result['values'][$docId][$notationField] = 5;
+								break;
+							default:
+								$result['values'][$docId][$notationField] = '';
+						}
+					}
+
+					$ratingField = 'fldS4eJtB1hJVUgcb'; // PROD
+					if (isset($values['fld4KzcfmV2P8F3E6'])) {
+						$ratingField = 'fld4KzcfmV2P8F3E6'; // PREPROD
+					}
+					if (!empty($values[$ratingField])) {
+						switch ($values[$ratingField]) {
+							case '⭐️':
+								$result['values'][$docId][$ratingField] = 1;
+								break;
+							case '⭐️⭐️':
+								$result['values'][$docId][$ratingField] = 2;
+								break;
+							case '⭐️⭐️⭐️':
+								$result['values'][$docId][$ratingField] = 3;
+								break;
+							case '⭐️⭐️⭐️⭐️':
+								$result['values'][$docId][$ratingField] = 4;
+								break;
+							case '⭐️⭐️⭐️⭐️⭐️':
+								$result['values'][$docId][$ratingField] = 5;
+								break;
+							default:
+								$result['values'][$docId][$ratingField] = '';
 						}
 					}
 				}
+			}
 		}
 
 
@@ -241,67 +249,6 @@ class airtablecustom extends airtable {
 				$result['error'] = '';
 			}
 		}
-		/* Aiko - Suppression isn't used anymore
-		if ($param['rule']['id'] == '61bb49a310715') {	// Aiko - Suppression
-			if (!empty($result['values'])) {
-				foreach ($result['values'] as $docId => $values) {
-					$deletionParam = array();
-					$ruleId = '';
-					switch ($values['SyncSource']):
-						case 'Aiko - Binome':
-							$ruleId = '61a930273441b';
-							$deletionParam['values']['statut_c'] = 'suppr'; 
-							$deletionParam['values']['chatbot_c'] = 'suppr'; 
-							$deletionParam['values']['fin'] = ''; 
-							$deletionParam['values']['mise_en_place_c'] = ''; 
-							$deletionParam['values']['name'] = ''; 
-							$deletionParam['values']['annee_scolaire_c'] = ''; 
-							$deletionParam['values']['deleted'] = ''; 
-							$deletionParam['values']['heure_babituelle_rencontre_c'] = ''; 
-							$deletionParam['values']['jour_habituel_rencontre_c'] = ''; 
-							$deletionParam['values']['lieu_habituel_rencontre_c'] = ''; 
-							$deletionParam['values']['precision_lieu_c'] = ''; 
-							break;
-						case 'Aiko - Contact':
-							$ruleId = '61a920fae25c5';
-							$deletionParam['values']['aiko'] = '1'; 
-							$deletionParam['values']['contact_type_c'] = ''; 
-							$deletionParam['values']['salutation'] = ''; 
-							$deletionParam['values']['birthdate'] = ''; 
-							$deletionParam['values']['email1'] = ''; 
-							$deletionParam['values']['phone_mobile'] = ''; 
-							$deletionParam['values']['last_name'] = ''; 
-							$deletionParam['values']['first_name'] = ''; 
-							$deletionParam['values']['deleted'] = ''; 
-							break;
-						case 'Aiko - Referent':
-							$ruleId = '61a9190e40965';
-							$deletionParam['values']['status'] = 'Active'; // to skip the rule filter
-							// Add all the other values otherwise the source data wont be stored and the status will still be empty
-							$deletionParam['values']['email_address'] = ''; 
-							$deletionParam['values']['phone_mobile'] = ''; 
-							$deletionParam['values']['last_name'] = '';
-							$deletionParam['values']['first_name'] = '';
-							$deletionParam['values']['deleted'] = '';
-							break;
-						default:
-							throw new \Exception('SyncSource '.$values['SyncSource'].' unknown. Failed to generate deletion.');
-					endswitch;
-					if (empty($values['IDCOMET'])) {
-						throw new \Exception('No COMET ID for the record '.$values['DEVREC_ID'].'. Failed to generate deletion.');
-					}
-					
-					$ruleParam['ruleId'] = $ruleId; 
-					$ruleParam['jobId'] = $param['jobId'];
-					$ruleDeletion = new rule($this->logger, $this->container, $this->conn, $ruleParam);				
-
-					$deletionParam['values']['myddleware_deletion'] = true;
-					$deletionParam['values']['id'] = $values['IDCOMET'];
-					$deletionParam['values']['date_modified'] = gmdate('Y-m-d H:i:s');
-					$documents = $ruleDeletion->generateDocuments($values['IDCOMET'], false, $deletionParam); 
-				}	
-			}
-		} */
 		return $result;
 	}
 	

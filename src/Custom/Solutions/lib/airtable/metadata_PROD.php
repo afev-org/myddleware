@@ -109,8 +109,7 @@ $moduleFields['appdKFUpk2X2Ok8Dc'] = array (
         'fldAlx9j5a3As2i3P' => array( 'label' => 'Nom Théorique', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 1, 'relate' => false),
         'fldKJLd9G2jp0s217' => array( 'label' => 'ID TMP', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 1, 'relate' => false),
         'flduaPHukFT92TyIm' => array( 'label' => 'DEV RATRAPAGE', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 1, 'relate' => false),
-        'fldWfMuB64unu6K5v' => array( 'label' => 'BINOMES', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 1, 'relate' => true),
-        'fldmk0IlXa41Qnixw' => array( 'label' => 'ID BINOME RATRAPAGE', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 1, 'relate' => true),
+        'fldWfMuB64unu6K5v' => array( 'label' => 'BINOMES', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 1, 'relate' => true)
     ),
 
 	'BILAN' => array(

@@ -27,7 +27,8 @@ class ToolsManagerCustom extends ToolsManager {
 			$data['lst_rule']['62738aabafcd2'] = 'Esp Rep - Quartiers';
 			$data['lst_rule']['6273905a05cb2'] = 'Esp Rep - Contacts repérants';
 			$data['lst_rule']['62739b419755f'] = 'Esp Rep - Coupons vers Esp Rep';
-			$data['lst_rule']['61a920fae25c5'] = 'Aiko Contacts';
+			$data['lst_rule']['61a920fae25c5'] = 'Aiko engagé';
+			$data['lst_rule']['665787f17fd25'] = 'Aiko mentoré';
 			$data['lst_rule']['61a900506e8f1'] = 'Aiko Pôles';
 			$data['lst_rule']['61a930273441b'] = 'Aiko Binomes';
 			// Pôle relationship for mobilisation
@@ -68,6 +69,10 @@ class ToolsManagerCustom extends ToolsManager {
 			$data['lst_rule']['5cf98651a17f3'] = 'REEC - User';
 		}
 		
+		if (current(array_keys($data['source'])) == 'CRMC_mentore') {
+			$data['lst_rule']['5cf98651a17f3'] = 'REEC - User';
+		}
+		
 		// Une règle avec le module Binôme de SuiteCRM peut être liée aux module user de MySQL
 		if (current(array_keys($data['source'])) == 'CRMC_binome') {
 			$data['lst_rule']['5cf98651a17f3'] = 'REEC - User';
@@ -77,9 +82,15 @@ class ToolsManagerCustom extends ToolsManager {
 		// Une règle avec le module accounts_contacts peut être liée aux module Composante et Contact partenaire
 		if (current(array_keys($data['source'])) == 'accounts_contacts') {
 			$data['lst_rule']['5ce362b962b63'] = 'REEC - Composante';
-			$data['lst_rule']['5d01a630c217c'] = 'REEC - Contact partenaire';
 			$data['lst_rule']['5ce3621156127'] = 'REEC - Engagé';
 			$data['lst_rule']['5cdf83721067d'] = 'REEC - Jeune accompagné';
+			$data['lst_rule']['5d01a630c217c'] = 'REEC - Contact partenaire';
+		}
+		
+		// Une règle avec le module accounts_crmc_contact_partenaire_1_c peut être liée aux module Composante et Contact partenaire
+		if (current(array_keys($data['source'])) == 'accounts_crmc_contact_partenaire_1_c') {
+			$data['lst_rule']['5ce362b962b63'] = 'REEC - Composante';
+			$data['lst_rule']['5d01a630c217c'] = 'REEC - Contact partenaire';
 			$data['lst_rule']['6273905a05cb2'] = 'Esp Rep - Contacts repérants';
 		}
 		

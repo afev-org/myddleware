@@ -755,7 +755,7 @@ class DocumentManagerCustom extends DocumentManager
 		return $matchingrows;
 	}
 	
-	public function checkParentDocument(): bool {
+	/* public function checkParentDocument(): bool {
 		try {				
 			// If the sendinblue contact is not found in the contact rule, we search in the coupon rule
 			if ($this->ruleId == '6210fcbe4d654') { 	// Sendinblue - email delivered		
@@ -828,9 +828,9 @@ class DocumentManagerCustom extends DocumentManager
 		}
 			
 		return $chekParent;
-	}
+	} */
 	
-	public function transformDocument(): bool {		
+	/* public function transformDocument(): bool {		
 		// If the sendinblue contact is not found in the contact rule, we search in the coupon rule
 		if ($this->ruleId == '6210fcbe4d654') { 	// Sendinblue - email delivered
 			$transform = parent::transformDocument();			
@@ -874,7 +874,7 @@ class DocumentManagerCustom extends DocumentManager
 		}
 			
 		return parent::transformDocument();
-	}
+	} */
 	
 	protected function insertDataTable($data, $type): bool {
 		if (
@@ -964,22 +964,6 @@ class DocumentManagerCustom extends DocumentManager
             return false;
         }
     }
-
-    /* public function updateType($new_type) {
-		// Call standard
-		parent::updateType($new_type);
-		
-		// DO NOT create binome with chatbot_c = non 
-		if (
-				$this->ruleId ==  '61a930273441b'
-			AND $this->sourceData['chatbot_c'] == 'non'
-			AND $new_type == 'C'
-		) { 
-			$this->message .= utf8_decode('La création de binome avec chatbot = non dans Airtable n\'est pas autorisée. Ce document est annulé.');
-			$this->updateStatus('Cancel');
-			$this->doNotOverrideStatus = true;
-		}
-	} */
 
 	// Set the quartier parameters
 	public function setQuartierDocumentParams()

@@ -362,7 +362,6 @@ class suitecrmcore extends solution
 					'relate' => false,
 				];
 			}
-
             return $this->moduleFields;
         } catch (\Exception $e) {
             return false;
@@ -448,8 +447,8 @@ class suitecrmcore extends solution
                 'link_name_to_fields_array' => $link_name_to_fields_array,
                 'max_results' => $this->limitCall,
                 'deleted' => $deleted,
-                'Favorites' => '',
             ];
+
             $get_entry_list_result = $this->call('get_entry_list', $get_entry_list_parameters);
             // Construction des données de sortie
             if (isset($get_entry_list_result->result_count)) {
@@ -650,7 +649,7 @@ class suitecrmcore extends solution
                 $setEntriesListParameters = [
                     'session' => $this->session,
                     'module_name' => $param['module'],
-                    'name_value_lists' => $dataSugar,
+                    'name_value_list' => $dataSugar,
                 ];
                 $get_entry_list_result = $this->call('set_entry', $setEntriesListParameters);
 
@@ -789,9 +788,8 @@ class suitecrmcore extends solution
                 $setEntriesListParameters = [
                     'session' => $this->session,
                     'module_name' => $param['module'],
-                    'name_value_lists' => $dataSugar,
+                    'name_value_list' => $dataSugar,
                 ];
-
                 $get_entry_list_result = $this->call('set_entry', $setEntriesListParameters);
                 if (!empty($get_entry_list_result->id)) {
                     // In case of module note with attachement, we generate a second call to add the file
@@ -818,7 +816,6 @@ class suitecrmcore extends solution
             // Modification du statut du flux
             $this->updateDocumentStatus($idDoc, $result[$idDoc], $param);
         }
-
         return $result;
     }
 
