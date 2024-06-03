@@ -566,7 +566,7 @@ class suitecrmcustom extends suitecrm
 		$param = array();
 		try {
 			if ($type == 'source') {
-				if ($module == 'Leads') {
+				if (in_array($module, array('Leads','CRMC_coupon_mentore'))) {
 					$param[] = array(
 						'id' => 'leadType',
 						'name' => 'leadType',
@@ -674,7 +674,6 @@ class suitecrmcustom extends suitecrm
 		){
 			$query .= ' AND '.strtolower($param['module'])."_cstm.situation_c = 'etudiant' ";
 		}
-
 		return $query;
 	}
 
