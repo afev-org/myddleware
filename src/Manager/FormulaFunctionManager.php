@@ -160,7 +160,7 @@ class formulafunctioncore
 		){
 			$sqlParams = "	SELECT 
 									target_id record_id,
-									GROUP_CONCAT(DISTINCT document.id ORDER BY document.source_date_modified ASC) document_id,
+									GROUP_CONCAT(DISTINCT document.id ORDER BY document.source_date_modified DESC) document_id,
 									GROUP_CONCAT(DISTINCT document.type) types,
 									MAX(document.date_modified) date_modified
 								FROM document 
@@ -184,7 +184,7 @@ class formulafunctioncore
 		){
 			$sqlParams = "	SELECT 
 								source_id record_id,
-								GROUP_CONCAT(DISTINCT document.id ORDER BY document.source_date_modified ASC) document_id,
+								GROUP_CONCAT(DISTINCT document.id ORDER BY document.source_date_modified DESC) document_id,
 								GROUP_CONCAT(DISTINCT document.type) types,
 								MAX(document.date_modified) date_modified
 							FROM document
@@ -214,7 +214,7 @@ class formulafunctioncore
 		// Manage error if no result found
 		if (empty($result['record_id'])) {
 			if ($errodIfNoFound) {
-				throw new \Exception('Failed to retrieve a related document. No data for the field '.$sourceFieldName.'. There is not record with the ID '.('1' == $direction ? 'source' : 'target').' '.$fieldValue.' in the rule '.$ruleLink['name'].'. This document is queued. ');
+				throw new \Exception('Failed to retrieve a related document. No data for the field '.$sourceFieldName.'. There is not record with the ID '.('1' == $direction ? 'source' : 'target').' '.$field.' in the rule '.$ruleLink['name'].'. This document is queued. ');
 			} else {
 				return '';
 			}
@@ -225,7 +225,7 @@ class formulafunctioncore
 			AND strpos($result['document_id'], ',')
 		) {
 			$documentList = explode(',',$result['document_id']);
-			$result['document_id'] = end($documentList);
+			$result['document_id'] = $documentList[0];
 		}
 		// No doc id in case of simulation
 		if (!empty($docId)) {
