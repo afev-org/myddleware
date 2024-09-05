@@ -236,7 +236,8 @@ class DocumentManagerCustom extends DocumentManager
 		if (
 			!empty($this->document_data['rule_id'])
 			and	$this->document_data['rule_id'] == '5f20b113356e1' // Rule Composante - Contact partenaire
-			and $new_status == 'Relate_KO'
+			and $new_status == 'Error_transformed'
+			and strpos($this->message, 'lookup') !== false
 		) {
 			// Relationship could be created after the contact, to we don't cancel teh document at the first atempt
 			if($this->attempt > 1 ) {
@@ -244,7 +245,7 @@ class DocumentManagerCustom extends DocumentManager
 				$this->message .= utf8_decode('La relation ne concerne probablement pas une composante composante et un contact partenaire. Ce transfert de données est annulé. ');
 			// Keep the document open until the second try
 			} else {
-				$new_status = 'Predecessor_OK';
+				$new_status = 'Relate_OK';
 				$this->message .= utf8_decode('La relation ne concerne probablement pas une composante composante et un contact partenaire. En attente d un second essai. ');
 				// Add a try as the standard increment attemp only for error or close document
 				$this->attempt++;
