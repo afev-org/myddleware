@@ -329,6 +329,10 @@ class airtablecustom extends airtable {
 	protected function checkDataBeforeUpdate($param, $data, $idDoc)
 	{
 		$data = parent::checkDataBeforeUpdate($param, $data, $idDoc);
+		
+		if ($idDoc == 'error') {
+			throw new \Exception('Error unknown. ');
+		}
 		// If the etab sup is missing then we remove the field from the call
 		if ($param['rule']['id'] == '6267e9c106873') { // Mobilisation - Composantes
 			if (

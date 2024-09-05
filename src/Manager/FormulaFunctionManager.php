@@ -122,7 +122,7 @@ class formulafunctioncore
         }
     }
 	
-	public static function lookup($entityManager, $connection, $currentRule, $docId, $myddlewareUserId, $sourceFieldName, $field, $rule, $errorIfEmpty=false, $errodIfNoFound=true, $parent=false)
+	public static function lookup($entityManager, $connection, $currentRule, $docId, $myddlewareUserId, $sourceFieldName, $field, $rule, $errorIfEmpty=false, $errodIfNoFound=true, $parent=false, $forceDirection=null)
 	{
 		// Manage error if empty
 		if (empty($field)) {
@@ -134,7 +134,9 @@ class formulafunctioncore
 		}
 		// In case of simulation during rule creation (not edition), we don't have the current rule id.
 		// We set direction = 1 by default
-		if ($currentRule === 0) {
+		if ($forceDirection !== null) {
+			$direction = $forceDirection;
+		} elseif ($currentRule === 0) {
 			$direction = 1;
 		} else {
 			// Get rules detail
@@ -155,6 +157,15 @@ class formulafunctioncore
 					!empty($ruleRef)
 				AND	$ruleRef['conn_id_source'] == $ruleLink['conn_id_source']
 				AND	$ruleRef['conn_id_target'] == $ruleLink['conn_id_target']
+			) 
+			// In case of the linked rule has the target connector = source connector, we use module to get the direction of the relationship 
+			OR (
+					!empty($ruleRef)
+				AND $ruleLink['conn_id_target'] == $ruleLink['conn_id_source']
+				AND	(
+						$ruleRef['module_source'] == $ruleLink['module_source']
+					 OR $ruleRef['module_target'] == $ruleLink['module_target']
+				)
 			) 
 			OR (!empty($direction)) // Manage simulation
 		){
@@ -179,8 +190,18 @@ class formulafunctioncore
 								LIMIT 1";
 			$direction = 1;
 		} elseif (
-				$ruleRef['conn_id_source'] == $ruleLink['conn_id_target']
-			AND	$ruleRef['conn_id_target'] == $ruleLink['conn_id_source']
+			(
+					$ruleRef['conn_id_source'] == $ruleLink['conn_id_target']
+				AND	$ruleRef['conn_id_target'] == $ruleLink['conn_id_source']
+			)
+			// In case of the linked rule has the target connector = source connector, we use module to get the direction of the relationship 
+			OR (
+					$ruleLink['conn_id_target'] == $ruleLink['conn_id_source']
+				AND	(
+						$ruleRef['module_source'] == $ruleLink['module_target']
+					 OR $ruleRef['module_target'] == $ruleLink['module_source']
+				)
+			)
 		){
 			$sqlParams = "	SELECT 
 								source_id record_id,
