@@ -26,7 +26,7 @@
 /config/services_custom.yaml
 
 # Custom directory
-/src/Custom/*
+# /src/Custom/*
 
 # Managed by Composer
 /app/bootstrap.php.cache

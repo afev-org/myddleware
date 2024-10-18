@@ -14,48 +14,28 @@ services:
 # You must use the same syntax for each custom class you create. For further info : 
 # https://symfony.com/doc/4.4/service_container/service_decoration.html 
 
-  # App\Custom\Solutions\woocommercecustom:
-  #     decorates: App\Solutions\woocommerce
-  #     decoration_on_invalid: ignore
-  #     decoration_priority: 5
+  App\Custom\Premium\Manager\DocumentManagerPremium:
+      decorates: App\Manager\DocumentManager
+      decoration_on_invalid: ignore
+      decoration_priority: 1
 
-  # App\Custom\Solutions\wordpresscustom:
-  #     decorates: App\Solutions\wordpress
-  #     decoration_on_invalid: ignore
-  #     decoration_priority: 1
-
-  # App\Custom\Premium\Solutions\mysqlpremium:
-    # decorates: App\Solutions\mysql
-    # decoration_on_invalid: ignore
-    # decoration_priority: 1
-
-  # App\Custom\Solutions\mysqlcustom:
-    # decorates: App\Custom\Premium\Solutions\mysqlpremium
-    # decoration_on_invalid: ignore
-    # decoration_priority: 1
-    
-  # App\Custom\Premium\Manager\DocumentManagerPremium:
-    # decorates: App\Manager\DocumentManager
-    # decoration_on_invalid: ignore
-    # decoration_priority: 1
-    
-  # App\Custom\Premium\Manager\ToolsManagerPremium:
-    # decorates: App\Manager\ToolsManager
-    # decoration_on_invalid: ignore
-    # decoration_priority: 1
+  App\Custom\Premium\Manager\ToolsManagerPremium:
+      decorates: App\Manager\ToolsManager
+      decoration_on_invalid: ignore
+      decoration_priority: 1
 
   App\Custom\Manager\DocumentManagerCustom:
-      decorates: App\Manager\DocumentManager
+      decorates: App\Custom\Premium\Manager\DocumentManagerPremium
+      decoration_on_invalid: ignore
+      decoration_priority: 1
+
+  App\Custom\Manager\ToolsManagerCustom:
+      decorates: App\Custom\Premium\Manager\ToolsManagerPremium
       decoration_on_invalid: ignore
       decoration_priority: 1
 
   App\Custom\Manager\FormulaFunctionManagerCustom:
       decorates: App\Manager\FormulaFunctionManager
-      decoration_on_invalid: ignore
-      decoration_priority: 1
-
-  App\Custom\Manager\ToolsManagerCustom:
-      decorates: App\Manager\ToolsManager
       decoration_on_invalid: ignore
       decoration_priority: 1
 
