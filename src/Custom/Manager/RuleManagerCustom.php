@@ -19,7 +19,7 @@ class RuleManagerCustom extends RuleManager
 				// Empty if relate KO
 				if (empty($value)) {
 					$documentData = $this->getDocumentData($docId, 'S');
-					if (empty($documentData['MydCustRelSugarcrmc_binome_contactscontacts_ida'])) {
+					if (!empty($documentData['MydCustRelSugarcrmc_binome_contactscontacts_ida'])) {
 						$this->generatePoleRelationship('61a920fae25c5', $documentData['MydCustRelSugarcrmc_binome_contactscontacts_ida'], 'id'); // 	Aiko - engagé
 					}
 					if (!empty($documentData['MydCustRelSugarcrmc_binome_crmc_mentorecrmc_mentore_ida'])) {

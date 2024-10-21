@@ -19,13 +19,13 @@ services:
       decoration_on_invalid: ignore
       decoration_priority: 1
 
-  App\Custom\Premium\Manager\ToolsManagerPremium:
-      decorates: App\Manager\ToolsManager
+  App\Custom\Manager\DocumentManagerCustom:
+      decorates: App\Custom\Premium\Manager\DocumentManagerPremium
       decoration_on_invalid: ignore
       decoration_priority: 1
 
-  App\Custom\Manager\DocumentManagerCustom:
-      decorates: App\Custom\Premium\Manager\DocumentManagerPremium
+  App\Custom\Premium\Manager\ToolsManagerPremium:
+      decorates: App\Manager\ToolsManager
       decoration_on_invalid: ignore
       decoration_priority: 1
 
