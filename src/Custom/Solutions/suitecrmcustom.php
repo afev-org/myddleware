@@ -371,8 +371,6 @@ class suitecrmcustom extends suitecrm
 					$this->logger, 
 					$this->connection, 
 					$this->entityManager,
-					$this->documentRepository,
-					$this->ruleRelationshipsRepository,
 					$this->formulaManager
 				);
 				$param['id_doc_myddleware'] = $idDoc;

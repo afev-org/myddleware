@@ -235,8 +235,6 @@ class airtablecustom extends airtable {
 					$this->logger,
 					$this->connection,
 					$this->entityManager,
-					$this->documentRepository,
-					$this->ruleRelationshipsRepository,
 					$this->formulaManager
 				);
 				$paramDoc['id_doc_myddleware'] = $param['document']['id'];
@@ -294,8 +292,6 @@ class airtablecustom extends airtable {
 						$this->logger, 
 						$this->connection, 
 						$this->entityManager,
-						$this->documentRepository,
-						$this->ruleRelationshipsRepository,
 						$this->formulaManager
 					);
 				}
@@ -358,8 +354,6 @@ class airtablecustom extends airtable {
 					$this->logger, 
 					$this->connection, 
 					$this->entityManager,
-					$this->documentRepository,
-					$this->ruleRelationshipsRepository,
 					$this->formulaManager
 				);
 			}

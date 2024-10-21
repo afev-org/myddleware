@@ -124,8 +124,6 @@ class mysqlcustom extends mysql {
 						$this->logger, 
 						$this->connection, 
 						$this->entityManager,
-						$this->documentRepository,
-						$this->ruleRelationshipsRepository,
 						$this->formulaManager
 					);
 				}

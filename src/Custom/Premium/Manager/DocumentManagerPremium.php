@@ -6,18 +6,7 @@ use App\Manager\DocumentManager;
 use App\Entity\WorkflowLog;
 
 class DocumentManagerPremium extends DocumentManager
-{
-    public function setDocument($id_doc)
-    {
-		// if (file_exists( __DIR__.'/../licence.php')) {
-			// include __DIR__.'/../licence.php';
-			// $limitDate = $this->tools->decryptKey($licenceKey);
-			// echo $limitDate.chr(10);
-		// }
-		$limitDate = $this->tools->isPremium();
-		return parent::setDocument($id_doc);
-	}
-	
+{	
 	public function setParam($param, $clear = false, $clearRule = true)
     {
 		if ($clearRule) {
