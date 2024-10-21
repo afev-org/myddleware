@@ -19,8 +19,13 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Shapecode\Bundle\CronBundle\Entity\CronJob as CronJob;
+use Shapecode\Bundle\CronBundle\Entity\CronJobResult;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Pagerfanta\Doctrine\ORM\QueryAdapter;
+use Pagerfanta\Pagerfanta;
+use App\Manager\ToolsManager;
+
 
 /**
  * @Route("/rule/jobscheduler")
@@ -29,11 +34,13 @@ class JobSchedulerController extends AbstractController
 {
     private JobSchedulerManager $jobSchedulerManager;
     private EntityManagerInterface $entityManager;
+    private ToolsManager $tools;
 
-    public function __construct(EntityManagerInterface $entityManager, JobSchedulerManager $jobSchedulerManager)
+    public function __construct(EntityManagerInterface $entityManager, JobSchedulerManager $jobSchedulerManager,ToolsManager $tools)
     {
         $this->entityManager = $entityManager;
         $this->jobSchedulerManager = $jobSchedulerManager;
+        $this->tools = $tools;
     }
 
     /**
@@ -41,6 +48,9 @@ class JobSchedulerController extends AbstractController
      */
     public function index(): Response
     {
+
+        
+
         $entities = $this->entityManager->getRepository(JobScheduler::class)->findBy([], ['jobOrder' => 'ASC']);
 
         return $this->render('JobScheduler/index.html.twig', [
@@ -148,7 +158,6 @@ class JobSchedulerController extends AbstractController
     public function edit($id): Response
     {
         $entity = $this->entityManager->getRepository(JobScheduler::class)->find($id);
-
         if (!$entity) {
             throw $this->createNotFoundException('Unable to find JobScheduler entity.');
         }
@@ -305,12 +314,18 @@ class JobSchedulerController extends AbstractController
     }
 
     /**
-     * @Route("/crontab_list", name="jobscheduler_cron_list")
+     * @Route("/crontab_list", name="jobscheduler_cron_list", defaults={"page"=1})
+     * @Route("/crontab_list/page-{page}", name="jobscheduler_cron_list_page", requirements={"page"="\d+"})
      */
-    public function crontabList(): Response
+    public function crontabList(int $page): Response
     {
+
+        
+
+
         //Check if crontab is enabled 
         $entitiesCron = $this->entityManager->getRepository(Config::class)->findBy(['name' => 'cron_enabled']);
+		$searchLimit = $this->entityManager->getRepository(Config::class)->findOneBy(['name' => 'search_limit'])->getValue();
 
         //Check the user timezone
         if ($timezone = '') {
@@ -321,10 +336,21 @@ class JobSchedulerController extends AbstractController
 
         $entity = $this->entityManager->getRepository(CronJob::class)->findAll();
 
+        // Pagination for cron_job_result
+        $query = $this->entityManager->createQuery(
+            'SELECT c FROM Shapecode\Bundle\CronBundle\Entity\CronJobResult c ORDER BY c.runAt DESC'
+        );
+    
+        $adapter = new QueryAdapter($query);
+        $pager = new Pagerfanta($adapter);
+        $pager->setMaxPerPage(10);
+        $pager->setCurrentPage($page);
+
         return $this->render('JobScheduler/crontab_list.html.twig', [
             'entity' => $entity,
             'timezone' => $timezone,
-            'entitiesCron' => $entitiesCron
+            'entitiesCron' => $entitiesCron,
+            'pager' => $pager,
         ]);
     }
 
@@ -403,12 +429,51 @@ class JobSchedulerController extends AbstractController
         if (!$entity) {
             throw $this->createNotFoundException('Unable to find Crontab entity.');
         }
+
+        // Get the current running instances from the $entity
+        $currentMaxInstancesString = (string) $entity->getMaxInstances();
+
+        $currentRunningInstancesString = (string) $entity->getRunningInstances();
+
+        // get the new value of the running instances from the request
+        $newRunningInstances = $request->request->get('job_scheduler_cron')['runningInstances'];
+
+        $newRunningInstancesInteger = (int) $newRunningInstances;
+
+        $newDescription = $request->request->get('job_scheduler_cron')['description'];
+        $newPeriod = $request->request->get('job_scheduler_cron')['period'];
+        $newMaxInstances = $request->request->get('job_scheduler_cron')['maxInstances'];
+
+
+        // if the new value is different from the current value, update the request to not update the running instances
+        if ($entity->getRunningInstances() !== $newRunningInstancesInteger) {
+            $request->request->set('job_scheduler_cron', ['runningInstances' => $currentRunningInstancesString, 'maxInstances' => $currentMaxInstancesString, "period" => $entity->getPeriod(), "command" => $entity->getCommand(), "description" => $entity->getDescription()]);
+        }
+
         $editForm = $this->createEditFormCrontab($entity);
         $editForm->handleRequest($request);
 
         if ($editForm->isSubmitted() && $editForm->isValid()) {
             $this->entityManager->flush();
 
+            return $this->redirect($this->generateUrl('jobscheduler_cron_list'));
+        } else if ($editForm->isSubmitted() && !($editForm->isValid())) {
+            // do an sql statement to update the running instances
+            $this->entityManager->getConnection()->executeQuery('UPDATE cron_job SET running_instances = :running_instances,
+            max_instances = :max_instances,
+            period = :period,
+            description = :description
+            
+            WHERE id = :id', 
+            ['running_instances' => $newRunningInstances,
+             'id' => $id,
+            'max_instances' => $newMaxInstances,
+            'period' => $newPeriod,
+            'description' => $newDescription
+            ]);
+            $this->entityManager->flush();
+
+            // redirect to the show view
             return $this->redirect($this->generateUrl('jobscheduler_cron_list'));
         }
 
@@ -419,22 +484,31 @@ class JobSchedulerController extends AbstractController
     }
 
     /**
-     * @Route("/{id}/show_crontab", name="crontab_show")
+     * @Route("/{id}/show_crontab", name="crontab_show", defaults={"page"=1})
+     * @Route("/{id}/show_crontab/page-{page}", name="crontab_show_page", requirements={"page"="\d+"})
      */
-    public function showCrontab($id): Response
+    public function showCrontab($id, int $page): Response
     {
         $entity = $this->entityManager->getRepository(CronJob::class)->find($id);
         if (!$entity) {
             throw $this->createNotFoundException('Unable to find crontab entity.');
         }
 
-        /** @var UserRepository $userRepository */
-        $userRepository = $this->entityManager->getRepository(User::class);
+        $query = $this->entityManager->createQuery(
+            'SELECT c FROM Shapecode\Bundle\CronBundle\Entity\CronJobResult c WHERE c.cronJob = :cronJob ORDER BY c.runAt DESC'
+        )->setParameter('cronJob', $id);
+
+        $adapter = new QueryAdapter($query);
+        $pager = new Pagerfanta($adapter);
+        $pager->setMaxPerPage(10);
+        $pager->setCurrentPage($page);
 
         return $this->render('JobScheduler/show_crontab.html.twig', [
             'entity' => $entity,
+            'pager' => $pager,
         ]);
     }
+
     
     /**
      * Disables all cron jobs.

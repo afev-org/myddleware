@@ -40,7 +40,17 @@ require('./js/animation.js')
 require('./js/task.js')
 require('./js/connector.js')
 require('./js/smtp.js')
+require('./js/filter.js')
+require('./js/crontab.js')
+require('./js/rule_relation_filter.js')
+require('./js/editAction.js')
+require('./js/connector_detail.js')
+require("./js/workflows.js");
+
 
 
 // start the Stimulus application
 import './bootstrap';
+import 'select2/dist/css/select2.css';
+import 'select2';
+

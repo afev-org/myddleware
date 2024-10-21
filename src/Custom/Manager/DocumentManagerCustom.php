@@ -509,7 +509,7 @@ class DocumentManagerCustom extends DocumentManager
 		return $new_status;
 	}
 
-	public function updateStatus($new_status)
+	public function updateStatus($new_status, $workflow = false)
 	{
 		/* // If the status has been forced during a standard process, we stop the next status change (done by the standard)
 		if ($this->doNotOverrideStatus) {

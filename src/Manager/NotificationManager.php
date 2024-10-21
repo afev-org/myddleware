@@ -30,19 +30,21 @@ use DateTime;
 use Exception;
 use Swift_Mailer;
 use Swift_Message;
-use Swift_SmtpTransport;
-
 use App\Entity\User;
+
 use Twig\Environment;
 use App\Entity\Config;
+use Swift_SmtpTransport;
 use Twig\Error\LoaderError;
 use Twig\Error\SyntaxError;
 use Psr\Log\LoggerInterface;
 use Twig\Error\RuntimeError;
 use Doctrine\DBAL\Connection;
 use App\Repository\JobRepository;
+use App\Repository\LogRepository;
 use App\Repository\RuleRepository;
 use App\Repository\UserRepository;
+use App\Repository\ConfigRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -64,6 +66,8 @@ class NotificationManager
     private RuleRepository $ruleRepository;
     private $fromEmail;
     private Environment $twig;
+    private ConfigRepository $configRepository;
+    private LogRepository $logRepository;
 
     public function __construct(
         LoggerInterface $logger,
@@ -76,7 +80,9 @@ class NotificationManager
         Swift_Mailer $mailer,
         ToolsManager $tools,
         ParameterBagInterface $params,
-        Environment $twig
+        Environment $twig,
+        ConfigRepository $configRepository, 
+        LogRepository $logRepository
     ) {
         $this->logger = $logger;
         $this->connection = $connection;
@@ -89,9 +95,11 @@ class NotificationManager
         $this->tools = $tools;
         $this->params = $params;
         $this->twig = $twig;
+        $this->configRepository = $configRepository;
+        $this->logRepository = $logRepository;
     }
 
-        /**
+    /**
      * Send alert
      *
      * @throws Exception
@@ -101,7 +109,7 @@ class NotificationManager
         try {
 
             $this->sendAlertTaskTooLong();
-            $this->sendAlertCrontabDisabled();
+            // $this->sendAlertLimitReached();
 
             return true;
 
@@ -112,85 +120,94 @@ class NotificationManager
         }
     }
 
-    /**
+     /**
      * Send alert if a job is running too long.
      *
      * @throws Exception
      */
-    public function sendAlertTaskTooLong(): bool
+    public function sendAlertTaskTooLong()
     {
-        try {
-            
-            // Set all config parameters
-            $this->setConfigParam();
-            if (empty($this->configParams['alert_time_limit'])) {
-				throw new Exception('No alert time set in the parameters file. Please set the parameter alert_limit_minute in the file config/parameters.yml.');
-			}
-            // Calculate the date corresponding to the beginning still authorised
-            $timeLimit = new DateTime('now', new \DateTimeZone('GMT'));
-            $timeLimit->modify('-'.$this->configParams['alert_time_limit'].' minutes');
+        // Set all config parameters
+        $this->setConfigParam();
+        if (empty($this->configParams['alert_time_limit'])) {
+            throw new Exception('No alert time set in the parameters file. Please set the parameter alert_limit_minute in the file config/parameters.yml.');
+        }
+        // Calculate the date corresponding to the beginning still authorised
+        $timeLimit = new DateTime('now', new \DateTimeZone('GMT'));
+        $timeLimit->modify('-'.$this->configParams['alert_time_limit'].' minutes');
 
-            // Search if a job is lasting more time that the limit authorized
-            $job = $this->jobRepository->findJobStarted($timeLimit);
-            // If a job is found, we send the alert
-            if (!empty($job)) {
-                // Create text
-                $textMail = $this->translator->trans('email_alert.body', [
-                    '%min%' => $this->configParams['alert_time_limit'],
-                    '%begin%' => $job->getBegin()->format('Y-m-d H:i:s'),
-                    '%id%' => $job->getId(),
-                    '%base_uri%' => (!empty($this->configParams['base_uri']) ? $this->configParams['base_uri'].'rule/task/view/'.$job->getId().'/log' : ''),
-                ]);
+        // Search if a job is lasting more time that the limit authorized
+        $job = $this->jobRepository->findJobStarted($timeLimit);
+        // If a job is found, we send the alert
+        if (!empty($job)) {
+            // Create text
+            $textMail = $this->translator->trans('email_alert.body', [
+                '%min%' => $this->configParams['alert_time_limit'],
+                '%begin%' => $job->getBegin()->format('Y-m-d H:i:s'),
+                '%id%' => $job->getId(),
+                '%base_uri%' => (!empty($this->configParams['base_uri']) ? $this->configParams['base_uri'].'rule/task/view/'.$job->getId().'/log' : ''),
+            ]);
 
-                return $this->send($textMail, $this->translator->trans('email_alert.subject'));
-            }
-
-            return true;
-        } catch (Exception $e) {
-            $error = 'Error : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
-            $this->logger->error($error);
-            throw new Exception($error);
+            return $this->send($textMail, $this->translator->trans('email_alert.subject'));
         }
     }
+
     /**
-     * Send alert if a job is running too long.
+     * Send alert if a batch of documents has the same reference while having more documents than the limit, which will cause a bottleneck. It takas an array of JobSettings as parameter. It returns true if the alert is sent using the function send() and false if the alert is not sent.
      *
      * @throws Exception
      */
-    public function sendAlertCrontabDisabled(): bool
+    public function sendAlertSameDocReference(array $JobSettings): bool
     {
-        try {
-            
-            // Set all config parameters
-            $this->setConfigParam();
-            if (empty($this->configParams['alert_time_limit'])) {
-				throw new Exception('No alert time set in the parameters file. Please set the parameter alert_limit_minute in the file config/parameters.yml.');
+        $this->setConfigParam();
+        // we create a text mail with the rule id, the job id and the reference date, they are contained in the JobSettings array
+        $textMail = $this->translator->trans('email_alert_same_doc_reference.body', [
+            '%rule_id%' => $JobSettings['rule_id'],
+            '%job_id%' => $JobSettings['job_id'],
+            '%reference_date%' => $JobSettings['reference_date'],
+            '%base_uri%' => (!empty($this->configParams['base_uri']) ? $this->configParams['base_uri'].'rule/task/view/'.$JobSettings['job_id'].'/log' : ''),
+        ]);
+
+        return $this->send($textMail, $this->translator->trans('email_alert_same_doc_reference.subject'));
+
+    }
+
+
+    /**
+     * Send alert if limit reached.
+     *
+     * @throws Exception
+     */
+    public function sendAlertLimitReached()
+    {
+        // Get alert_date_ref
+        $alertDateRef = $this->configRepository->findAlertDateRef();
+
+        $alertDateRef = $alertDateRef['value'];
+
+        // Get error message
+        $newErrorLogs = $this->logRepository->findNewErrorLogs(new \DateTime($alertDateRef));
+
+        //Send Alerte
+        if (!empty($newErrorLogs)) {
+
+			$textMail = "Des nouveaux logs d'erreur ont été trouvés :\n\n";
+
+			// TODO: à translate
+			foreach ($newErrorLogs as $log) {
+				$textMail .= "Date de création: " . $log['created']->format('Y-m-d H:i:s') . "\n";
+				$textMail .= "Type: " . $log['type'] . "\n";
+				$textMail .= "Message: " . $log['message'] . "\n\n";
 			}
 
-            // we're going to check whether there was no job started since an hour
-            $timeOneHourAgo = new DateTime('now', new \DateTimeZone('GMT'));
-            $timeOneHourAgo->modify('-'.$this->configParams['alert_time_limit'].' minutes');
-
-            // Search if a job is lasting more time that the limit authorized
-            $anyJob = $this->jobRepository->findIfAnyJobStartedSince($timeOneHourAgo);
-
-            // if no job was started since an hour, we send the alert
-            if (empty($anyJob)) {
-                // Create textmail that says 'Alert: the crontab is stopped since more than one hour. Please check the crontab.'
-				$textMail = 'Alert: the crontab is stopped since more than '.$this->configParams['alert_time_limit'].' minutes .'. 'Please check the crontab. ';
-				$textMail .= (!empty($this->configParams['base_uri']) ? $this->configParams['base_uri'].'rule/task/list/' : '');
-                return $this->send($textMail, $this->translator->trans('email_alert.subject'));
-            }
-
-
-            return true;
-        } catch (Exception $e) {
-            $error = 'Error : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
-            $this->logger->error($error);
-            throw new Exception($error);
+			// TODO: check : envoyez l'e-mail
+			$this->send($textMail, "Alerte: Nouveaux logs d'erreur trouvés");
         }
-    }
-	
+        // Update alert_date_ref
+        $currentDate = new \DateTime();
+        $this->configRepository->setAlertDateRef($currentDate->format('Y-m-d H:i:s'));
+
+	}
 		
 	protected function send($textMail, $subject) {
 		// Get the email adresses of all ADMIN

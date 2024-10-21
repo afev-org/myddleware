@@ -593,7 +593,10 @@ class prestashopcore extends solution
      */
     protected function getReferenceCall($param, $result)
     {
-        // IF the reference is a date
+        // Keep the same date ref if no result
+		if (empty($result['count'])) {
+			return $param['date_ref'];
+		}
         if ($this->referenceIsDate($param['module'])) {
             // Add 1 second to the date ref because the read function is a >= not a >
             $date = new \DateTime(end($result['values'])['date_modified']);
@@ -604,6 +607,10 @@ class prestashopcore extends solution
         }
         // if the reference is an increment
         else {
+            if (isset($result['values']) && is_array($result['values'])) {
+                $maxId = max(array_column($result['values'], 'id'));
+                return $maxId;
+            }
             return end($result['values'])['date_modified']++;
         }
     }
@@ -1065,6 +1072,10 @@ class prestashopcore extends solution
         // No reference date for module shop_urls so we set one by default
         if ($param['module'] == 'shop_urls') {
             return '1970-01-01 00:00:00';
+        }
+
+        if (in_array($param['module'], $this->moduleWithoutReferenceDate)) {
+            return gmdate('Y-m-d H:i:s') ;
         }
         return $this->dateTimeToMyddleware($record[$dateRefField]);
      }

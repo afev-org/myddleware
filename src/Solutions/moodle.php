@@ -35,10 +35,12 @@ class moodlecore extends solution
     protected $moodleClient;
     protected array $required_fields = [
         'default' => ['id'],
+        'get_users_statistics_by_date' => ['id', 'timemodified'],
         'get_users_completion' => ['id', 'timemodified'],
         'get_users_last_access' => ['id', 'lastaccess'],
         'get_course_completion_by_date' => ['id', 'timecompleted'],
         'get_user_grades' => ['id', 'timemodified'],
+        'get_quiz_attempts' => ['id', 'timemodified'],
         'groups' => ['id', 'timemodified'],
         'group_members' => ['id', 'timeadded'],
     ];
@@ -46,8 +48,9 @@ class moodlecore extends solution
     protected array $FieldsDuplicate = [
         'users' => ['email', 'username'],
         'courses' => ['shortname', 'idnumber'],
+        'manual_enrol_users' => ['userid', 'courseid'],
+        'manual_unenrol_users' => ['userid', 'courseid'],
     ];
-
 	protected array $createOnlyFields = [
         'courses' => ['lang'],
     ];
@@ -117,11 +120,13 @@ class moodlecore extends solution
                     'courses' => 'Courses',
                     'get_users_completion' => 'Get course activity completion',
                     'get_users_last_access' => 'Get users last access',
+                    'get_users_statistics_by_date' => 'Get users statistics',
                     'get_enrolments_by_date' => 'Get enrolments',
                     'get_course_completion_by_date' => 'Get course completion',
                     'get_user_compentencies_by_date' => 'Get user compentency',
                     'get_competency_module_completion_by_date' => 'Get compentency module completion',
                     'get_user_grades' => 'Get user grades',
+                    'get_quiz_attempts' => 'Get quiz attempts',
                     'groups' => 'Groups',
 					'group_members' => 'Group members',
                 ];
@@ -188,6 +193,17 @@ class moodlecore extends solution
     public function read($param): array
     {
         try {
+			// No read action in case of history on enrolment module (except if user_id and course_id are duplicate search parameters)
+			if (
+					in_array($param['module'], array('manual_enrol_users', 'manual_unenrol_users'))
+				AND $param['call_type'] == 'history'
+				AND (
+						empty($param['query']['userid'])
+					 OR empty($param['query']['courseid'])
+				)
+			) {
+				return array();
+			}
             $result = [];
             // Set parameters to call Moodle
             $parameters = $this->setParameters($param);
@@ -195,16 +211,16 @@ class moodlecore extends solution
             $functionName = $this->getFunctionName($param);
             // Get the custom fields set in the connector
             $customFieldList = $this->getCustomFields($param);
-            // Init the attribute value for custom fields depending on the module
-            $attributeValue = ($param['module'] == 'courses' ? 'valueraw' : 'value');
+            // Init the attribute name and value for custom fields
+            $attributeName = ($param['module'] == 'courses' || $param['module'] == 'groups' ? 'shortname' : 'name');
+            $attributeValue = ($param['module'] == 'courses'? 'valueraw' : 'value');
 
             // Call to Moodle
             $serverurl = $this->paramConnexion['url'].'/webservice/rest/server.php'.'?wstoken='.$this->paramConnexion['token'].'&wsfunction='.$functionName;
             $response = $this->moodleClient->post($serverurl, $parameters);
             $xml = $this->formatResponse('read', $response, $param);
-
             if (!empty($xml->ERRORCODE)) {
-                throw new \Exception("Error $xml->ERRORCODE : $xml->MESSAGE");
+                throw new \Exception("Error code $xml->ERRORCODE : $xml->MESSAGE. ".(!empty($xml->DEBUGINFO) ? "Info : $xml->DEBUGINFO" : ""));
             }
             // Transform the data to Myddleware format
             if (!empty($xml->MULTIPLE->SINGLE)) {
@@ -251,10 +267,12 @@ class moodlecore extends solution
                     }
                     $result[] = $row;
                 }
+            } elseif (!empty($xml->MESSAGE)) {
+                throw new \Exception("Error : $xml->MESSAGE. ".(!empty($xml->DEBUGINFO) ? "Info : $xml->DEBUGINFO" : ""));
             }
         } catch (\Exception $e) {
-            $result['error'] = 'Error : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
-            $this->logger->error($result['error']);
+            $this->logger->error('Error : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )');
+            throw new \Exception('Error : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )');
         }
         return $result;
     }
@@ -322,6 +340,9 @@ class moodlecore extends solution
                         $functionname = 'enrol_manual_enrol_users';
                         break;
                     case 'manual_unenrol_users':
+						$enrolments = [$obj];
+                        $params = ['enrolments' => $enrolments];
+                        $functionname = 'manual_unenrol_users';
                         break;
                     case 'notes':
                         $notes = [$obj];
@@ -414,10 +435,7 @@ class moodlecore extends solution
                 foreach ($data as $key => $value) {
                     if ('target_id' == $key) {
                         continue;
-                    // We don't send Myddleware_element_id field to Moodle
-                    } elseif (in_array($key, array('Myddleware_element_id','source_date_modified','id_doc_myddleware'))) {
-                        continue;
-                    }
+                    } 
                     if (!empty($value)) {
                         // if $value belongs to $this->paramConnexion[user_custom_fields] then we add it to $obj->customfields
                         if (in_array($key, $customFieldList)) {
@@ -455,6 +473,11 @@ class moodlecore extends solution
                         $params = ['enrolments' => $enrolments];
                         $functionname = 'enrol_manual_enrol_users';
                         break;
+					case 'manual_unenrol_users':
+						$enrolments = [$obj];
+                        $params = ['enrolments' => $enrolments];
+                        $functionname = 'enrol_manual_unenrol_users';
+                        break;
                     case 'notes':
                         $obj->id = $data['target_id'];
                         unset($obj->userid);
@@ -474,12 +497,13 @@ class moodlecore extends solution
                 }
 
                 $serverurl = $this->paramConnexion['url'].'/webservice/rest/server.php'.'?wstoken='.$this->paramConnexion['token'].'&wsfunction='.$functionname;
-                $response = $this->moodleClient->post($serverurl, $params);
+                $response = $this->moodleClient->post($serverurl, $params);			
                 $xml = simplexml_load_string($response);
 				
 				// Check if there is a warning
 				if (
-						!empty($xml)
+						!empty($xml->SINGLE->KEY)
+					AND $xml->count() != 0	// Empty xml
 					AND $xml->SINGLE->KEY->attributes()->__toString() == 'warnings'
 					AND !empty($xml->SINGLE->KEY->MULTIPLE->SINGLE->KEY[3])
 				) {
@@ -491,7 +515,7 @@ class moodlecore extends solution
                     throw new \Exception($xml->ERRORCODE.' : '.$xml->MESSAGE.(!empty($xml->DEBUGINFO) ? ' Debug : '.$xml->DEBUGINFO : ''));
                 }
                 // Si pas d'erreur et module sans retour alors on génère l'id
-                elseif (in_array($param['module'], ['manual_enrol_users'])) {
+                elseif (in_array($param['module'], ['manual_enrol_users', 'manual_unenrol_users'])) {
                     $result[$idDoc] = [
                         'id' => $obj->courseid.'_'.$obj->userid.'_'.$obj->roleid,
                         'error' => false,
@@ -598,6 +622,12 @@ class moodlecore extends solution
     // Get the function name
     protected function getFunctionName($param): string
     {
+		if (
+				$param['call_type'] == 'history'
+			AND in_array($param['module'], array('manual_enrol_users', 'manual_unenrol_users'))
+		) {
+			return 'local_myddleware_search_enrolment';
+		}
         // In case of duplicate search (search with a criteria)
         if (
                 !empty($param['query'])
@@ -609,7 +639,7 @@ class moodlecore extends solution
             } elseif ('courses' == $param['module']) {
                 return 'core_course_get_courses_by_field';
             }
-            // In case of read by date or search a specific record with an id for specific modules user or course
+		// In case of read by date or search a specific record with an id for specific modules user or course
         } else {
             if ('users' == $param['module']) {
                 return 'local_myddleware_get_users_by_date';
@@ -632,9 +662,22 @@ class moodlecore extends solution
      */
     protected function setParameters($param): array
     {
-        $functionName = $this->getFunctionName($param);
-        $parameters['time_modified'] = $this->dateTimeFromMyddleware($param['date_ref']);
+		$functionName = $this->getFunctionName($param);
+		// Specific parameters for function local_myddleware_search_enrolment
+		if ($functionName == 'local_myddleware_search_enrolment') {
+			if (
+					empty($param['query']['userid'])
+				 OR empty($param['query']['courseid'])
+			) {
+				throw new \Exception('CourseId and UserId are both requiered to check if an enrolment exists. One of them is empty here or is not added as duplicate serach parameter in the rule. ');
+			}
+			$parameters['userid'] = $param['query']['userid'];
+			$parameters['courseid'] = $param['query']['courseid'];
+			return $parameters;
+        }
+		
         // If standard function called to search by criteria
+        $parameters['time_modified'] = $this->dateTimeFromMyddleware($param['date_ref']);
         if (in_array($functionName, ['core_user_get_users', 'core_course_get_courses_by_field'])) {
             if (!empty($param['query'])) {
                 foreach ($param['query'] as $key => $value) {
@@ -648,7 +691,8 @@ class moodlecore extends solution
             } else {
                 throw new \Exception('Filter criteria empty. Not allowed to run function '.$functionName.' without filter criteria.');
             }
-        } elseif (!empty($param['query']['id'])) {
+        } 
+		elseif (!empty($param['query']['id'])) {
             $parameters['id'] = $param['query']['id'];
         }
 
@@ -697,7 +741,7 @@ class moodlecore extends solution
         ) {
             return explode(',',$this->paramConnexion['course_custom_fields']);
         } 
-        return null;
+        return array();
     }
 
 	// Function to add custom fields for course and user modules.

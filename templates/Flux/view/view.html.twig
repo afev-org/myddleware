@@ -39,6 +39,11 @@
 	<div id="flux" class="pt-4">
 		{# ------------- FLUX ------------- #}
 		<div>
+			{# {% for message in app.flashes('success_unlock') %}
+				<div class="alert alert-success">
+					{{ message }}
+				</div>
+			{% endfor %} #}
 			<div class="block-btn-infos d-flex justify-content-around">
 				{% if ctm_btn %}
 					{% for btn in ctm_btn %}
@@ -69,6 +74,13 @@
 						<a class="btn_action_loading" href="{{ path('flux_readrecord',{'id' : doc.getId }) }}" title="{{'view_flux.btn.readrecord'|trans}}">
 							<button type="button" class="btn btn-primary">
 								{{'view_flux.btn.readrecord'|trans}}
+							</button>
+						</a>
+					{% endif %}
+					{% if doc.jobLock %}
+						<a class="btn_action_loading" href="{{ path('document_view', {'id': doc.getId}) }}" title="{{ 'view_flux.btn.unlock'|trans }}">
+							<button type="button" class="btn btn-danger">
+								{{ 'view_flux.btn.unlock'|trans }}
 							</button>
 						</a>
 					{% endif %}
@@ -132,7 +144,7 @@
 						<td class="ctr">{{ doc.getDateModified|date("d/m/Y H:i:s", timezone) }}</td>
 						{% if doc.getParentId %}
 							<td>
-								<a href="{{ path('flux_info',{'id' : doc.getParentId }) }}" title="">{{ doc.getParentId }}</a>
+								<a href="{{ path('flux_info_page',{'id' : doc.getParentId, 'page' : 1, 'logPage' : 1 }) }}" title="">{{ doc.getParentId }}</a>
 							</td>
 						{% endif %}
 					</tr>
@@ -222,7 +234,7 @@
 									{% if value != doc.getId  %}
 										<li class="{{ key }}">
 											<span class="field">{{ key }}</span>
-											<span>{{ value }}</span>
+											<span {% if source[key] is defined and source[key] != value %}class="modified"{% endif %}>{{ value }}</span>
 										</li>
 									{% endif %}
 								{% endfor %}
@@ -263,7 +275,7 @@
 								{% for flux in post_documents %}
 									<tr class="fd_{{ flux.globalStatus|lower }}" data-id="{{ flux.id }}">
 										<td class="ctr">
-											<a href="{{ path('flux_info',{'id' : flux.id }) }}">{{ flux.id }}</a>
+											<a href="{{ path('flux_info_page',{'id' : flux.id, 'page' : 1, 'logPage' : 1 }) }}">{{ flux.id }}</a>
 										</td>
 										<td class="ctr">
 											<a href="{{ path('regle_open',{'id' : flux.rule }) }}" title="">{{ attribute(post_Documents_Rule,flux.id) }}</a>
@@ -311,7 +323,7 @@
 							{% if pager.haveToPaginate %}
 								<div class="d-flex">
 									{% if pager.haveToPaginate %}
-										{{ pagerfanta(pager, 'twitter_bootstrap4', { 'routeParams' : { 'id': doc.getId }, 'routeName': 'flux_info_page' } ) }}
+										{{ pagerfanta(pager, 'twitter_bootstrap4', { 'routeParams' : { 'id': doc.getId, 'page' : 1, 'logPage' : 1 }, 'routeName': 'flux_info_page' } ) }}
 									{% endif %}
 								</div>
 							{% endif %}
@@ -356,7 +368,7 @@
 												<path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z"/>
 												</svg>
 											{% endif %}
-													<a href="{{ path('flux_info',{'id' : flux.id }) }}">{{ flux.id }}</a>
+													<a href="{{ path('flux_info_page',{'id' : flux.id, 'page' : 1, 'logPage' : 1 }) }}">{{ flux.id }}</a>
 												</td>
 												<td class="ctr">
 													<a href="{{ path('regle_open',{'id' : rule.getId }) }}" title="">{{ rule.getName }}</a>
@@ -387,9 +399,9 @@
 														{% endif %}
 													</div>
 												</td>
-											</tr>
-										{% endfor %}
 									</tr>
+										{% endfor %}
+										
 									<tr>
 										<th>{{'list_flux.tab.id'|trans}}</th>
 										<th>{{'list_flux.tab.name'|trans}}</th>
@@ -402,13 +414,13 @@
 								{% endif %}
 							</table>
 							<div class="d-flex justify-content-center">
-								{% if pager.haveToPaginate %}
-									<div class="d-flex justify-content-center">
-										{% if pager.haveToPaginate %}
-											{{ pagerfanta(pager, 'twitter_bootstrap4', { 'routeParams' : { 'id': doc.getId }, 'routeName': 'flux_info_page' } ) }}
-										{% endif %}
-									</div>
-								{% endif %}
+
+							{# ------------- HISTORY DOCUMENTS ------------- #}
+							<div class="pagination-flux-history">
+    						{% if pager.haveToPaginate %}
+    						    {{ pagerfanta(documentPagination.pager, 'default', { (documentPagination.pageParameterName): documentPagination.pager.currentPage }) }}
+    						{% endif %}
+							</div>
 							</div>
 						{% endif %}
 					</div>
@@ -441,7 +453,7 @@
 									{% for flux in parent_documents %}
 										<tr class="fd_{{ flux.globalStatus|lower }}" data-id="{{ flux.id }}">
 											<td class="ctr">
-												<a href="{{ path('flux_info',{'id' : flux.id }) }}">{{ flux.id }}</a>
+												<a href="{{ path('flux_info_page',{'id' : flux.id, 'page' : 1, 'logPage' : 1 }) }}">{{ flux.id }}</a>
 											</td>
 											<td class="ctr">
 												<a href="{{ path('regle_open',{'id' : flux.rule }) }}" title="">{{ attribute(parent_Documents_Rule,flux.id) }}</a>
@@ -489,7 +501,7 @@
 								{% if pager.haveToPaginate %}
 									<div class="d-flex justify-content-center">
 										{% if pager.haveToPaginate %}
-											{{ pagerfanta(pager, 'twitter_bootstrap4', { 'routeParams' : { 'id': doc.getId }, 'routeName': 'flux_info_page' } ) }}
+											{{ pagerfanta(pager, 'twitter_bootstrap4', { 'routeParams' : { 'id': doc.getId, 'page' : 1, 'logPage' : 1 }, 'routeName': 'flux_info_page' } ) }}
 										{% endif %}
 									</div>
 								{% endif %}
@@ -525,7 +537,7 @@
 									{% for flux in child_documents %}
 										<tr class="fd_{{ flux.globalStatus|lower }}" data-id="{{ flux.id }}">
 											<td class="ctr">
-												<a href="{{ path('flux_info',{'id' : flux.id }) }}">{{ flux.id }}</a>
+												<a href="{{ path('flux_info_page',{'id' : flux.id, 'page' : 1, 'logPage' : 1 }) }}">{{ flux.id }}</a>
 											</td>
 											<td class="ctr">
 												<a href="{{ path('regle_open',{'id' : flux.rule }) }}" title="">{{ attribute(child_Documents_Rule,flux.id) }}</a>
@@ -573,7 +585,7 @@
 								{% if pager.haveToPaginate %}
 									<div class="d-flex justify-content-center">
 										{% if pager.haveToPaginate %}
-											{{ pagerfanta(pager, 'twitter_bootstrap4', { 'routeParams' : { 'id': doc.getId }, 'routeName': 'flux_info_page' } ) }}
+											{{ pagerfanta(pager, 'twitter_bootstrap4', { 'routeParams' : { 'id': doc.getId, 'page' : 1, 'logPage' : 1 }, 'routeName': 'flux_info_page' } ) }}
 										{% endif %}
 									</div>
 								{% endif %}
@@ -583,21 +595,43 @@
 
 
 					{# ------------- MESSAGE ------------- #}
-					{% if nb > 0 %}
-						<div id="fd-title-small" class="left">
-							<p>{{'view_flux.nblogs'|trans}}</p>
-							<p>
-								<span class="nb">{{ nb }}</span>
-							</p>
+					{% for message in app.flashes('success') %}
+						<div class="alert alert-success">
+							{{ message }}
 						</div>
-						<div class="clr"></div>
-					{% endif %}
+					{% endfor %}
+
+
+					<div class="nbr_and_comment d-flex flex-row justify-content-safe m-2">
+						{% if nb > 0 %}
+							<div id="fd-title-small" class="left">
+								<p>{{'view_flux.nblogs'|trans}}</p>
+								<p>
+									<span class="nb">{{ nb_logs }}</span>
+								</p>
+							</div>
+							<div class="clr"></div>
+						{% endif %}
+
+						<div class="l-5 flux-comment-container">
+
+						
+						{# {{ form_start(formComment) }}
+							{{ form_widget(formComment) }}
+							<button type="submit" class="btn btn-primary m-2 document-comment-submit">{{'view_flux.comment'|trans}}</button>
+						{{ form_end(formComment) }} #}
+
+						</div>
+					</div>
+
+
+
 					<div id="message">
 
 						{% if nb > 0 %}
 
 							<table class="listepager table">
-								{% if entities is not empty %}
+								{% if logPagination.pager.currentPageResults is not empty %}
 									<tr>
 										<th>{{'view_flux.log.id'|trans}}</th>
 										<th>{{'view_flux.log.ref'|trans}}</th>
@@ -606,7 +640,7 @@
 										<th>{{'view_flux.log.type'|trans}}</th>
 										<th>{{'view_flux.log.msg'|trans}}</th>
 									</tr>
-									{% for log in entities %}
+									{% for log in logPagination.pager.currentPageResults %}
 										<tr class="fd_log_{{ log.getType|lower }}">
 											<td class="ctr">
 												{{ log.getId }}
@@ -614,7 +648,7 @@
 											<td>
 
 												{% if log.getRef is not empty %}
-													<a onclick="window.open(this.href); return false;" href="{{ path('flux_info', {'id': log.getRef}) }}">
+													<a onclick="window.open(this.href); return false;" href="{{ path('flux_info_page', {'id': log.getRef, 'page' : 1, 'logPage' : 1}) }}">
 														{{ log.getRef }}
 													</a>
 												{% else %}
@@ -626,7 +660,7 @@
 													<a href="{{ path('task_view', {'id':log.getJob.id}) }}">{{ log.getJob.id }}</a>
 												{% endif %}
 											</td>
-											<td>{{ log.getDateCreated|date("d/m/Y H:i:s", timezone) }}</td>
+											<td>{{ log.getCreated|date("d/m/Y H:i:s", timezone) }}</td>
 											<td class="ctr">
 												<div class="log_{{ log.getType|lower }}">{{ log.getType }}
 													{% if log.getType|lower == 's' %}
@@ -659,21 +693,134 @@
 									</tr>
 								{% endif %}
 							</table>
+							{# ------------- LOGS ------------- #}
 							<div class="d-flex justify-content-center">
-								{% if pager.haveToPaginate %}
-									<div class="d-flex justify-content-center">
-										{% if pager.haveToPaginate %}
-											{{ pagerfanta(pager, 'twitter_bootstrap4', { 'routeParams' : { 'id': doc.getId }, 'routeName': 'flux_info_page' } ) }}
-										{% endif %}
-									</div>
-								{% endif %}
+
+							{# Import the macros file #}
+							{% import 'Flux/view/macros.html.twig' as custom_macros %}
+
+							{# Use the custom_route_generator macro with the required arguments (logPage, and documentPage) #}
+							{% set custom_route_first = custom_macros.custom_route_generator_first(logPage, documentPage) %}
+							{% set custom_route_previous = custom_macros.custom_route_generator_previous(logPage, documentPage) %}
+							{% set custom_route_last = custom_macros.custom_route_generator_last(logPagination.pager.nbResults // logPagination.pager.maxPerPage + 1, documentPage) %}
+							{% set custom_route_next = custom_macros.custom_route_generator_next(logPage, documentPage) %}
+							
+							{% set more_than_one_page = logPagination.pager.nbResults > logPagination.pager.maxPerPage %}
+							{# Use the generated custom_route in your links or wherever needed #}
+							{% if more_than_one_page %}
+							<p class="m-1" >{{logPagination.pager.currentPage}} out of {{ (logPagination.pager.nbResults / logPagination.pager.maxPerPage)|round(0, 'ceil') }}</p>
+
+							<a class='m-1' href="{{ custom_route_first }}"> First </a>
+							{% if logPagination.pager.currentPage > 1 %}
+								<a class='m-1' href="{{ custom_route_previous }}"> Previous </a>
+							{% endif %}
+							{% endif %}
+
+
+							{# in betweeen #}
+
+							{% set between_pages = (logPagination.pager.nbResults // logPagination.pager.maxPerPage) - 1 %}
+
+							{% set more_than_two_pages = between_pages > 0 %}
+
+							{% if more_than_two_pages %}
+								{% for i in 2..(between_pages + 1) %}
+									{% set custom_route_between = custom_macros.custom_route_generator_between(i, documentPage) %}
+									<a class='m-1' href="{{ custom_route_between }}">{{ i }}</a>
+								{% endfor %}
+							{% endif %}
+
+							{# in between end #}
+
+							{# <pre>
+								{{ dump(logPagination.pager.nbResults) }}
+								{{ dump(logPagination.pager.maxPerPage) }}
+								{{ dump(logPagination.pager.nbResults % logPagination.pager.maxPerPage) }}
+								{{ dump(more_than_one_page) }}
+							</pre> #}
+
+								
+
+							{% if logPagination.pager.currentPage < logPagination.pager.nbResults // logPagination.pager.maxPerPage + 1 and logPagination.pager.nbResults % logPagination.pager.maxPerPage != 0 %}
+								<a class='m-1' href="{{ custom_route_next }}"> Next </a>
+							{% endif %}
+							{% if logPagination.pager.currentPage <= logPagination.pager.nbResults // logPagination.pager.maxPerPage and logPagination.pager.nbResults % logPagination.pager.maxPerPage != 0 %}
+								<a class='m-1' href="{{ custom_route_last }}"> Last </a>
+							{% endif %}
+
+							
 							</div>
+							
 						{% else %}
 							<p>{{'view_flux.empty_log'|trans}}</p>
 						{% endif %}
 					</div>
-					{# ------------- MESSAGE ------------- #}
+					{# ------------- LOGS ------------- #}
 				</div>
+
+			<div id="message" class="d-grid">
+				{% if workflowLogs is not empty %}
+					{% if nb_workflow_logs > 0 %}
+					<div id="fd-title-small" class="left">
+						<p>{{'view_flux.nbWorflowLogs'|trans}}</p>
+						<p>
+							<span class="nb">{{ nb_workflow_logs }}</span>
+						</p>
+					</div>
+					{% endif %}
+					<div class="">
+					<table class="table">
+						<thead>
+							<tr>
+								<th>ID</th>
+								<th>Workflow</th>
+								<th>Job</th>
+								<th>Trigger Document</th>
+								<th>Generate Document</th>
+								<th>Created By</th>
+								<th>Status</th>
+								<th>Date Created</th>
+								<th>Message</th>
+								<th>Action Name</th>
+								<th>Action Type</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for log in workflowLogs %}
+								<tr class="fd_{{ log.status|lower }}" data-id="{{ log.id }}">
+									<td class="ctr">{{ log.id }}</td>
+									<td class="ctr"><a href="{{ path('workflow_show', {'id': log.workflow.id}) }}">{{ log.workflow.name }}</a></td>
+									<td class="ctr">{{ log.job.id }}</td>
+									<td class="ctr">    {% if log.triggerDocument is not null %}
+										<a href="{{ path('flux_info_page',{'id' : log.triggerDocument.id, 'page' : 1, 'logPage' : 1 }) }}">{{ log.triggerDocument.id }}</a>
+									{% else %}
+										<span></span>
+									{% endif %}</td>
+									<td class="ctr">    {% if log.generateDocument is not null %}
+										<a href="{{ path('flux_info_page',{'id' : log.generateDocument.id, 'page' : 1, 'logPage' : 1 }) }}">{{ log.generateDocument.id }}</a>
+									{% else %}
+										<span></span>
+									{% endif %}</td>
+									<td class="ctr">{{ log.createdBy }}</td>
+									<td class="ctr">
+										<div class="gblstatus_{{ log.status|lower }}">{{ log.status }}</div>
+									</td>
+									<td class="ctr">{{ log.dateCreated|date('Y-m-d H:i:s') }}</td>
+									<td class="ctr">{{ log.getMessage }}</td>
+									<td class="ctr"><a href="{{ path('workflow_action_show', {'id': log.action.id}) }}">{{ log.action.name }}</a></td>
+									<td class="ctr">{{ log.action.action }}</td>
+								</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+					</div>
+				{% else %}
+					<p>{{'view_flux.empty_workflow'|trans}}</p>
+				{% endif %}
+			</div>
+
+			
+
 	<script type="text/javascript">
 		var path_img = "{{ asset('build/images/regle/') }}";
 		var chemin_img = "{{ asset('build/images/regle/') }}";

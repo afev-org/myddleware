@@ -25,18 +25,20 @@ along with Myddleware.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace App\Manager;
 
-use App\Entity\Config;
-use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use App\Entity\Config;
 use Psr\Log\LoggerInterface;
-use Symfony\Bundle\FrameworkBundle\Console\Application;
-use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Dotenv\Dotenv;
-use Symfony\Component\HttpKernel\KernelInterface;
-use Symfony\Component\Process\Exception\ProcessFailedException;
-use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Component\Process\PhpExecutableFinder;
+use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Process\Exception\ProcessFailedException;
+use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 
 class UpgradeManager
 {
@@ -71,6 +73,15 @@ class UpgradeManager
     public function processUpgrade($output): string
     {
         try {
+
+            $envFilePath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . '.env';
+            $dotenv = new Dotenv();
+    
+            if (file_exists($envFilePath)) {
+                $dotenv->load($envFilePath);
+            }
+            $oldVersion = $_ENV['MYDDLEWARE_VERSION'];
+
             // Customize update process
             $this->beforeUpdate($output);
             // Set all config parameters
@@ -109,15 +120,17 @@ class UpgradeManager
             // Customize update process
             $this->afterUpdate($output);
 
-            // Get old and new Myddleware version
-            $oldVersion = getenv('MYDDLEWARE_VERSION');
             // Refresh variable from env file
-            if (file_exists(__DIR__.'/../../.env')) {
-                (new Dotenv())->load(__DIR__.'/../../.env');
+            if (file_exists($envFilePath)) {
+                (new Dotenv())->load($envFilePath);
             }
 
-            $output->writeln('<info>Myddleware has been successfully updated from version '.$oldVersion.' to '.getenv('MYDDLEWARE_VERSION').'</info>');
-            $this->message .= 'Myddleware has been successfully updated from version '.$oldVersion.' to '.getenv('MYDDLEWARE_VERSION').chr(10);
+            $newVersion = $_ENV['MYDDLEWARE_VERSION'];
+
+
+
+            $output->writeln('<info>Myddleware has been successfully updated from version '.$oldVersion.' to '.$newVersion.'</info>');
+            $this->message .= 'Myddleware has been successfully updated from version '.$oldVersion.' to '.$newVersion.chr(10);
         } catch (Exception $e) {
             $error = 'Error : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
             $this->logger->error($error);
@@ -134,8 +147,8 @@ class UpgradeManager
     protected function updateFiles()
     {
         // Update Main if git_branch is empty otherwise we update the specific branch
-        $command = (!empty($this->configParams['git_branch'])) ? 'git pull origin '.$this->configParams['git_branch'] : 'git pull';
-        $process = new Process(array($command));
+        $command = (!empty($this->configParams['git_branch'])) ? ['git', 'pull', 'origin', $this->configParams['git_branch']] : ['git', 'pull'];
+        $process = new Process($command);
         $process->run();
         // executes after the command finishes
         if (!$process->isSuccessful()) {
@@ -150,7 +163,7 @@ class UpgradeManager
         }
 
         // Run the command a second time, we expect to get the message "Already up-to-date"
-        $process = new Process(array($command));
+        $process = new Process($command);
         $process->run();
         // executes after the command finishes
         if (!$process->isSuccessful()) {
@@ -171,7 +184,7 @@ class UpgradeManager
     protected function updateVendors()
     {
         // Change the command composer if php isn't the default php version
-        $process = new Process(array('composer install --ignore-platform-reqs'));
+        $process = new Process(['composer', 'install', '--ignore-platform-reqs']);
         $process->run();
         // executes after the command finishes
         if (!$process->isSuccessful()) {
@@ -182,14 +195,14 @@ class UpgradeManager
     // Execute yarn action
     protected function yarnAction()
     {
-        $process = new Process(array('yarn install'));
+        $process = new Process(['yarn',  'install']);
         $process->run();
         // executes after the command finishes
         if (!$process->isSuccessful()) {
             throw new ProcessFailedException($process);
         }
 
-        $process = new Process(array('yarn build'));
+        $process = new Process(['yarn', 'build']);
         $process->run();
         // executes after the command finishes
         if (!$process->isSuccessful()) {
@@ -253,14 +266,17 @@ class UpgradeManager
         }
     }
 
+    
+    
     /**
      * @throws Exception
      */
     protected function clearSymfonyCache()
     {
-        // Add current environment  to the default list
+        $fs = new Filesystem();
+        // Add current environment to the default list
         $this->defaultEnvironment[$this->env] = $this->env;
-
+    
         foreach ($this->defaultEnvironment as $env) {
             // Command clear cache remove only current environment cache
             if ($this->env == $env) {
@@ -271,11 +287,11 @@ class UpgradeManager
                     'command' => 'cache:clear',
                     '--env' => $env,
                 ];
-
+    
                 $input = new ArrayInput($arguments);
                 $output = new BufferedOutput();
                 $application->run($input, $output);
-
+    
                 $content = $output->fetch();
                 // Send output to the logfile if debug mode selected
                 if (!empty($content)) {
@@ -284,20 +300,21 @@ class UpgradeManager
                     $this->message .= $content.chr(10);
                 }
             } else {
-                // CLear other environment cache via command
-                $command = 'rm -rf var/cache/'.$env.'/*';
-                $process = new Process(array($command));
-                $process->run();
-                // executes after the command finishes
-                if (!$process->isSuccessful()) {
-                    throw new ProcessFailedException($process);
+                // Clear other environment cache via command
+                try {
+                    $fs->remove('var/cache/'.$env.'/*');
+                } catch (IOExceptionInterface $exception) {
+                    echo "An error occurred while clearing your directory at ".$exception->getPath();
+                    $this->logger->error("An error occurred while clearing your directory at ".$exception->getPath());
+                    throw new \Exception("An error occurred while clearing your directory at ".$exception->getPath());
                 }
-                echo $process->getOutput();
-                $this->logger->error($process->getOutput());
-                $this->message .= $process->getOutput().chr(10);
+                
+                $this->logger->info("Cache cleared for environment: ".$env);
+                $this->message .= "Cache cleared for environment: ".$env.chr(10);
             }
         }
     }
+    
 
     // Get the content of the table config
     protected function setConfigParam()

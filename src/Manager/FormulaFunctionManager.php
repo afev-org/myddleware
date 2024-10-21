@@ -31,7 +31,7 @@ class formulafunctioncore
 {
     protected array $names = ['changeTimeZone', 'changeFormatDate', 'changeValue', 'changeMultiValue', 'getValueFromArray','lookup'];
     protected string $path = "App\Manager\FormulaFunctionManager::";
-
+	
     public function getNamesFunctions(): array
     {
         return $this->names;
@@ -93,7 +93,7 @@ class formulafunctioncore
             return '';
         }
     }
-
+	
     public static function changeMultiValue($var, $arrayKeyToValue, $delimiter)
     {
         // Transform string into an array
