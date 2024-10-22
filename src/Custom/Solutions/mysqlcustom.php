@@ -120,10 +120,12 @@ class mysqlcustom extends mysql {
 
 				// Change the document data 
 				if (!isset($this->documentManager)) {
+					$chlidEntityManager = clone $this->entityManager;
+					$chlidEntityManager->clear();
 					$this->documentManager = new DocumentManager(
 						$this->logger, 
 						$this->connection, 
-						$this->entityManager,
+						$chlidEntityManager,
 						$this->formulaManager
 					);
 				}

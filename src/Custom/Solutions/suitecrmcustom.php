@@ -704,6 +704,6 @@ class suitecrmcustom extends suitecrm
             $module = $rule->getModuleTarget();
             $recordId = $document->gettarget();
         }
-        return 'https://comet'.($_ENV['AFEV_ENV'] == 'PREPROD' ? '2.preprod' : '').'.afev.org/index.php?module='.$module.'&action=DetailView&record='.$recordId;
+        return 'https://comet'.($_ENV['AFEV_ENV'] == 'PREPROD' ? '-v3.preprod' : '').'.afev.org/index.php?module='.$module.'&action=DetailView&record='.$recordId;
     }
 }

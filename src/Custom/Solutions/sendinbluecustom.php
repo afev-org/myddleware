@@ -47,10 +47,12 @@ class sendinbluecustom extends sendinblue {
 						if ($contactIdDeleted == $record['target_id']) {
 							$paramDoc['id_doc_myddleware'] = $idDoc;
 							$paramDoc['jobId'] = $param['jobId'];
+							$chlidEntityManager = clone $this->entityManager;
+							$chlidEntityManager->clear();
 							$documentManager = new DocumentManager(
 										$this->logger, 
 										$this->connection, 
-										$this->entityManager,
+										$$chlidEntityManager,
 										$this->formulaManager
 									);
 							$documentManager->setParam($paramDoc);
@@ -69,10 +71,12 @@ class sendinbluecustom extends sendinblue {
 		// Get all source field of the ruleId
 		$paramDoc['id_doc_myddleware'] = $idDoc;
 		$paramDoc['jobId'] = $param['jobId'];
+		$chlidEntityManager = clone $this->entityManager;
+		$chlidEntityManager->clear();
 		$documentManager = new DocumentManager(
 										$this->logger, 
 										$this->connection, 
-										$this->entityManager,
+										$chlidEntityManager,
 										$this->formulaManager
 									);
 		$documentManager->setParam($paramDoc);			
@@ -147,10 +151,12 @@ class sendinbluecustom extends sendinblue {
 		) {
 			try {
 				$this->connection->beginTransaction();
+				$chlidEntityManager = clone $this->entityManager;
+				$chlidEntityManager->clear();
 				$documentManager = new DocumentManager(
 										$this->logger, 
 										$this->connection, 
-										$this->entityManager,
+										$chlidEntityManager,
 										$this->formulaManager
 									);
 				$param['id_doc_myddleware'] = $idDoc;
