@@ -166,6 +166,19 @@ class DocumentManagerPremium extends DocumentManager
                                             $this->message = 'Document transformed using workflow. ';
                                             $this->createWorkflowLog($action, $workflowStatus, $error);
                                             break;
+										case 'rerun':
+                                            $workflowStatus = 'Success';
+                                            $error = '';
+                                            $this->typeError = 'W';
+											// Avoid infinite loop by skipping the call to the workflow after changing the status
+                                            $this->workflowAction = true;
+											$rule = new RuleManager($this->logger, $this->connection, $this->entityManager, $this->parameterBagInterface, $this->formulaManager, $this->solutionManager, clone $this);
+											$rule->setRule($this->ruleId);
+											$rule->setJobId($this->jobId);
+											$errors = $rule->actionDocument($this->id, 'rerun');
+                                            $this->message = 'Document rerun using workflow. ';
+                                            $this->createWorkflowLog($action, $workflowStatus, $error);
+                                            break;
 										default:
 										   throw new \Exception('Function '.key($action).' unknown.');
 									}
