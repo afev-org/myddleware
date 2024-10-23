@@ -558,14 +558,18 @@ class documentcore
                 $stmt->bindValue(':now', $now);
                 $stmt->bindValue(':id', $this->id);
                 $result = $stmt->executeQuery();
-				$this->typeError = 'S';
-				$this->message .= 'Document unlocked. ';
-				$this->createDocLog();
-				if (
-					!$this->api
-					AND $this->env == 'background'
-				) {
-					echo 'Unlock document '.$this->id.'  '.$now.chr(10);
+				// Create log only when force is true
+				if ($force === true) {
+					$this->typeError = 'S';
+					$this->message .= 'Document unlocked. ';
+					$this->createDocLog();
+					// Display the result in the terminal
+					if (
+							!$this->api
+						AND $this->env == 'background'
+					) {
+						echo 'Unlock document '.$this->id.'  '.$now.chr(10);
+					}
 				}
 				return true;
 			} else {
@@ -2221,8 +2225,7 @@ class documentcore
 									date_modified = :now,
 									global_status = :globalStatus,
 									attempt = :attempt,
-									status = :new_status,
-									job_lock = :jobLock
+									status = :new_status
 								WHERE
 									id = :id
 								';
@@ -2239,15 +2242,14 @@ class documentcore
             $stmt->bindValue(':attempt', $this->attempt);
             $stmt->bindValue(':new_status', $new_status);
             $stmt->bindValue(':id', $this->id);
-			// Remove the lock on the document in the class and in the database
-            $this->jobLock = '';
-            $stmt->bindValue(':jobLock', $this->jobLock);
-            $result = $stmt->executeQuery();
             $this->message .= 'Status : '.$new_status;
             $this->status = $new_status;
             $this->afterStatusChange($new_status);
+            $result = $stmt->executeQuery();
             // We don't clear the message because we could need it in the workflow, we clear it after the workflow execution
 			$this->createDocLog(false);
+			$this->message = '';
+			$this->docIdRefError = '';
 			// runWorkflow can't be executed if updateStatus is called from the solution class
 			if (
                     $new_status!='Send'
@@ -2255,8 +2257,15 @@ class documentcore
             ) {
 				$this->runWorkflow();
 			}
-			$this->message = '';
-			$this->docIdRefError = '';
+			// Remove the lock on the document in the class and in the database
+			// Exception : status New because there is no lock on documet for this status, the lock in on the rule
+			// Update status call by a workflow, the lock will be removed only by the main call
+			if (
+					!in_array($new_status, array('New'))
+				AND !$workflow
+			) {
+				$this->unsetLock();
+			}
         } catch (\Exception $e) {
             $this->message .= 'Error status update : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
             $this->typeError = 'E';

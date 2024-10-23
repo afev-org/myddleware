@@ -24,7 +24,12 @@
 
 {% extends 'base.html.twig' %}
 {% block title %}{{parent()}} | {{'title.task.list'|trans}}{% endblock %}
-{% block titlesm %}{{'title.task.list'|trans}}{% endblock titlesm %} 
+{% block titlesm %}
+  {{'title.task.list'|trans}}
+  {% if nb > 0 %}
+    ({{ nb }})
+  {% endif %}
+{% endblock titlesm %} 
 {% block body %} 
 	<div id="task" >
 <a href="{{ path('task_stopall') }}">
@@ -40,15 +45,7 @@
 			{{ message }}
 		</div>
 	{% endfor %}
-
-
 			{% if nb > 0 %}
-				<div id="fd-title-small" class="left">
-					<p>{{'list_task.total'|trans}} :<p> <span class="nb">{{ nb }}</span>
-				</div>
-
-
-				<div class="clr"></div>
 				<table class="listepager table container">
 					{% if entities is not empty %}	
 						<tr>
@@ -121,11 +118,37 @@
 						</tr>			
 					{% endif %}
 				</table>
-				<div class="d-flex justify-content-center mt-4">
-					{% if pager.haveToPaginate %}
-						{{ pagerfanta(pager, 'twitter_bootstrap4', {'routeName': 'task_list_page'}) }}
-					{% endif %}
-				</div>
+				<div class="container task-pagination" >
+				{% if pager.haveToPaginate %}
+											{{ pagerfanta(pager, 'twitter_bootstrap4', {'routeName': 'task_list_page', 'routeParams': {'page': app.request.get('page', 1)}}) }}
+											
+											<form id="pageForm" method="get" class="form-inline mt-3" onsubmit="updateFormAction(event)">
+												<div class="form-group" required style="width: 15em;">
+													<label for="page" class="sr-only">Page</label>
+													<input type="number" name="page" id="page" class="form-control" placeholder="Page number" min="1" required>
+												</div>
+												<button type="submit" class="btn btn-primary ml-2" style="display: flex; margin: 1em;" >Go to page</button>
+											</form>
+										
+											<script>
+											const maxPage = {{ pager.getNbPages() }};
+
+												function updateFormAction(event) {
+													event.preventDefault();
+													const page = document.getElementById('page').value;
+													if (page < 1 || page > maxPage) {
+														alert('Please enter a valid page number between 1 and ' + maxPage);
+														return;
+													}
+													const form = document.getElementById('pageForm');
+													const baseUrl = "{{ path('task_list_page', {'page': 1}) }}";
+													const action = baseUrl.replace('/page-1', '/page-' + page);
+													form.action = action;
+													form.submit();
+												}
+											</script>
+										{% endif %}
+			</div>
 			{% else %}
 				<p class="display-6">{{ 'list_task.empty'|trans }}</p>
 			{% endif %}
