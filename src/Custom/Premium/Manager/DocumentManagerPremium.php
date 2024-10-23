@@ -3,6 +3,7 @@
 namespace App\Custom\Premium\Manager;
 
 use App\Manager\DocumentManager;
+use App\Manager\RuleManager;
 use App\Entity\WorkflowLog;
 
 class DocumentManagerPremium extends DocumentManager
