@@ -4,7 +4,11 @@ namespace App\Custom\Premium\Manager;
 
 use App\Manager\DocumentManager;
 use App\Manager\RuleManager;
+use App\Entity\Workflow;
 use App\Entity\WorkflowLog;
+use App\Entity\WorkflowAction;
+use App\Entity\Document;
+use App\Entity\Job;
 
 class DocumentManagerPremium extends DocumentManager
 {	
