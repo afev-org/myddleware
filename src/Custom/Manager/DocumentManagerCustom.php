@@ -4,11 +4,11 @@ namespace App\Custom\Manager;
 
 use App\Solutions\suitecrm;
 use App\Manager\ruleManager;
-use App\Manager\DocumentManager;
+use App\Custom\Premium\Manager\DocumentManagerPremium;
 use App\Manager\LoadExternalListManager;
 use App\Entity\InternalListValue as InternalListValueEntity;
 
-class DocumentManagerCustom extends DocumentManager
+class DocumentManagerCustom extends DocumentManagerPremium
 {
 
 	protected $etabComet;
@@ -509,7 +509,7 @@ class DocumentManagerCustom extends DocumentManager
 		return $new_status;
 	}
 
-	public function updateStatus($new_status)
+	public function updateStatus($new_status, $workflow = false)
 	{
 		/* // If the status has been forced during a standard process, we stop the next status change (done by the standard)
 		if ($this->doNotOverrideStatus) {

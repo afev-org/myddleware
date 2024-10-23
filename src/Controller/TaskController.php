@@ -28,6 +28,8 @@ namespace App\Controller;
 use App\Entity\Config;
 use App\Entity\Job;
 use App\Entity\Log;
+use App\Entity\Document;
+use App\Entity\Rule;
 use App\Manager\JobManager;
 use App\Repository\DocumentRepository;
 use App\Repository\JobRepository;
@@ -73,6 +75,9 @@ class TaskController extends AbstractController
             foreach ($configs as $config) {
                 $this->params[$config->getName()] = $config->getvalue();
             }
+        }
+        if (empty($this->DocumentRepository)) {
+            $this->documentRepository = $this->entityManager->getRepository(Document::class);
         }
     }
 
@@ -165,17 +170,44 @@ class TaskController extends AbstractController
 
             // Add log to indicate this action
             $log = new Log();
-            $log->setDateCreated(new \DateTime());
+            $log->setCreated(new \DateTime());
             $log->setType('W');
             $log->setMessage('The task has been manually stopped. ');
             $log->setJob($taskStop);
             $em->persist($log);
+
+			// Remove lock on document locked by this job
+			$this->documentRepository->removeLock($taskStop->getId());
+
+            // Remove lock (send and read) on rule locked by this job
+            $ruleRepository = $this->entityManager->getRepository(Rule::class);
+            $ruleRepository->removeLock($taskStop->getId());
             $em->flush();
 
             return $this->redirect($this->generateURL('task_view', ['id' => $taskStop->getId()]));
         } catch (Exception $e) {
+			$this->logger->error('Failed to stop task '.$taskStop->getId().' : '.$e->getMessage().''.$e->getFile().' '.$e->getLine());
             return $this->redirect($this->generateUrl('task_list'));
         }
+    }
+
+
+    /**
+     * @Route("/task/stopall", name="task_stopall")
+     */
+    public function stopAllTask(): RedirectResponse
+    {   
+        // Find all the tasks that are started
+        $tasks = $this->jobRepository->findBy(['status' => 'Start']);
+        foreach ($tasks as $task) {
+            $this->stopTask($task);
+        }
+
+        // Add a flash message of success to say that all the tasks have been stopped
+        $this->addFlash('success', 'All the tasks have been stopped');
+        
+        return $this->redirect($this->generateUrl('task_list'));
+
     }
 
     /* ******************************************************

@@ -260,6 +260,7 @@ td {
 
 td a {
 	color: #337ab7!important;
+	text-decoration: none;
 }
 
 .title_source_ctr, .title_target_ctr {
@@ -352,4 +353,8 @@ td a {
 .tab-3, .tab-4, .tab-5, .tab-6, .tab-7{
 	border: 0px solid transparent !important;
 	border-top-right-radius: 194.25rem !important;
+}
+
+.ui-dialog.ui-corner-all.ui-widget.ui-widget-content.ui-front {
+	max-width: 645px;
 }

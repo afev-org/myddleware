@@ -73,6 +73,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use App\Form\Type\RelationFilterType;
+use App\Entity\Workflow;
 
     /**
      * @Route("/rule")
@@ -144,21 +146,26 @@ use Symfony\Contracts\Translation\TranslatorInterface;
         {
         }
 
-        /* ******************************************************
+    /* ******************************************************
          * RULE
          ****************************************************** */
 
-        /**
-         * LISTE DES REGLES.
-         *
-         * @return RedirectResponse|Response
-         *
-         * @Route("/list", name="regle_list", defaults={"page"=1})
-         * @Route("/list/page-{page}", name="regle_list_page", requirements={"page"="\d+"})
-         */
-        public function ruleListAction(int $page = 1)
-        {
-            try {
+    /**
+     * LISTE DES REGLES.
+     *
+     * @return RedirectResponse|Response
+     *
+     * @Route("/list", name="regle_list", defaults={"page"=1})
+     * @Route("/list/page-{page}", name="regle_list_page", requirements={"page"="\d+"})
+     */
+    public function ruleListAction(int $page = 1, Request $request)
+    {
+        try {
+
+            $ruleName = $request->query->get('rule_name');
+
+            if ($ruleName) {
+
                 $key = $this->sessionService->getParamRuleLastKey();
                 if (null != $key && $this->sessionService->isRuleIdExist($key)) {
                     $id = $this->sessionService->getRuleId($key);
@@ -169,13 +176,34 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
                 $this->getInstanceBdd();
                 $compact['nb'] = 0;
-				$pager = $this->tools->getParamValue('ruleListPager');
+                $pager = $this->tools->getParamValue('ruleListPager');
+                $compact = $this->nav_pagination([
+                    'adapter_em_repository' => $this->entityManager->getRepository(Rule::class)->findListRuleByUser($this->getUser(), $ruleName),
+                    'maxPerPage' => isset($pager) ? $pager : 20,
+                    'page' => $page,
+                ]);
+
+            } else {
+
+                $key = $this->sessionService->getParamRuleLastKey();
+                if (null != $key && $this->sessionService->isRuleIdExist($key)) {
+                    $id = $this->sessionService->getRuleId($key);
+                    $this->sessionService->removeRuleId($key);
+
+                    return $this->redirect($this->generateUrl('regle_open', ['id' => $id]));
+                }
+
+                $this->getInstanceBdd();
+
+                $compact['nb'] = 0;
+                $pager = $this->tools->getParamValue('ruleListPager');
                 $compact = $this->nav_pagination([
                     'adapter_em_repository' => $this->entityManager->getRepository(Rule::class)->findListRuleByUser($this->getUser()),
                     'maxPerPage' => isset($pager) ? $pager : 20,
                     'page' => $page,
                 ]);
 
+            }
 
                 // Si tout se passe bien dans la pagination
                 if ($compact) {
@@ -185,19 +213,22 @@ use Symfony\Contracts\Translation\TranslatorInterface;
                         $compact['pager'] = '';
                     }
 
-                    return $this->render('Rule/list.html.twig', [
-                        'nb_rule' => $compact['nb'],
-                        'entities' => $compact['entities'],
-                        'pager' => $compact['pager'],
-                    ]
+                    return $this->render(
+                        'Rule/list.html.twig',
+                        [
+                            'nb_rule' => $compact['nb'],
+                            'entities' => $compact['entities'],
+                            'pager' => $compact['pager'],
+                        ]
                     );
                 }
                 throw $this->createNotFoundException('Error');
-                // ---------------
-            } catch (Exception $e) {
-                throw $this->createNotFoundException('Error : '.$e);
-            }
+            
+        } catch (Exception $e) {
+            throw $this->createNotFoundException('Error : ' . $e);
         }
+    }
+
 
         /**
          * SUPPRESSION D'UNE REGLE.
@@ -327,7 +358,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
             $this->sessionService->setFluxFilterWhere(['rule' => $rule->getName()]);
             $this->sessionService->setFluxFilterRuleName($rule->getName());
 
-            return $this->redirect($this->generateUrl('flux_list', ['search' => 1]));
+            return $this->redirect($this->generateUrl('document_list_page'));
         }
 
         /**
@@ -978,6 +1009,16 @@ use Symfony\Contracts\Translation\TranslatorInterface;
                 }
             }
 
+            // get the workflows of the rule, if there are none then set hasWorkflows to false. If there is at least one then set it to true. to get the workflows we use the entity manager and filter by the rule id
+            $hasWorkflows = $this->entityManager->getRepository(Workflow::class)->findBy(['rule' => $rule->getId(), 'deleted' => 0]) ? true : false;
+            
+            if ($hasWorkflows) {
+                $workflows = $this->entityManager->getRepository(Workflow::class)->findBy(['rule' => $rule->getId(), 'deleted' => 0]);
+                
+            } else {
+                $workflows = [];
+            }
+
             return $this->render('Rule/edit/fiche.html.twig', [
                 'rule' => $rule,
                 'connector' => $connector[0],
@@ -988,6 +1029,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
                 'filters' => $Filters,
                 'params_suite' => $params_suite,
                 'id' => $id,
+                'hasWorkflows' => $hasWorkflows,
+                'workflows' => $workflows,
             ]
             );
         }
@@ -1420,7 +1463,12 @@ use Symfony\Contracts\Translation\TranslatorInterface;
                                 if ('before' == $k) {
                                     $before[] = $v;
                                 } else {
-                                    $after[] = $v;
+                                    foreach ($v as $key => $value) {
+                                        // if value does not contains the substring "mdw_no_send_field"
+                                        if (strpos($value, 'mdw_no_send_field') === false) {
+                                            $after[] = $v;
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1767,19 +1815,20 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
                 // Les filtres
                 $lst_filter = [
-                    'content' => $this->translator->trans('filter.content'),
-                    'notcontent' => $this->translator->trans('filter.notcontent'),
-                    'begin' => $this->translator->trans('filter.begin'),
-                    'end' => $this->translator->trans('filter.end'),
-                    'gt' => $this->translator->trans('filter.gt'),
-                    'lt' => $this->translator->trans('filter.lt'),
-                    'equal' => $this->translator->trans('filter.equal'),
-                    'different' => $this->translator->trans('filter.different'),
-                    'gteq' => $this->translator->trans('filter.gteq'),
-                    'lteq' => $this->translator->trans('filter.lteq'),
-                    'in' => $this->translator->trans('filter.in'),
-                    'notin' => $this->translator->trans('filter.notin'),
+                    $this->translator->trans('filter.content') => 'content',
+                    $this->translator->trans('filter.notcontent') => 'notcontent',
+                    $this->translator->trans('filter.begin') => 'begin',
+                    $this->translator->trans('filter.end') => 'end',
+                    $this->translator->trans('filter.gt') => 'gt',
+                    $this->translator->trans('filter.lt') => 'lt',
+                    $this->translator->trans('filter.equal') => 'equal',
+                    $this->translator->trans('filter.different') => 'different',
+                    $this->translator->trans('filter.gteq') => 'gteq',
+                    $this->translator->trans('filter.lteq') => 'lteq',
+                    $this->translator->trans('filter.in') => 'in',
+                    $this->translator->trans('filter.notin') => 'notin',
                 ];
+                
 
                 //Behavior filters
                 $lst_errorMissing = [
@@ -1883,7 +1932,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
                 $bidirectional_params['module']['source'] = $module['source'];
                 $bidirectional_params['module']['cible'] = $module['cible'];
 
-                $bidirectional = RuleManager::getBidirectionalRules($this->connection, $bidirectional_params);
+                $bidirectional = RuleManager::getBidirectionalRules($this->connection, $bidirectional_params, $solution_source, $solution_cible);
                 if ($bidirectional) {
                     $rule_params = array_merge($rule_params, $bidirectional);
                 }
@@ -1912,8 +1961,72 @@ use Symfony\Contracts\Translation\TranslatorInterface;
                     }
                 }
 
+                // get the array of array $ruleFieldsSource and for each value, get the label only and add it to the array $listOfSourceFieldsLabels
+                $listOfSourceFieldsLabels = [
+                    'Source Fields' => [],
+                    'Target Fields' => [],
+                    'Relation Fields' => [],
+                ];
+                foreach ($ruleFieldsSource as $key => $value) {
+                    $listOfSourceFieldsLabels['Source Fields'][$key] = $value['label'];
+                }
+
+                // get the array of array $ruleFieldsTarget and for each value, get the label only and add it to the array $listOfSourceFieldsLabels
+                foreach ($ruleFieldsTarget as $key => $value) {
+                    $listOfSourceFieldsLabels['Target Fields'][$key] = $value['label'];
+                }
+
+                foreach ($lst_relation_source_alpha as $key => $value) {
+                    $listOfSourceFieldsLabels['Relation Fields'][$key] = $value['label'];
+                }
+                
+
+                $form_all_related_fields = $this->createForm(RelationFilterType::class, null, [
+                    'field_choices' => $listOfSourceFieldsLabels,
+                    'another_field_choices' => $lst_filter
+                ]);
+                
+                $filters = $this->entityManager->getRepository(RuleFilter::class)
+                        ->findBy(['rule' => $ruleKey]);
+
+                // we want to make a request that fetches all the rule names and ids, so we can display them in the form
+                $ruleRepo = $this->getDoctrine()->getManager()->getRepository(Rule::class);
+                $ruleListRelation = $ruleRepo->createQueryBuilder('r')
+                    ->select('r.id, r.name, r.moduleSource')
+                    ->where('(
+												r.connectorSource= ?1 
+											AND r.connectorTarget= ?2
+											AND r.name != ?3
+											AND r.deleted = 0
+										)
+									OR (
+												r.connectorTarget= ?1
+											AND r.connectorSource= ?2
+											AND r.name != ?3
+											AND r.deleted = 0
+									)')
+                    ->setParameter(1, (int) $this->sessionService->getParamRuleConnectorSourceId($ruleKey))
+                    ->setParameter(2, (int) $this->sessionService->getParamRuleConnectorCibleId($ruleKey))
+                    ->setParameter(3, $this->sessionService->getParamRuleName($ruleKey))
+                    ->getQuery()
+                    ->getResult();
+
+                // from the result ruleListRelation we create an array with the rule name as the key and the rule id as the value
+                $ruleListRelation = array_reduce($ruleListRelation, function ($carry, $item) {
+                    $carry[$item['name']] = $item['id'];
+                    return $carry;
+                }, []);
+
+                $html_list_rules = '';
+                if (!empty($ruleListRelation)) {
+                    foreach ($ruleListRelation as $ruleName => $ruleId) {
+                        $html_list_rules .= '<option value="'.$ruleId.'">'.$ruleName.'</option>';
+                    }
+                }
+
                 //  rev 1.07 --------------------------
                 $result = [
+                    'filters' => $filters,
                     'source' => $source['table'],
                     'cible' => $cible['table'],
                     'rule_params' => $rule_params,
@@ -1923,18 +2036,46 @@ use Symfony\Contracts\Translation\TranslatorInterface;
                     'lst_category' => $lstCategory,
                     'lst_functions' => $lstFunctions,
                     'lst_filter' => $lst_filter,
+                    'form_all_related_fields' => $form_all_related_fields->createView(),
                     'lst_errorMissing' => $lst_errorMissing,
                     'lst_errorEmpty' => $lst_errorEmpty,
                     'params' => $this->sessionService->getParamRule($ruleKey),
                     'duplicate_target' => $fieldsDuplicateTarget,
                     'opt_target' => $html_list_target,
                     'opt_source' => $html_list_source,
+                    'html_list_rules' => $html_list_rules,
                     'fieldMappingAddListType' => $fieldMappingAdd,
                     'parentRelationships' => $allowParentRelationship,
                     'lst_parent_fields' => $lstParentFields,
                     'regleId' => $ruleKey,
                     'simulationQueryField' => $this->simulationQueryField,
                 ];
+
+                foreach ($result['source'] as $module => $fields) {
+                    foreach ($fields as $fieldNameEncoded => $fieldValue) {
+                        // Decode the field name
+                        $fieldNameDecoded = urldecode($fieldNameEncoded);
+
+                        // Optionally, clean up the field name by removing or replacing unwanted characters
+                        $fieldNameCleaned = $fieldNameDecoded; // Adjust as needed
+
+                        // Clean the field value
+                        // Example: Trim whitespace and remove special characters
+                        // Adjust the cleaning logic as per your requirements
+                        $fieldValueCleaned = trim($fieldValue); // Trimming whitespace
+                        // For more aggressive cleaning, uncomment and adjust the following line
+                        // $fieldValueCleaned = preg_replace('/[^\x20-\x7E]/', '', $fieldValueCleaned);
+
+                        // Check if any cleaning was necessary for the field name
+                        if ($fieldNameCleaned !== $fieldNameEncoded || $fieldValue !== $fieldValueCleaned) {
+                            // Remove the old key
+                            unset($result['source'][$module][$fieldNameEncoded]);
+
+                            // Add the cleaned field name with its cleaned value
+                            $result['source'][$module][$fieldNameCleaned] = $fieldValueCleaned;
+                        }
+                    }
+                }
 
                 $result = $this->tools->beforeRuleEditViewRender($result);
 
@@ -1953,8 +2094,9 @@ use Symfony\Contracts\Translation\TranslatorInterface;
                 $this->logger->error($e->getMessage().' ('.$e->getFile().' line '.$e->getLine());
                 $this->sessionService->setCreateRuleError($ruleKey, $this->translator->trans('error.rule.mapping').' : '.$e->getMessage().' ('.$e->getFile().' line '.$e->getLine().')');
 
-                return $this->redirect($this->generateUrl('regle_stepone_animation'));
-                exit;
+                // return $this->redirect($this->generateUrl('regle_stepone_animation'));
+                // exit;
+                dump($e->getMessage().' ('.$e->getFile().' line '.$e->getLine());
             }
         }
 
@@ -2288,9 +2430,6 @@ use Symfony\Contracts\Translation\TranslatorInterface;
                             }
                         }
 
-                        // delete space
-                        $field_source = str_replace(' ', '', $field_source);
-
                         // Insert
                         $oneRuleField = new RuleField();
                         $oneRuleField->setRule($oneRule);
@@ -2337,22 +2476,54 @@ use Symfony\Contracts\Translation\TranslatorInterface;
                     }
                 }
 
+                // $form = $this->createForm(RelationFilterType::class);
+                // $form->handleRequest($request);
                 //------------------------------- RuleFilter ------------------------
+                // $form->handleRequest($request);
+              //------------------------------- RuleFilter ------------------------
+              $filters = $request->request->get('filter');
 
-                if (!empty($request->request->get('filter'))) {
-                    foreach ($request->request->get('filter') as $filter) {
-                        $oneRuleFilter = new RuleFilter();
-                        $oneRuleFilter->setTarget($filter['target']);
-                        $oneRuleFilter->setRule($oneRule);
-                        $oneRuleFilter->setType($filter['filter']);
-                        $oneRuleFilter->setValue($filter['value']);
-                        $this->entityManager->persist($oneRuleFilter);
-                        $this->entityManager->flush();
-                    }
-                }
+              if (!empty($filters)) {
+                  foreach ($filters as $filterData) {
+                      // $filterData est un tableau contenant les valeurs des champs pour chaque élément de liste <li>
+              
+                      // Accès aux valeurs des champs individuels
+                      $fieldInput = $filterData['target'];
+                      $anotherFieldInput = $filterData['filter'];
+                      $textareaFieldInput = $filterData['value'];
+
+              
+                      // Maintenant, vous pouvez utiliser ces valeurs comme vous le souhaitez, par exemple, pour créer un objet RuleFilter
+                      $oneRuleFilter = new RuleFilter();
+                      $oneRuleFilter->setTarget($fieldInput);
+                      $oneRuleFilter->setRule($oneRule);
+              
+                      $oneRuleFilter->setType($anotherFieldInput);
+                      $oneRuleFilter->setValue($textareaFieldInput);
+              
+                      // Enregistrez votre objet RuleFilter dans la base de données
+                      $this->entityManager->persist($oneRuleFilter);
+                  }
+              
+                  $this->entityManager->flush();
+              }
+                    // $this->getDoctrine()->getManager()->flush();
+                // }
+                // if (!empty($request->request->get('filter'))) {
+                //     foreach ($request->request->get('filter') as $filter) {
+                //         $oneRuleFilter = new RuleFilter();
+                //         $oneRuleFilter->setTarget($filter['target']);
+                //         $oneRuleFilter->setRule($oneRule);
+                //         $oneRuleFilter->setType($filter['filter']);
+                //         $oneRuleFilter->setValue($filter['value']);
+                //         $this->entityManager->persist($oneRuleFilter);
+                //         $this->entityManager->flush();
+                //     }
+                // }
 
                 // --------------------------------------------------------------------------------------------------
                 // Order all rules
+                error_log(print_r($request->request->all(), true));
                 $this->jobManager->orderRules();
 
                 // --------------------------------------------------------------------------------------------------
@@ -2373,6 +2544,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
                 $oneRuleAudit->setRule($oneRule);
                 $oneRuleAudit->setDateCreated(new \DateTime());
                 $oneRuleAudit->setData($ruledata);
+                $oneRuleAudit->setCreatedBy($this->getUser());
                 $this->entityManager->persist($oneRuleAudit);
                 $this->entityManager->flush();
 
@@ -2415,7 +2587,10 @@ use Symfony\Contracts\Translation\TranslatorInterface;
                     $this->sessionService->removeParamRule($ruleKey);
                 }
                 $this->entityManager->getConnection()->commit();
-                $response = 1;
+                
+                $rule_id = $oneRule->getId();
+                $response = ['status' => 1, 'id' => $rule_id];
+                //$response = 1;
             } catch (Exception $e) {
                 $this->entityManager->getConnection()->rollBack();
                 $this->logger->error('2;'.htmlentities($e->getMessage().' ('.$e->getFile().' line '.$e->getLine().')'));
@@ -2454,106 +2629,17 @@ use Symfony\Contracts\Translation\TranslatorInterface;
                 $nbFlux = $nbFlux + (int) $value['nb'];
             }
 
+            $countNbDocuments = $this->documentRepository->countNbDocuments();
+
             return $this->render('Home/index.html.twig', [
                 'errorByRule' => $this->ruleRepository->errorByRule($user),
                 'listJobDetail' => $this->jobRepository->listJobDetail(),
                 'nbFlux' => $nbFlux,
                 'solutions' => $lstArray,
                 'locale' => $language,
+                'countNbDocuments' => $countNbDocuments,
             ]
             );
-        }
-
-        /**
-         * @Route("/graph/type/error/doc", name="graph_type_error_doc", options={"expose"=true})
-         */
-        public function graphTypeError(): Response
-        {
-            $countTypeDoc = [];
-            $documents = $this->documentRepository->countTypeDoc($this->getUser());
-            if (count($documents)) {
-                $countTypeDoc[] = ['test', 'test2'];
-                foreach ($documents as $value) {
-                    $countTypeDoc[] = [$value['global_status'], (int) $value['nb']];
-                }
-            }
-
-            return $this->json($countTypeDoc);
-        }
-
-        /**
-         * @Route("/graph/type/transfer/rule", name="graph_type_transfer_rule", options={"expose"=true})
-         */
-        public function graphTransferRule(): Response
-        {
-            $countTransferRule = [];
-            $values = $this->documentRepository->countTransferRule($this->getUser());
-            if (count($values)) {
-                $countTransferRule[] = ['test', 'test2'];
-                foreach ($values as $value) {
-                    $countTransferRule[] = [$value['name'], (int) $value['nb']];
-                }
-            }
-
-            return $this->json($countTransferRule);
-        }
-
-        /**
-         * @Route("/graph/type/transfer/histo", name="graph_type_transfer_histo", options={"expose"=true})
-         */
-        public function graphTransferHisto(): Response
-        {
-            $countTransferRule = [];
-            $values = $this->home->countTransferHisto($this->getUser());
-            if (count($values)) {
-                $countTransferRule[] = [
-                    'date',
-                    $this->translator->trans('flux.gbl_status.open'),
-                    $this->translator->trans('flux.gbl_status.error'),
-                    $this->translator->trans('flux.gbl_status.cancel'),
-                    $this->translator->trans('flux.gbl_status.close'),
-                ];
-                foreach ($values as $field => $value) {
-                    $countTransferRule[] = [
-                        $value['date'],
-                        (int) $value['open'],
-                        (int) $value['error'],
-                        (int) $value['cancel'],
-                        (int) $value['close'],
-                    ];
-                }
-            }
-
-            return $this->json($countTransferRule);
-        }
-
-        /**
-         * @Route("/graph/type/job/histo", name="graph_type_job_histo", options={"expose"=true})
-         */
-        public function graphJobHisto(): Response
-        {
-            $countTransferRule = [];
-            $jobs = $this->jobRepository->findBy([], ['begin' => 'ASC'], 5);
-            if (count($jobs)) {
-                $countTransferRule[] = [
-                    'date',
-                    $this->translator->trans('flux.gbl_status.open'),
-                    $this->translator->trans('flux.gbl_status.error'),
-                    $this->translator->trans('flux.gbl_status.cancel'),
-                    $this->translator->trans('flux.gbl_status.close'),
-                ];
-                foreach ($jobs as $job) {
-                    $countTransferRule[] = [
-                        $job->getBegin()->format('d/m/Y H:i:s'),
-                        (int) $job->getOpen(),
-                        (int) $job->getError(),
-                        (int) $job->getCancel(),
-                        (int) $job->getClose(),
-                    ];
-                }
-            }
-
-            return $this->json($countTransferRule);
         }
 
         /**
@@ -2938,5 +3024,47 @@ use Symfony\Contracts\Translation\TranslatorInterface;
         return $this->render('Rule/byIdForm.html.twig', [
             'formIdBatch' => $form->createView()
         ]);
+    }
+
+    /**
+     * @Route("/rule/update_description", name="update_rule_description", methods={"POST"})
+     */
+    public function updateDescription(Request $request): Response
+    {
+        $ruleId = $request->request->get('ruleId');
+        $description = $request->request->get('description');
+        $entityManager = $this->getDoctrine()->getManager();
+        $descriptionOriginal = $entityManager->getRepository(RuleParam::class)->findOneBy([
+            'rule' => $ruleId,
+            'name' => 'description'
+        ]);
+        // if $description is the same as the previous one or is equal to 0 or is empty
+        if ($description === '0' || empty($description) || $description === $descriptionOriginal->getValue()) {
+            return $this->redirect($this->generateUrl('regle_open', ['id' => $ruleId]));
+        }
+
+        // Retrieve the RuleParam entity using the ruleId
+        $rule = $entityManager->getRepository(RuleParam::class)->findOneBy(['rule' => $ruleId]);
+
+        if (!$rule) {
+            throw $this->createNotFoundException('Couldn\'t find specified rule in database');
+        }
+
+        // Retrieve the RuleParam with the name "description" and the same rule as the previously retrieved entity
+        $descriptionRuleParam = $entityManager->getRepository(RuleParam::class)->findOneBy([
+            'rule' => $rule->getRule(),
+            'name' => 'description'
+        ]);
+
+        // Check if the description entity was found
+        if (!$descriptionRuleParam) {
+            throw $this->createNotFoundException('Couldn\'t find description rule parameter');
+        }
+
+        // Update the value of the description
+        $descriptionRuleParam->setValue($description);
+        $entityManager->flush();
+
+        return new Response('', Response::HTTP_OK);
     }
 }

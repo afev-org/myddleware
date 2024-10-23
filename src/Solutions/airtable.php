@@ -414,12 +414,6 @@ class airtablecore extends solution
                         ++$i;
                         continue;
                     }
-				
-					// If no data we skip this record
-					if (empty($data)) {
-						unset($records[$idDoc]);
-						continue;
-					}
 
                     $body['records'][$i]['fields'] = $data;
 
@@ -452,7 +446,7 @@ class airtablecore extends solution
                     ++$i;
                 }
 
-                // Airtable field can contains space which is not compatible in Myddleware.
+                // Airtable fiueld can contains space which is not compatible in Myddleware.
                 // Because we replace space by ___ in Myddleware, we change ___ to space before sending data to Airtable
                 if (!empty($body['records'])) {
                     foreach ($body['records'] as $keyRecord => $record) {
@@ -490,25 +484,23 @@ class airtablecore extends solution
                 $content = $response->toArray();
                 if (!empty($content)) {
                     $i = 0;
-					if (!empty($records)) {
-						foreach ($records as $idDoc => $data) {
-							$record = $content['records'][$i];
-							if (!empty($record['id'])) {
-								$result[$idDoc] = [
-														'id' => $record['id'],
-														'error' => false,
-												];
-							} else {
-								$result[$idDoc] = [
-									'id' => '-1',
-									'error' => 'Failed to send data. Message from Airtable : '.print_r($content['records'][$i], true),
-								];
-							}
-							++$i;
-							// Modification du statut du flux
-							$this->updateDocumentStatus($idDoc, $result[$idDoc], $param);
-						}
-					}
+                    foreach ($records as $idDoc => $data) {
+                        $record = $content['records'][$i];
+                        if (!empty($record['id'])) {
+                            $result[$idDoc] = [
+                                                    'id' => $record['id'],
+                                                    'error' => false,
+                                            ];
+                        } else {
+                            $result[$idDoc] = [
+                                'id' => '-1',
+                                'error' => 'Failed to send data. Message from Airtable : '.print_r($content['records'][$i], true),
+                            ];
+                        }
+                        ++$i;
+                        // Modification du statut du flux
+                        $this->updateDocumentStatus($idDoc, $result[$idDoc], $param);
+                    }
                 } else {
                     throw new Exception('Failed to send the record but no error returned by Airtable. ');
                 }

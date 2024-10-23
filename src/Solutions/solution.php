@@ -81,6 +81,7 @@ class solutioncore
     protected DocumentRepository $documentRepository;
     protected RuleRelationShipRepository $ruleRelationshipsRepository;
     protected FormulaManager $formulaManager;
+    protected array $ignoreQuotesOnQuery = ['bigint', 'numeric', 'bit', 'smallint', 'decimal', 'smallmoney', 'int', 'tinyint', 'money', 'float', 'real'];
 
     public function __construct(
         LoggerInterface $logger,
@@ -153,7 +154,10 @@ class solutioncore
         try {
             $param['id_doc_myddleware'] = $idDoc;
             $param['api'] = $this->api;
-            $documentManager = new DocumentManager($this->logger, $this->connection, $this->entityManager, $this->documentRepository, $this->ruleRelationshipsRepository, $this->formulaManager);
+			// Create new documentManager with a clean entityManager
+			$chlidEntityManager = clone $this->entityManager;
+			$chlidEntityManager->clear();
+            $documentManager = new DocumentManager($this->logger, $this->connection, $chlidEntityManager, $this->formulaManager, null, $this->parameterBagInterface);
             $documentManager->setParam($param);
             // If a message exist, we add it to the document logs
             if (!empty($value['error'])) {
@@ -267,6 +271,10 @@ class solutioncore
         return $this->moduleFields;
     }
 
+    function truncate($string, $length, $dots = "...") {
+        return strlen($string) > $length ? substr($string, 0, $length - strlen($dots)) . $dots : $string;
+    }
+
     // Permet d'ajouter des règles en relation si les règles de gestion standard ne le permettent pas
     // Par exemple si on veut connecter des règles de la solution SAP CRM avec la solution SAP qui sont 2 solutions différentes qui peuvent être connectées
     public function get_rule_custom_relationship($module, $type)
@@ -292,6 +300,13 @@ class solutioncore
 
             // Read data
             $readResult = $this->read($param);
+			// In case of error in an history call, we return directly the error
+			if (
+					$param['call_type'] == 'history'
+				AND !empty($readResult['error'])
+			) {
+				return $readResult;
+			}
 
             // Save the new rule params into attribut dataSource
             if (!empty($readResult['ruleParams'])) {
@@ -347,7 +362,7 @@ class solutioncore
 				throw new \Exception('Failed to get the reference call.');
 			}
         } catch (\Exception $e) {
-            $result['error'] = 'Error : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
+            $result['error'] = (!empty($param['rule']['id']) ? 'Error in rule '.$param['rule']['id'].' : ' : 'Error : ').$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
         }
 
         return $result;
@@ -644,8 +659,11 @@ class solutioncore
 							// Calculation of all target fields where the source field exists
 							if(array_search($field, $fieldsArray) !== false) {
 								$param['id_doc_myddleware'] = $docId;
-								$param['api'] = $this->api;				
-								$documentManager = new DocumentManager($this->logger, $this->connection, $this->entityManager, $this->documentRepository, $this->ruleRelationshipsRepository, $this->formulaManager);
+								$param['api'] = $this->api;	
+								// Create new documentManager with a clean entityManager
+								$chlidEntityManager = clone $this->entityManager;
+								$chlidEntityManager->clear();								
+								$documentManager = new DocumentManager($this->logger, $this->connection, $chlidEntityManager, $this->formulaManager);
 								$documentManager->setParam($param);			
 								$send['data'][$docId][$ruleField['target_field_name']] = $documentManager->getTransformValue($send['source'][$docId], $ruleField);			
 							}
@@ -818,6 +836,12 @@ class solutioncore
         if (isset($record['Myddleware_element_id'])) {
             unset($record['Myddleware_element_id']);
         }
+		if (isset($record['id_doc_myddleware'])) {
+            unset($record['id_doc_myddleware']);
+        }
+		if (isset($record['source_date_modified'])) {
+            unset($record['source_date_modified']);
+        }
 
         return $record;
     }
@@ -963,6 +987,14 @@ class solutioncore
         $this->isJobActive($param);
 
         return $data;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function beforeGetBidirectionalRules($param, $type)
+    {
+        return $param;
     }
 
     /**

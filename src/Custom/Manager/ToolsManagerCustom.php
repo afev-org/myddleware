@@ -1,9 +1,9 @@
 <?php
 namespace App\Custom\Manager;
 
-use App\Manager\ToolsManager;
+use App\Custom\Premium\Manager\ToolsManagerPremium;
 
-class ToolsManagerCustom extends ToolsManager {
+class ToolsManagerCustom extends ToolsManagerPremium {
 
 	// Add contact type parameter in the list
 	protected array $ruleParam = array('datereference','bidirectional','fieldId','mode','duplicate_fields','limit','delete', 'fieldDateRef', 'fieldId', 'targetFieldId','contactType','recordType','deletionField','deletion','anneeScolaire');
@@ -121,5 +121,6 @@ class ToolsManagerCustom extends ToolsManager {
 
 		return $data;
 	}
+
 } 
 

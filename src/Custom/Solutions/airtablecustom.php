@@ -230,13 +230,13 @@ class airtablecustom extends airtable {
 					or strpos($result['error'], '404  returned')	// Airtable has changed the error message
 				)
 			) {
+				$chlidEntityManager = clone $this->entityManager;
+				$chlidEntityManager->clear();
 				// Change the document type 
 				$documentManager = new DocumentManager(
 					$this->logger,
 					$this->connection,
-					$this->entityManager,
-					$this->documentRepository,
-					$this->ruleRelationshipsRepository,
+					$chlidEntityManager,
 					$this->formulaManager
 				);
 				$paramDoc['id_doc_myddleware'] = $param['document']['id'];
@@ -290,12 +290,12 @@ class airtablecustom extends airtable {
 				)
 			) {
 				if (!isset($this->documentManager)) {
+					$chlidEntityManager = clone $this->entityManager;
+					$chlidEntityManager->clear();
 					$this->documentManager = new DocumentManager(
 						$this->logger, 
 						$this->connection, 
-						$this->entityManager,
-						$this->documentRepository,
-						$this->ruleRelationshipsRepository,
+						$chlidEntityManager,
 						$this->formulaManager
 					);
 				}
@@ -354,12 +354,12 @@ class airtablecustom extends airtable {
 	
 		if ($param['rule']['id'] == '625fcd2ed442f') { // Mobilisation - Coupons
 			if (!isset($this->documentManager)) {
+				$chlidEntityManager = clone $this->entityManager;
+				$chlidEntityManager->clear();
 				$this->documentManager = new DocumentManager(
 					$this->logger, 
 					$this->connection, 
-					$this->entityManager,
-					$this->documentRepository,
-					$this->ruleRelationshipsRepository,
+					$chlidEntityManager,
 					$this->formulaManager
 				);
 			}

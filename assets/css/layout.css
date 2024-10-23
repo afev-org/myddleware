@@ -23,32 +23,27 @@
 *********************************************************************************/
 
 #myd_top {
-	/* height: 35px; */
-	min-height: 40px;
-	/* max-height: 35px;	 */
-	background: #444446;
-	border-bottom: 4px solid #198BCA;
-	/* min-width: 1200px; */
+	min-height: 100px;
 	position: fixed;
 	top: 0;
-	left: 0;
-	right: 0;
+    right: -135px;
 	z-index: 99;
 	font-size: larger;
 }
 
 #myd_title {
+	box-shadow: rgba(0, 0, 0, 0.06) 0px 2px 4px 0px inset;
 	height: 50px;
-	background: #198BCA;
+	background: #f8f9f9;
 	margin: 0 auto;
-	/* width: 80vw; */
-		color: white;
+	color: rgb(0, 0, 0);
 	padding: 14px;		
 	font-weight: bold;	
 }
 
 #myd_title a, #myd_title a:hover { 
-	color: #ffffff;
+	color: #000000;
+	text-decoration: none;
 }
 
 .myd_loading > img{
@@ -65,9 +60,8 @@ header {
 section  {
 	margin-bottom: 15vh!important;
 	/* width: 80vw; */
-	min-height: 570px;
+	min-height: 150px;
 	background: white !important;
-	/* box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px; */
 }
 
 footer {
@@ -187,7 +181,6 @@ footer {
 
 #notification {
     margin: 0 auto;
-    /* width: 80vw; */
     background:white;
     display:none;
 }
@@ -300,3 +293,7 @@ footer {
 	margin-bottom: 0.35rem !important;
  }
 
+ .page-item.active .page-link {
+	background-color: #03c4eb !important;
+    border-color: #03c4eb !important;
+ }

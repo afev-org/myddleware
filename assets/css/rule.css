@@ -100,8 +100,6 @@
 	position: absolute;
 	top: 0;
 	left: 31px;
-	/* border-style: solid; */
-	/* border-color: #198BCA transparent transparent #198BCA; */
 	border-width: 8px 7px;
 }
 #rule .onoffswitch-inactive .onoffswitch-switch:before {
@@ -109,8 +107,6 @@
 	position: absolute;
 	top: 0;
 	right: 31px;
-	/* border-style: solid;
-	border-color: transparent #555555 #555555 transparent; */
 	border-width: 8px 7px;
 }
 #rule .onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-inner {
@@ -128,8 +124,8 @@
 
 #rule th {
 	background: #ECECEC;
-	height: 20px;
-	padding: 2px;
+	height: 45px;
+	padding: 10px;
 	text-align: center;
 }
 
@@ -490,11 +486,11 @@
 }
 
 .nav-link.active {
-color: #000000!important; 
+color: #03c4eb!important; 
 }
 
 #ruleInfoTabs, #ruleConfigTabs, #connectorCreateTabs, #connectorTabs {
-	background-color: #ecedee;
+	box-shadow: rgb(248 249 249) 0px -5px 9px -4px inset, rgba(255, 255, 256, 14.5) 20px 1px 2px 0px inset;
 }
 
 .fancybox {
@@ -508,3 +504,103 @@ color: #000000!important;
 .mapping-container > .mapping-card {
 	margin: 30px;
 }
+
+#rulenamesearchbar {
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+    transition: all 0.5s;
+    max-width: 400px;
+    position: relative;
+	margin-top: 15px;
+}
+
+#rule_name{
+	padding: 10px;
+}
+
+#myd_title:has(.rule_list_view) {
+    height: 151px !important;
+}
+
+.container_filter_step3{
+	max-width: 1449px;
+}
+
+.form-switch .form-check-input:checked {
+	background-color:  #198BCA !important;
+	border-block-color: #198BCA !important;
+}
+
+.workflow_status.form-check-input:checked {
+    margin-left: 7px !important;
+}
+
+.workflow_status.form-check-input {
+    margin-left: 7px !important;
+}
+
+.tooltip-icon {
+    position: absolute;
+    bottom: 10px;
+    right: 10px; 
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    color: #0F66A9;
+}
+
+.tooltip-icon i {
+    font-size: 1.5rem;
+}
+
+.tooltip-icon:hover {
+    color: #0c4978; 
+}
+
+.comment-box {
+    display: none;
+    position: absolute;
+    bottom: 40px;
+    right: 10px;
+    background-color: #f1f1f1;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 10px;
+    width: 200px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.comment-box::before {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    right: 20px;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid #f1f1f1;
+}
+
+.comment-box .comment-text {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.comment-box .edit-btn {
+    margin-top: 10px;
+    background-color: #007bff;
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.edit-btn:hover {
+    background-color: #0056b3;
+}
+
+
+

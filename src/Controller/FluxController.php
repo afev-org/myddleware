@@ -26,33 +26,39 @@
 
 namespace App\Controller;
 
-use App\Entity\Config;
-use App\Entity\Document;
-use App\Entity\DocumentAudit;
-use App\Entity\DocumentData;
-use App\Entity\DocumentRelationship;
+			   
+use Exception;
 use App\Entity\Log;
 use App\Entity\Rule;
-use App\Manager\DocumentManager;
-use App\Manager\JobManager;
-use App\Manager\SolutionManager;
-use App\Repository\DocumentRepository;
-use App\Service\SessionService;
-use Doctrine\ORM\EntityManagerInterface;
-use Exception;
-use Pagerfanta\Adapter\ArrayAdapter;
-use Pagerfanta\Doctrine\ORM\QueryAdapter;
-use Pagerfanta\Exception\NotValidCurrentPageException;
+use App\Entity\Config;
+use App\Entity\Document;
+use App\Entity\Job;					
 use Pagerfanta\Pagerfanta;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\HttpFoundation\RedirectResponse;
+use App\Entity\WorkflowLog;
+use App\Manager\JobManager;
+use App\Entity\DocumentData;
+use App\Entity\DocumentAudit;
+use App\Service\SessionService;
+use App\Manager\DocumentManager;
+use App\Manager\SolutionManager;
+use App\Entity\DocumentRelationship;
+use Pagerfanta\Adapter\ArrayAdapter;
+use App\Repository\DocumentRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Pagerfanta\Doctrine\ORM\QueryAdapter;
+use App\Form\Type\DocumentCommentType;							
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Pagerfanta\Exception\NotValidCurrentPageException;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 /**
  * @Route("/rule")
@@ -501,22 +507,17 @@ class FluxController extends AbstractController
                 document.type, 
                 document.attempt, 
                 document.global_status, 
-                users.username, 
                 rule.name as rule_name, 
                 rule.id as rule_id 
             FROM document 
                 INNER JOIN rule	
-                    ON document.rule_id = rule.id
-                INNER JOIN users
-                    ON document.created_by = users.id "
+                    ON document.rule_id = rule.id "
                 .$join. 
             " WHERE 
                     document.deleted = 0 "
                     .$where.
             " ORDER BY document.date_modified DESC"
             ." LIMIT ". $limit;
-            
-        
         $stmt = $this->getDoctrine()->getManager()->getConnection()->prepare($query);
         // Add parameters to the query
         // Source content
@@ -582,16 +583,21 @@ class FluxController extends AbstractController
             $this->sessionService->removeFluxFilter();
         }
 
-        return $this->redirect($this->generateUrl('flux_list', ['search' => 1]));
+        return $this->redirect($this->generateUrl('document_list', ['search' => 1]));
     }
 
-    /**
-     * @Route("/flux/{id}/log/", name="flux_info", defaults={"page"=1})
-     * @Route("/flux/{id}/log/page-{page}", name="flux_info_page", requirements={"page"="\d+"})
-     */
-    public function fluxInfo(Request $request, $id, $page)
+/**
+ * @Route("/flux/{id}/log/{logPage}", name="flux_info", defaults={"page"=1, "logPage"=1})
+ * @Route("/flux/{id}/log/page-{page}/log-{logPage}", name="flux_info_page", requirements={"page"="\d+", "logPage"="\d+"})
+ */
+public function fluxInfo(Request $request, $id, $page, $logPage)
+
     {
         try {
+
+            $documentPage = $request->attributes->get('page', 1);
+            $logPage = $request->attributes->get('logPage', 1);
+
             $session = $request->getSession();
             $em = $this->getDoctrine()->getManager();
 
@@ -623,11 +629,10 @@ class FluxController extends AbstractController
             $historyData = $this->listeFluxTable($id, 'H');
 
             $compact = $this->nav_pagination([
-                'adapter_em_repository' => $em->getRepository(Log::class)
-                    ->findBy(
-                        ['document' => $id],
-                        ['id' => 'DESC']
-                    ),
+                'adapter_em_repository' => $em->getRepository(Document::class)->findBy(
+                    ['source' => $doc[0]->getSource(), 'rule' => $doc[0]->getRule(), 'deleted' => 0],
+                    ['dateModified' => 'DESC']
+                ),
                 'maxPerPage' => $this->params['pager'],
                 'page' => $page,
             ], false);
@@ -695,6 +700,7 @@ class FluxController extends AbstractController
                 $historyDocuments = [];
             }
 
+
             // Add custom button
             $name_solution_target = $rule->getConnectorTarget()->getSolution()->getName();
             $solution_target = $this->solutionManager->get($name_solution_target);
@@ -728,6 +734,90 @@ class FluxController extends AbstractController
             } else {
                 $timezone = $this->getUser()->getTimezone();
             }
+
+            // Get the logs
+            $logs = $em->getRepository(Log::class)
+            ->findBy(
+                ['document' => $id],
+                ['id' => 'DESC']
+            );
+
+            // Set the parameters for document pagination
+            $docParams = [
+                'adapter_em_repository' => $em->getRepository(Document::class)->findBy(
+                    ['source' => $doc[0]->getSource(), 'rule' => $doc[0]->getRule(), 'deleted' => 0],
+                    ['dateModified' => 'DESC']
+                ),
+                'maxPerPage' => $this->params['pager'],
+                'page' => $documentPage,
+                'pageParameterName' => 'docPage'
+            ];
+
+            // Set the parameters for log pagination
+            $logParams = [
+                'adapter_em_repository' => $em->getRepository(Log::class)->findBy(
+                    ['document' => $id],
+                    ['id' => 'DESC']
+                ),
+                'maxPerPage' => $this->params['pager'],
+                'page' => $logPage,
+                'pageParameterName' => 'logPage'
+            ];
+
+// Get the paginated results for documents and logs
+$documentPagination = $this->nav_pagination_documents($docParams, false);
+$logPagination = $this->nav_pagination_logs($logParams, false);
+
+// $formComment = $this->createForm(DocumentCommentType::class, null);
+
+
+//             $formComment->handleRequest($request);
+//             if ($formComment->isSubmitted() && $formComment->isValid()) {
+//                 $comment = $formComment->getData()['comment'];
+				
+//                 // create new job
+//                 $job = new Job();
+//                 $job->setBegin(new \DateTime());
+//                 $job->setEnd(new \DateTime());
+//                 $job->setParam('notification');
+//                 $job->setMessage('Comment log created. Comment: '.$comment);
+//                 $job->setOpen(0);
+//                 $job->setClose(0);
+//                 $job->setCancel(0);
+//                 $job->setManual(1);
+//                 $job->setApi(0);
+//                 $job->setError(0);
+//                 $job->setStatus('End');
+//                 $job->setId(uniqid(mt_rand(), true));
+                
+//                 $em->persist($job);
+//                 $em->flush();
+                
+//                 // Add log to indicate this action
+//                 $log = new Log();
+//                 $log->setCreated(new \DateTime());
+//                 $log->setType('I');
+                
+//                 $log->setRule($rule);
+//                 $log->setJob($job);
+//                 $log->setMessage($comment);
+//                 $log->setDocument($doc[0]);
+//                 $em->persist($log);
+//                 $em->flush();
+                
+//                 $this->addFlash('success', 'Comment successfully added !');
+
+//                 // Redirect the route to avoid resubmitting the form according to the PRG pattern
+//                 return $this->redirectToRoute('flux_info', ['id' => $id]);
+            // }
+
+            // show the workflows logs from the table workflowlog related this document, we are looking for the field trigger_document_id in the table workflowlog
+            $workflowLogs = $em->getRepository(WorkflowLog::class)->findBy(
+                ['triggerDocument' => $id],
+                ['id' => 'DESC']
+            );
+
+
             // Call the view
             return $this->render(
                 'Flux/view/view.html.twig',
@@ -750,15 +840,24 @@ class FluxController extends AbstractController
                     'parent_documents' => $parentDocuments,
                     'parent_Documents_Rule' => $parentDocumentsRule,
                     'nb_parent_documents' => count($parentDocuments),
-                    'history_documents' => $historyDocuments,
-                    'nb_history_documents' => count($historyDocuments),
+                    'history_documents' => $documentPagination['entities'],
+                    'nb_history_documents' => $documentPagination['nb'],
+                    'nb_logs' => $logPagination['nb'],
                     'ctm_btn' => $list_btn,
                     'read_record_btn' => $solution_source->getReadRecord(),
                     'timezone' => $timezone,
+					// 'formComment' => $formComment->createView(),
+                    'logs' => $logs,
+                    'documentPagination' => $documentPagination,
+                    'logPagination' => $logPagination,
+                    'documentPage' => $documentPage,
+                    'logPage' => $logPage,
+                    'workflowLogs' => $workflowLogs,
+                    'nb_workflow_logs' => count($workflowLogs),
                 ]
             );
         } catch (Exception $e) {
-            return $this->redirect($this->generateUrl('flux_list', ['search' => 1]));
+            throw $this->createNotFoundException('Page not found.'.$e->getMessage().' '.$e->getFile().' '.$e->getLine());
         }
     }
 
@@ -856,6 +955,9 @@ class FluxController extends AbstractController
                         $this->jobManager->runBackgroundJob('readrecord', [$doc->getRule(), 'id', $doc->getSource()]);
                     }
                 }
+										 
+								
+				 
             }
 
             return $this->redirect($this->generateURL('flux_info', ['id' => $id]));
@@ -885,6 +987,7 @@ class FluxController extends AbstractController
         if (isset($_POST['ids']) && count($_POST['ids']) > 0) {
             $this->jobManager->actionMassTransfer('cancel', 'document', $_POST['ids']);
         }
+
         exit;
     }
 
@@ -900,7 +1003,7 @@ class FluxController extends AbstractController
         exit;
     }
 
-    /* ******************************************************
+    /* *******************************************************
         * METHODES PRATIQUES
         ****************************************************** */
 
@@ -929,6 +1032,84 @@ class FluxController extends AbstractController
                 $compact['pager']->setCurrentPage($currentPage);
                 $compact['nb'] = $compact['pager']->getNbResults();
                 $compact['entities'] = $compact['pager']->getCurrentPageResults();
+            } catch (NotValidCurrentPageException $e) {
+                throw $this->createNotFoundException('Page not found.'.$e->getMessage().' '.$e->getFile().' '.$e->getLine());
+            }
+
+            return $compact;
+        }
+
+        return false;
+    }
+
+
+    private function nav_pagination_documents($params, $orm = true)
+    {
+        /*
+            * adapter_em_repository = requete
+            * maxPerPage = integer
+            * page = page en cours
+            */
+        if (is_array($params)) {
+
+            $pageParameterName = $params['pageParameterName'];
+
+            $compact = [];
+            if ($orm) {
+                $queryBuilder = $params['adapter_em_repository'];
+                $pagerfanta = new Pagerfanta(new QueryAdapter($queryBuilder));
+                $compact['pager'] = $pagerfanta;
+            } else {
+                $compact['pager'] = new Pagerfanta(new ArrayAdapter($params['adapter_em_repository']));
+            }
+            $maxPerPage = intval($params['maxPerPage']);
+            $currentPage = intval($params['page']);
+            $compact['pager']->setMaxPerPage($maxPerPage);
+            try {
+                $compact['pager']->setCurrentPage($currentPage);
+                $compact['nb'] = $compact['pager']->getNbResults();
+                $compact['entities'] = $compact['pager']->getCurrentPageResults();
+                $compact['pageParameterName'] = $pageParameterName;
+                
+            } catch (NotValidCurrentPageException $e) {
+                throw $this->createNotFoundException('Page not found.'.$e->getMessage().' '.$e->getFile().' '.$e->getLine());
+            }
+
+            return $compact;
+        }
+
+        return false;
+    }
+
+
+    private function nav_pagination_logs($params, $orm = true)
+    {
+        /*
+            * adapter_em_repository = requete
+            * maxPerPage = integer
+            * page = page en cours
+            */
+
+        if (is_array($params)) {
+
+            $pageParameterName = $params['pageParameterName'];
+
+            $compact = [];
+            if ($orm) {
+                $queryBuilder = $params['adapter_em_repository'];
+                $pagerfanta = new Pagerfanta(new QueryAdapter($queryBuilder));
+                $compact['pager'] = $pagerfanta;
+            } else {
+                $compact['pager'] = new Pagerfanta(new ArrayAdapter($params['adapter_em_repository']));
+            }
+            $maxPerPage = intval($params['maxPerPage']);
+            $currentPage = intval($params['page']);
+            $compact['pager']->setMaxPerPage($maxPerPage);
+            try {
+                $compact['pager']->setCurrentPage($currentPage);
+                $compact['nb'] = $compact['pager']->getNbResults();
+                $compact['entities'] = $compact['pager']->getCurrentPageResults();
+                $compact['pageParameterName'] = $pageParameterName;
             } catch (NotValidCurrentPageException $e) {
                 throw $this->createNotFoundException('Page not found.'.$e->getMessage().' '.$e->getFile().' '.$e->getLine());
             }
@@ -968,6 +1149,59 @@ class FluxController extends AbstractController
             return;
         } catch (Exception $e) {
             return false;
+        }
+    }
+
+    /**
+     * @Route("/document/unlock/{id}", name="document_view")
+     */
+    public function unlockDocument($id) {
+        try{
+            $this->jobManager->massAction('unlock', 'document', [$id], false, null, null);
+
+            // add traduction
+            $this->addFlash('success_unlock', 'Document déverrouillé avec succès.');
+            return $this->redirect($this->generateURL('flux_info', ['id' => $id]));
+        } catch (Exception $e) {
+            // add traduction
+            $this->addFlash('error_unlock', 'Erreur lors du déverrouillage du document.');
+            return $this->redirect($this->generateUrl('flux_list', ['search' => 1]));
+        }
+    }
+
+    /**
+     * @Route("/flux/unlock", name="flux_mass_unlock")
+     */
+    public function unlockDocuments(Request $request) {
+        try {
+            $ids = $request->request->get('ids', []);
+            if (empty($ids)) {
+                return new JsonResponse(['error' => 'No documents selected'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $result = $this->jobManager->massAction('unlock', 'document', $ids, false, null, null);
+            if (!$result) {
+                throw new HttpException(Response::HTTP_INTERNAL_SERVER_ERROR, "Unable to unlock documents.");
+            }
+
+            return new JsonResponse(['success' => true]);
+
+        } catch (\Exception $e) {
+            throw $this->createNotFoundException('Page not found.'.$e->getMessage().' '.$e->getFile().' '.$e->getLine());
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * @Route("/read_job_lock/clear/{id}", name="clear_read_job_lock", methods={"POST"})
+     */
+    public function clearReadJobLock($id) {
+        try {
+            $this->jobManager->clearLock('rule', [$id]);
+
+            return new JsonResponse(['status' => 'success', 'message' => 'Verrouillage effacé avec succès.']);
+        } catch (Exception $e) {
+            return new JsonResponse(['status' => 'error', 'message' => 'Erreur lors de la suppression du verrouillage.'], 500);
         }
     }
 }

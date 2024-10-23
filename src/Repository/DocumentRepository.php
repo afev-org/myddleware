@@ -31,6 +31,7 @@ use App\Entity\Rule;
 use App\Entity\User;
 use App\Manager\HomeManager;
 use DateTime;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\NonUniqueResultException;
@@ -159,25 +160,6 @@ class DocumentRepository extends ServiceEntityRepository
             ->select('COUNT(d) as nb, d.globalStatus as global_status')
             ->andWhere('d.deleted = 0')
             ->groupBy('d.globalStatus')
-            ->orderBy('nb', 'DESC');
-
-        if ($user && !$user->isAdmin()) {
-            $qb->andWhere('d.createdBy = :user')
-                ->setParameter('user', $user);
-        }
-
-        return $qb->getQuery()->getResult();
-    }
-
-    public function countTransferRule(User $user = null)
-    {
-        $qb = $this->createQueryBuilder('d')
-            ->select('COUNT(d) as nb, rule.name')
-            ->join('d.rule', 'rule')
-            ->andWhere('d.deleted = 0')
-            ->andWhere('d.globalStatus = :close')
-            ->setParameter('close', 'Close')
-            ->groupBy('rule.name')
             ->orderBy('nb', 'DESC');
 
         if ($user && !$user->isAdmin()) {
@@ -394,5 +376,60 @@ class DocumentRepository extends ServiceEntityRepository
         $qb->orderBy('document.dateModified', 'DESC');
 
         return $qb->getQuery()->getResult(AbstractQuery::HYDRATE_ARRAY);
+    }
+
+    public static function findDocType(EntityManagerInterface $entityManager)
+    {
+        $qb = $entityManager->createQueryBuilder();
+
+        
+        $qb->select('d.type')
+        ->from('App\Entity\Document', 'd')
+        ->where('d.deleted = 0')
+        ->groupBy('d.type');
+
+        $results = $qb->getQuery()->getResult(AbstractQuery::HYDRATE_ARRAY);
+        $curatedResults =  array_column($results, 'type');
+        $final = array_flip($curatedResults);
+        //$finale = array_flip($test);
+
+        return $final;
+    }
+    
+    public static function findStatusType(EntityManagerInterface $entityManager)
+    {
+        $qb = $entityManager->createQueryBuilder();
+
+        $qb->select('d.status')
+        ->from('App\Entity\Document', 'd')
+        ->where('d.deleted = 0');
+
+        $results = $qb->getQuery()->getScalarResult();
+
+        $curatedResults =  array_column($results, 'status');
+        $finalResults = array_flip($curatedResults);
+        return $finalResults;
+    }
+	
+    // Remove lock from document using a job id
+	public function removeLock($jobId) {
+		$q = $this->createQueryBuilder('d')
+			->update()
+			->set('d.jobLock', ':empty')
+			->where('d.jobLock = :jobLock')
+			->setParameter('jobLock', $jobId)
+            ->setParameter('empty', '')
+			->getQuery();
+        $q->execute();
+	}
+
+    public function countNbDocuments(): int 
+    {
+        return $this->createQueryBuilder('d')
+            ->select('COUNT(d.id)')
+            ->where('d.deleted = :deleted')
+            ->setParameter('deleted', 0)
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 }

@@ -299,7 +299,7 @@ class suitecrmcore extends solution
                             && !in_array($field->type, ['datetime', 'bool'])
                         ) {
                             foreach ($field->options as $option) {
-                                $this->moduleFields[$field->name]['option'][$option->name] = $option->value;
+                                $this->moduleFields[$field->name]['option'][$option->name] = parent::truncate($option->value, 80);
                             }
                         }
                     }
@@ -352,6 +352,7 @@ class suitecrmcore extends solution
                     }
                 }
             }
+			// Add field filecontents for notes module
 			if ($module == 'Notes') {
 				$this->moduleFields['filecontents'] = [
 					'label' => 'File contents',
@@ -367,6 +368,8 @@ class suitecrmcore extends solution
             return false;
         }
     }
+
+    
 
     // Permet de lire les données
 
@@ -399,12 +402,6 @@ class suitecrmcore extends solution
 
         // Built the query
         $query = $this->generateQuery($param, 'read');
-
-        // Remove custom field
-        if ($param['rule']['id'] == '65708a7e59eae') {
-            $query = str_replace('MydCustRelSugar', '', $query);
-        }
-        
         //Pour tous les champs, si un correspond à une relation custom alors on change le tableau en entrée
         $link_name_to_fields_array = [];
         foreach ($param['fields'] as $field) {
@@ -448,7 +445,6 @@ class suitecrmcore extends solution
                 'max_results' => $this->limitCall,
                 'deleted' => $deleted,
             ];
-
             $get_entry_list_result = $this->call('get_entry_list', $get_entry_list_parameters);
             // Construction des données de sortie
             if (isset($get_entry_list_result->result_count)) {
@@ -790,6 +786,7 @@ class suitecrmcore extends solution
                     'module_name' => $param['module'],
                     'name_value_list' => $dataSugar,
                 ];
+
                 $get_entry_list_result = $this->call('set_entry', $setEntriesListParameters);
                 if (!empty($get_entry_list_result->id)) {
                     // In case of module note with attachement, we generate a second call to add the file
@@ -816,6 +813,7 @@ class suitecrmcore extends solution
             // Modification du statut du flux
             $this->updateDocumentStatus($idDoc, $result[$idDoc], $param);
         }
+
         return $result;
     }
 
@@ -874,17 +872,15 @@ class suitecrmcore extends solution
                     $query .= ' AND ';
                 }
                 if ('email1' == $key) {
-                    $query .= strtolower($param['module']) . ".id in (SELECT eabr.bean_id FROM email_addr_bean_rel eabr JOIN email_addresses ea ON (ea.id = eabr.email_address_id) WHERE eabr.deleted=0 and ea.email_address LIKE '" . $value . "') ";
+                    $query .= strtolower($param['module']).".id in (SELECT eabr.bean_id FROM email_addr_bean_rel eabr JOIN email_addresses ea ON (ea.id = eabr.email_address_id) WHERE eabr.deleted=0 and ea.email_address LIKE '".$value."') ";
                 } else {
                     // Pour ProspectLists le nom de la table et le nom de l'objet sont différents
                     if ('ProspectLists' == $param['module']) {
-                        $query .= 'prospect_lists.' . $key . " = '" . $value . "' ";
+                        $query .= 'prospect_lists.'.$key." = '".$value."' ";
                     } elseif ('Employees' == $param['module']) {
-                        $query .= 'users.' . $key . " = '" . $value . "' ";
-                    } elseif (substr($key, -2) == '_c') {
-                        $query .= strtolower($param['module'] . '_cstm') . '.' . $key . " = '" . $value . "' ";
+                        $query .= 'users.'.$key." = '".$value."' ";
                     } else {
-                        $query .= strtolower($param['module']) . '.' . $key . " = '" . $value . "' ";
+                        $query .= (substr($key,-2) == '_c' ? strtolower($param['module']).'_cstm' : strtolower($param['module'])).'.'.$key." = '".$value."' ";
                     }
                 }
             }
@@ -900,6 +896,7 @@ class suitecrmcore extends solution
                 $query = strtolower($param['module']).'.'.$dateRefField." > '".$param['date_ref']."'";
             }
         }
+
         return $query;
     }
 

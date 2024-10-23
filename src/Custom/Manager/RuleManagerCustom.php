@@ -19,7 +19,7 @@ class RuleManagerCustom extends RuleManager
 				// Empty if relate KO
 				if (empty($value)) {
 					$documentData = $this->getDocumentData($docId, 'S');
-					if (empty($documentData['MydCustRelSugarcrmc_binome_contactscontacts_ida'])) {
+					if (!empty($documentData['MydCustRelSugarcrmc_binome_contactscontacts_ida'])) {
 						$this->generatePoleRelationship('61a920fae25c5', $documentData['MydCustRelSugarcrmc_binome_contactscontacts_ida'], 'id'); // 	Aiko - engagé
 					}
 					if (!empty($documentData['MydCustRelSugarcrmc_binome_crmc_mentorecrmc_mentore_ida'])) {
@@ -371,50 +371,4 @@ class RuleManagerCustom extends RuleManager
 		}
 	}
 
-	public function getTargetDataDocuments($documents = null): array
-	{
-		// include_once 'document.php';
-
-		// Permet de charger dans la classe toutes les relations de la règle
-		$response = [];
-
-		// Sélection de tous les docuements de la règle au statut 'New' si aucun document n'est en paramètre
-		if (empty($documents)) {
-			$documents = $this->selectDocuments('Transformed');
-		}
-
-		if (!empty($documents)) {
-			// Connexion à la solution cible pour rechercher les données
-			$this->connexionSolution('target');
-			$this->connection->beginTransaction(); // -- BEGIN TRANSACTION suspend auto-commit
-			try {
-				$i = 0;
-				// Récupération de toutes les données dans la cible pour chaque document
-				foreach ($documents as $document) {
-					if ($i >= $this->limitReadCommit) {
-						$this->commit(true); // -- COMMIT TRANSACTION
-						$i = 0;
-					}
-					++$i;
-					$param['id_doc_myddleware'] = $document['id'];
-					$param['solutionTarget'] = $this->solutionTarget;
-					$param['ruleFields'] = $this->ruleFields;
-					$param['ruleRelationships'] = $this->ruleRelationships;
-					$param['jobId'] = $this->jobId;
-					$param['api'] = $this->api;
-					// Set the param values and clear all document attributes
-					$this->documentManager->setParam($param, true);
-					$response[$document['id']] = $this->documentManager->getTargetDataDocument();
-					$response['doc_status'] = $this->documentManager->getStatus();
-				}
-				$this->commit(false); // -- COMMIT TRANSACTION
-			} catch (\Exception $e) {
-				$this->connection->rollBack(); // -- ROLLBACK TRANSACTION
-				$this->logger->error('Failed to create documents : ' . $e->getMessage() . ' ' . $e->getFile() . ' Line : ( ' . $e->getLine() . ' )');
-				$readSource['error'] = 'Failed to create documents : ' . $e->getMessage() . ' ' . $e->getFile() . ' Line : ( ' . $e->getLine() . ' )';
-			}
-		}
-
-		return $response;
-	}
 }
