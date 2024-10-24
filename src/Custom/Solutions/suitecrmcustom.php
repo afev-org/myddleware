@@ -386,6 +386,9 @@ class suitecrmcustom extends suitecrm
 				) {
 					// Handling 'Erreur code W0001' error
 					$documentManager->updateStatus('No_send');
+					$response[$idDoc] = false;
+					$this->connection->commit();
+					return $response;
 				// Aiko - Binome vers COMET
 				} elseif (
 						$param['ruleId'] == '62cb3f449e55f' 
@@ -393,11 +396,11 @@ class suitecrmcustom extends suitecrm
 				) {
 					// Handling 'Erreur code W0002' error
 					$documentManager->updateStatus('Cancel');
+					$response[$idDoc] = false;
+					$this->connection->commit();
+					return $response;
 				}
-				$response[$idDoc] = false;
 				$this->connection->commit();
-				return $response;
-
 			} catch (\Exception $e) {
 				echo 'Failed to send document : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
 				$this->connection->rollBack();

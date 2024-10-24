@@ -541,10 +541,14 @@ class documentcore
             $stmt->bindValue(':doc_id', $this->id);
             $documentResult = $stmt->executeQuery();
             $documentData = $documentResult->fetchAssociative(); // 1 row
+			// No action if document not locked
+			if (empty($documentData['job_lock'])) {
+				return true;
+			}
             // If document already lock by the current job, we return true;
             if (
-					$documentData['job_lock'] == $this->jobId
-				 OR $force === true
+				$documentData['job_lock'] == $this->jobId
+			 OR $force === true
 			) {
                 $now = gmdate('Y-m-d H:i:s');
                 $query = "	UPDATE document 
@@ -1515,8 +1519,7 @@ class documentcore
                         $dataInsert[$ruleFilter['target']] = (!empty($data[$ruleFilter['target']]) ? $data[$ruleFilter['target']] : '');
                     } 
                 }
-            }
-			
+            }		
             $documentEntity = $this->entityManager
                                     ->getRepository(Document::class)
                                     ->find($this->id);
