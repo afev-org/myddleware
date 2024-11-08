@@ -244,13 +244,13 @@ class RuleManagerCustom extends RuleManager
 				) {	
 					$sourceData = $this->getDocumentData($docId, 'S');
 					if (!empty($sourceData['MydCustRelSugarcrmc_binome_crmc_mentorecrmc_mentore_ida'])) { // Mentoré
-						$this->generatePoleRelationship('665787f17fd25', $sourceData['MydCustRelSugarcrmc_binome_crmc_mentorecrmc_mentore_ida'], 'id', false);  // Aiko contact
+						$this->generatePoleRelationship('665787f17fd25', $sourceData['MydCustRelSugarcrmc_binome_crmc_mentorecrmc_mentore_ida'], 'id', true);  // Aiko contact
 					}
 					if (!empty($sourceData['MydCustRelSugarcrmc_binome_contactscontacts_ida'])) { // Mentor
-						$this->generatePoleRelationship('61a920fae25c5', $sourceData['MydCustRelSugarcrmc_binome_contactscontacts_ida'], 'id', false);  // Aiko contact
+						$this->generatePoleRelationship('61a920fae25c5', $sourceData['MydCustRelSugarcrmc_binome_contactscontacts_ida'], 'id', true);  // Aiko contact
 					}
 					if (!empty($sourceData['assigned_user_id'])) { // Referent
-						$this->generatePoleRelationship('61a9190e40965', $sourceData['assigned_user_id'], 'id', false);  // Aiko Référent
+						$this->generatePoleRelationship('61a9190e40965', $sourceData['assigned_user_id'], 'id', true);  // Aiko Référent
 					}
 					
 					// Set back the status to predecessor OK and remove target data to allow Myddleware to recalcultae thetarget data with the new records sent
