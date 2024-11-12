@@ -52,7 +52,7 @@ class sendinbluecustom extends sendinblue {
 							$documentManager = new DocumentManager(
 										$this->logger, 
 										$this->connection, 
-										$$chlidEntityManager,
+										$chlidEntityManager,
 										$this->formulaManager
 									);
 							$documentManager->setParam($paramDoc);
