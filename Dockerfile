@@ -18,10 +18,14 @@ COPY composer.json ./composer.json
 COPY composer.lock ./composer.lock
 RUN composer install
 
-## Intall NodeJS
-RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
-    apt-get update && apt-get install -y nodejs build-essential && npm install -g npm yarn && \
+## Install NodeJS
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get update && apt-get install -y nodejs=20.17.* build-essential && \
+    npm install -g npm yarn && \
     apt-get clean && rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/*
+
+# Verify Node.js version
+RUN node --version
 
 COPY --chown=www-data:www-data . .
 
