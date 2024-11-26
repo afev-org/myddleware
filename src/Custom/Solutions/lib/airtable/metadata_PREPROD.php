@@ -385,6 +385,8 @@ $moduleFields['appP31F11PgaT1f6H'] = array (
 		'fldIj5AThi1qxdTnr'=> array( 'label' => 'COUPONS', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldkOspoByXpzWbAs'=> array( 'label' => 'POLES', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldDnLTxybluXJUgk'=> array( 'label' => 'DEV TEST ?', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldsdpYNimpaABgS0'=> array( 'label' => 'Date Demande Casier Judiciaire', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldTu2G3cs4YZTlfT'=> array( 'label' => 'Date Ajout Airtable', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 	),
 
 	'COUPONS' => array(
