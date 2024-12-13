@@ -316,8 +316,8 @@ class JobManager
                 }
             }
         } catch (Exception $e) {
-            $this->logger->error('Error AAA : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )');
-            $this->message .= 'Error AAA : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
+            $this->logger->error('Error : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )');
+            $this->message .= 'Error : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
         }
     }
 
