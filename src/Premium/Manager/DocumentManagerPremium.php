@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Custom\Premium\Manager;
+namespace App\Premium\Manager;
 
 use App\Manager\DocumentManager;
 use App\Manager\RuleManager;
