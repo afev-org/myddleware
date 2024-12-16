@@ -1014,9 +1014,7 @@ $.fn.setCursorPosition = function(pos) {
   });
 
   $("#unlockAllFlux").on("click", function () {
-    console.log(mass_unlock);
     if (confirm(confirm_unlock)) {
-      console.log("okkkey");
       $.ajax({
         type: "POST",
         url: mass_unlock,
@@ -1027,12 +1025,9 @@ $.fn.setCursorPosition = function(pos) {
           ids: massFluxTab,
         },
         success: function (data) {
-          console.log(data);
-          console.log("ouiiiii");
           location.reload();
         },
         error: function () {
-          console.log(data);
           alert("Erreur lors de la communication avec le serveur.");
         },
       });
@@ -1126,24 +1121,37 @@ $.fn.setCursorPosition = function(pos) {
 
 // ---- EXPORT DOCUMENTS TO CSV  --------------------------------------------------------------------------
 
-// Function to export the flux to a csv file when clicking on the button with an id of exportfluxcsv
 $("#exportfluxcsv").on("click", function () {
-  // If the massFluxTab array is not empty
-  // Convert the massFluxTab array to CSV format
-  // const csvContent = arrayToCSV(massFluxTab);
-  // Download the CSV file
-  // downloadCSV(csvContent, 'documents.csv');
-
-  // lanches the php function flux_export_docs_csv with the massFluxTab array as a parameter
   $.ajax({
     type: "POST",
     url: flux_export_docs_csv,
     data: {
       csvdocumentids: csvdocumentids,
     },
-    success: function (data) {
-      // code_html contient le HTML renvoyé
+    xhrFields: {
+      responseType: 'blob' // Set the response type to blob
     },
+    success: function (blob) {
+      // Create a temporary URL for the blob
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create a temporary link element
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `documents_export_${new Date().toISOString().slice(0,19).replace(/[:]/g, '')}.csv`;
+      
+      // Append link to body, click it, and remove it
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    },
+    error: function(xhr, status, error) {
+      console.error('Export failed:', error);
+      alert('Failed to export CSV file. Please try again.');
+    }
   });
 });
 
@@ -2239,8 +2247,6 @@ $(document).ready(function () {
       url: ajaxUrl,
       type: "POST",
       success: function (response) {
-        alert(read_job_lock_success);
-        console.log(jobId);
         if (response.read_job_lock === "") {
           $(".job_lock_" + jobId).show();
         } else {
@@ -2289,11 +2295,9 @@ function saveInputFlux(div, link) {
 	});
 }
 
-function toggleCommentBox(button) {
-  const commentBox = button.nextElementSibling;
-  if (commentBox.style.display === "block") {
-      commentBox.style.display = "none";
-  } else {
-      commentBox.style.display = "block";
-  }
-}
+document.addEventListener('DOMContentLoaded', function () {
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+  tooltipTriggerList.forEach(tooltipTriggerEl => {
+      new bootstrap.Tooltip(tooltipTriggerEl);
+  });
+});

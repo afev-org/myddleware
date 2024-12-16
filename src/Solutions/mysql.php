@@ -25,7 +25,7 @@
 
 namespace App\Solutions;
 
-class mysqlcore extends database
+class mysql extends database
 {
     protected $driver = 'mysql';
 
@@ -64,8 +64,4 @@ class mysqlcore extends database
 
         return ' LIMIT '.$param['limit'].' OFFSET '.$param['offset'];
     }
-}
-
-class mysql extends mysqlcore
-{
 }

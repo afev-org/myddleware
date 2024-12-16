@@ -45,8 +45,10 @@ use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use PDO;
+use Shapecode\Bundle\CronBundle\Entity\CronJob;
+use App\Entity\Job;
 
-class jobcore
+class JobManager
 {
     protected $id;
     public string $message = '';
@@ -61,6 +63,7 @@ class jobcore
     protected $ruleId;
     protected $logData;
     protected $start;
+    protected $cronJob;
     protected $paramJob;
     protected $manual;
     protected int $api = 0; 	// Specify if the class is called by the API
@@ -326,6 +329,15 @@ class jobcore
         $this->paramJob = $paramJob;
         $this->id = uniqid('', true);
         $this->start = microtime(true);
+		// Search if a crontab action has the same name than the current task. If yes, we add its id 
+		$searchName = '%myddleware:'.trim($paramJob).'%';
+		$this->cronJob = $this->entityManager->getRepository(CronJob::class)->createQueryBuilder('c')
+		   ->where('c.enable = :enable')
+		   ->andWhere('c.command LIKE :command')
+		   ->setParameter('enable', '1')
+		   ->setParameter('command', $searchName)
+		   ->getQuery()
+		   ->getOneOrNullResult();
 
         // Create Job
         $insertJob = $this->insertJob();
@@ -1421,7 +1433,6 @@ class jobcore
      */
     protected function updateJob(): bool
     {
-        // $this->connection->beginTransaction(); // -- BEGIN TRANSACTION
         try {
             $close = $this->logData['Close'];
             $cancel = $this->logData['Cancel'];
@@ -1451,9 +1462,7 @@ class jobcore
             $stmt->bindValue('message', $message);
             $stmt->bindValue('id', $this->id);
             $result = $stmt->executeQuery();
-            // $this->connection->commit(); // -- COMMIT TRANSACTION
         } catch (Exception $e) {
-            // $this->connection->rollBack(); // -- ROLLBACK TRANSACTION
             $this->logger->error('Failed to update Job : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )');
             $this->message .= 'Failed to update Job : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
             return false;
@@ -1466,18 +1475,20 @@ class jobcore
      */
     protected function insertJob(): bool
     {
-        $this->connection->beginTransaction(); // -- BEGIN TRANSACTION
         try {
-            $now = gmdate('Y-m-d H:i:s');
-            $query_header = "INSERT INTO job (id, begin, status, param, manual, api) VALUES ('$this->id', '$now', 'Start', '$this->paramJob', '$this->manual', '$this->api')";
-            $stmt = $this->connection->prepare($query_header);
-            $result = $stmt->executeQuery();
-            $this->connection->commit(); // -- COMMIT TRANSACTION
+			$job = new Job();
+			$job->setId($this->id);
+			$job->setStatus('Start');
+			$job->setParam($this->paramJob);
+			$job->setBegin(new DateTime());
+			$job->setManual($this->manual);
+			$job->setApi($this->api);
+			$job->setCronJob($this->cronJob);
+			$this->entityManager->persist($job);
+			$this->entityManager->flush();
         } catch (Exception $e) {
-            $this->connection->rollBack(); // -- ROLLBACK TRANSACTION
             $this->logger->error('Failed to create Job : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )');
             $this->message .= 'Failed to create Job : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
-
             return false;
         }
 
@@ -1494,21 +1505,20 @@ class jobcore
             // Search only jobs with status start and last log created before the limit
 			// We use the begin of teh job if no log
             $sqlParams = "
-			SELECT DISTINCT job.id
-			FROM job 
-				LEFT OUTER JOIN log    
+			SELECT 
+				job.id, 
+				job.begin, 
+				TIMESTAMPDIFF(SECOND,  job.begin, NOW()) diff_job,
+				MAX(log.created) log_created,
+				TIMESTAMPDIFF(SECOND, MAX(log.created), NOW()) diff_log,
+				job.cron_job_id
+			FROM job
+				LEFT OUTER JOIN log
 					ON job.id = log.job_id
 			WHERE
 					job.status = 'start'
-				AND (
-						(
-								log.created IS NULL
-							AND TIMESTAMPDIFF(SECOND,  job.begin, NOW()) > :period
-						) OR (
-								log.created IS NOT NULL
-							AND TIMESTAMPDIFF(SECOND,  (SELECT MAX(log2.created) from log as log2 where log2.job_id = job.id), NOW()) > :period
-						)
-					)
+			GROUP BY job.id
+			HAVING diff_log > :period OR (diff_job > :period AND log_created IS NULL)
 			";
             $stmt = $this->connection->prepare($sqlParams);
             $stmt->bindValue('period', $period);
@@ -1521,6 +1531,22 @@ class jobcore
                 $jobManagerChekJob->setId($job['id']);
                 $jobManagerChekJob->closeJob();   
 				$this->setMessage('Task '.$job['id'].' successfully closed. ');
+				// Check running instances on crontab
+				// Get the running instances of the closed job from the crontab if exist
+				if (!empty($job['cron_job_id'])) {
+					// Get the cronjob
+					$cronJob = $this->entityManager->getRepository(CronJob::class)->createQueryBuilder('c')
+								   ->where('c.id = :id')
+								   ->setParameter('id', $job['cron_job_id'])
+								   ->getQuery()
+								   ->getOneOrNullResult();
+					// Decrease the number of running instances if there is at least one running instance
+					if ($cronJob->getRunningInstances() > 0) {
+						$cronJob->decreaseRunningInstances();
+						$this->entityManager->persist($cronJob);
+						$this->entityManager->flush();
+					}
+				}
             }
         } catch (Exception $e) {
             $this->logger->error('Error : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )');
@@ -1529,7 +1555,4 @@ class jobcore
         }
         return true;
     }
-}
-class JobManager extends jobcore
-{
 }

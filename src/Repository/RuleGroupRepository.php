@@ -1,13 +1,14 @@
-{#/*********************************************************************************
+<?php
+/*********************************************************************************
  * This file is part of Myddleware.
 
  * @package Myddleware
  * @copyright Copyright (C) 2013 - 2015  Stéphane Faure - CRMconsult EURL
  * @copyright Copyright (C) 2015 - 2016  Stéphane Faure - Myddleware ltd - contact@myddleware.com
- * @link http://www.myddleware.com	
- 
+ * @link http://www.myddleware.com
+
  This file is part of Myddleware.
- 
+
  Myddleware is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -20,15 +21,18 @@
 
  You should have received a copy of the GNU General Public License
  along with Myddleware.  If not, see <http://www.gnu.org/licenses/>.
-*********************************************************************************/ #} 
+*********************************************************************************/
 
-<li class="nav-item d-grid flex-fill" role="presentation">
-    <button class="nav-link lh-lg active btn-lg fw-bold py-4" id="infos-tab" data-bs-toggle="tab" data-bs-target="#infos" type="button" role="tab" aria-controls="infos" aria-selected="true">
-        {{'view_connector.tabs.info'|trans}}
-    </button>
-</li>
-<li class="nav-item d-grid flex-fill" role="presentation">
-    <button class="nav-link lh-lg btn-lg fw-bold py-4" id="help-tab" data-bs-toggle="tab" data-bs-target="#help" type="button" role="tab" aria-controls="help" aria-selected="false">
-        {{'view_connector.tabs.help'|trans}}
-    </button>
-</li>
+namespace App\Repository;
+
+use App\Entity\Rulegroup;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
+
+class RuleGroupRepository extends ServiceEntityRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, Rulegroup::class);
+    }
+}

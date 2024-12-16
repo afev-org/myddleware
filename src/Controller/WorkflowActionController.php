@@ -166,6 +166,10 @@ class WorkflowActionController extends AbstractController
      */
     public function WorkflowActionDeleteAction(string $id, Request $request)
     {
+        if (!$this->tools->isPremium()) {
+            return $this->redirectToRoute('premium_list');
+        }
+
         try {
             $em = $this->getDoctrine()->getManager();
             $workflowActionResult = $em->getRepository(WorkflowAction::class)->findBy(['id' => $id, 'deleted' => 0]);
@@ -193,6 +197,10 @@ class WorkflowActionController extends AbstractController
      */
     public function WorkflowActionActiveAction(string $id, Request $request)
     {
+        if (!$this->tools->isPremium()) {
+            return $this->redirectToRoute('premium_list');
+        }
+
         try {
             $em = $this->getDoctrine()->getManager();
             $workflowResult = $em->getRepository(WorkflowAction::class)->findBy(['id' => $id, 'deleted' => 0]);
@@ -220,6 +228,10 @@ class WorkflowActionController extends AbstractController
      */
     public function WorkflowActionActiveShowAction(string $id, Request $request)
     {
+        if (!$this->tools->isPremium()) {
+            return $this->redirectToRoute('premium_list');
+        }
+
         try {
             $em = $this->getDoctrine()->getManager();
             $workflowActionResult = $em->getRepository(WorkflowAction::class)->findBy(['id' => $id, 'deleted' => 0]);
@@ -246,7 +258,11 @@ class WorkflowActionController extends AbstractController
      * @Route("/new/{workflowId}", name="workflow_action_create_with_workflow")
      */
     public function WorkflowCreateActionWithWorkflow(string $workflowId, Request $request)
-    {
+        {
+        if (!$this->tools->isPremium()) {
+            return $this->redirectToRoute('premium_list');
+        }
+
         try {
             $em = $this->getDoctrine()->getManager();
             $workflow = $em->getRepository(Workflow::class)->find($workflowId);
@@ -268,21 +284,30 @@ class WorkflowActionController extends AbstractController
             if ($workflowAction) {
                 $arguments = $workflowAction->getArguments();
 
-
-                $possiblesStatusesWithIntegers = DocumentRepository::findStatusType($em);
-
                 // change the array so that for each element, the key is the integer and should be replaced by the value, so the key and the value are both the value, a string
                 $StringStatus = [];
-                foreach ($possiblesStatusesWithIntegers as $key => $value) {
+                foreach ($this->documentManager->lstStatus() as $key => $value) {
                     $StringStatus[$key] = $key;
                 }
+
 
                 // to get the searchValue, we need to get the rule, and from the rule we need to get the list of the source fields. The possible choisces are the source fields of the rule. The searchValue is a choicetype
                 // step 1: get the workflow of the action
                 $ruleForSearchValue = $workflowAction->getWorkflow()->getRule();
                 // step 2: get the source fields of the rule
                 $sourceFields = $ruleForSearchValue->getSourceFields();
-                $sourceFields['id'] = 'd';
+                // Find the 'Id' field and move it to the beginning
+                $idKey = array_search('Id', $sourceFields);
+                if ($idKey === false) {
+                    $idKey = array_search('id', $sourceFields);
+                }
+                
+                if ($idKey !== false) {
+                    // Remove Id from its current position
+                    unset($sourceFields[$idKey]);
+                    // Add it to the beginning
+                    $sourceFields = [$idKey => 'id'] + $sourceFields;
+                }
 
                 // step 3: modify the source field so that for each, the key is the value and the value is the value
                 foreach ($sourceFields as $key => $value) {
@@ -293,7 +318,7 @@ class WorkflowActionController extends AbstractController
                 $sourceSearchValue = [];
                 // create an array of all the rules
 
-                $rules = $em->getRepository(Rule::class)->findBy(['active' => true]);
+                $rules = $em->getRepository(Rule::class)->findBy(['deleted' => 0]);
 
                 // fill the array with the source fields of each rule
                 foreach ($rules as $rule) {
@@ -316,7 +341,7 @@ class WorkflowActionController extends AbstractController
                     'status' => null,
                     'ruleId' => null,
                     'searchField' => null,
-                    'searchValue' => null,
+                    'searchValue' => 'id',
                     'order' => null,
                     'active' => null,
                     'to' => null,
@@ -539,6 +564,10 @@ class WorkflowActionController extends AbstractController
      */
     public function getTargetFields(string $ruleId, EntityManagerInterface $em): JsonResponse
     {
+        if (!$this->tools->isPremium()) {
+            return $this->redirectToRoute('premium_list');
+        }
+
         $ruleFields = $em->getRepository(RuleField::class)->findBy(['rule' => $ruleId]);
 
         if (!$ruleFields) {
@@ -561,6 +590,10 @@ class WorkflowActionController extends AbstractController
      */
     public function WorkflowActionShowAction(string $id, Request $request, int $page): Response
     {
+        if (!$this->tools->isPremium()) {
+            return $this->redirectToRoute('premium_list');
+        }
+
         try {
             $em = $this->getDoctrine()->getManager();
             $workflow = $em->getRepository(WorkflowAction::class)->findOneBy(['id' => $id, 'deleted' => 0]);
@@ -605,6 +638,10 @@ class WorkflowActionController extends AbstractController
      */
     public function WorkflowActionEditAction(string $id, Request $request)
     {
+        if (!$this->tools->isPremium()) {
+            return $this->redirectToRoute('premium_list');
+        }
+
         try {
             $em = $this->getDoctrine()->getManager();
             $workflowActionArray = $em->getRepository(WorkflowAction::class)->findBy(['id' => $id, 'deleted' => 0]);
@@ -614,12 +651,9 @@ class WorkflowActionController extends AbstractController
                 $this->emptyArgumentsBasedOnAction($id);
                 $arguments = $workflowAction->getArguments();
 
-
-                $possiblesStatusesWithIntegers = DocumentRepository::findStatusType($em);
-
                 // change the array so that for each element, the key is the integer and should be replaced by the value, so the key and the value are both the value, a string
                 $StringStatus = [];
-                foreach ($possiblesStatusesWithIntegers as $key => $value) {
+                foreach ($this->documentManager->lstStatus() as $key => $value) {
                     $StringStatus[$key] = $key;
                 }
 
@@ -628,7 +662,18 @@ class WorkflowActionController extends AbstractController
                 $ruleForSearchValue = $workflowAction->getWorkflow()->getRule();
                 // step 2: get the source fields of the rule
                 $sourceFields = $ruleForSearchValue->getSourceFields();
-                $sourceFields['id'] = 'id';
+                // Find the 'Id' field and move it to the beginning
+                $idKey = array_search('Id', $sourceFields);
+                if ($idKey === false) {
+                    $idKey = array_search('id', $sourceFields);
+                }
+                
+                if ($idKey !== false) {
+                    // Remove Id from its current position
+                    unset($sourceFields[$idKey]);
+                    // Add it to the beginning
+                    $sourceFields = [$idKey => 'id'] + $sourceFields;
+                }
 
                 // step 3: modify the source field so that for each, the key is the value and the value is the value
                 foreach ($sourceFields as $key => $value) {
@@ -639,7 +684,7 @@ class WorkflowActionController extends AbstractController
                 $sourceSearchValue = [];
                 // create an array of all the rules
 
-                $rules = $em->getRepository(Rule::class)->findBy(['active' => true]);
+                $rules = $em->getRepository(Rule::class)->findBy(['deleted' => 0]);
 
                 // fill the array with the source fields of each rule
                 foreach ($rules as $rule) {
@@ -898,6 +943,11 @@ class WorkflowActionController extends AbstractController
     // public function to empty the arguments based on the action
     public function emptyArgumentsBasedOnAction($id)
     {
+
+        if (!$this->tools->isPremium()) {
+            return $this->redirectToRoute('premium_list');
+        }
+
         $em = $this->getDoctrine()->getManager();
         $workflowActionArray = $em->getRepository(WorkflowAction::class)->findBy(['id' => $id, 'deleted' => 0]);
         $workflowAction = $workflowActionArray[0];
@@ -927,6 +977,10 @@ class WorkflowActionController extends AbstractController
     // public function to save the workflowAudit to the database
     public function saveWorkflowAudit($workflowId)
     {
+        if (!$this->tools->isPremium()) {
+            return $this->redirectToRoute('premium_list');
+        }
+
 
         $em = $this->getDoctrine()->getManager();
         $workflowArray = $em->getRepository(Workflow::class)->findBy(['id' => $workflowId, 'deleted' => 0]);
@@ -979,6 +1033,10 @@ class WorkflowActionController extends AbstractController
     #[Route('/workflowAction/toggle/{id}', name: 'workflow_action_toggle', methods: ['POST'])]
     public function toggleWorkflowAction(Request $request, EntityManagerInterface $em, WorkflowActionRepository $workflowActionRepository, string $id): JsonResponse
     {
+        if (!$this->tools->isPremium()) {
+            return $this->redirectToRoute('premium_list');
+        }
+
         $workflowAction = $workflowActionRepository->find($id);
 
         if (!$workflowAction) {

@@ -1,5 +1,5 @@
 <?php
-namespace App\Custom\Premium\Manager;
+namespace App\Premium\Manager;
 
 use App\Manager\ToolsManager;
 

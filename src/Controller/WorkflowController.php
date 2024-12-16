@@ -165,12 +165,15 @@ class WorkflowController extends AbstractController
      * LISTE DES WORKFLOWs.
      *
      * @return RedirectResponse|Response
-     *
-     * @Route("/list", name="workflow_list", defaults={"page"=1})
-     * @Route("/list/page-{page}", name="workflow_list_page", requirements={"page"="\d+"})
      */
-    public function WorkflowListAction(int $page = 1, Request $request)
+    #[Route('/list', name: 'workflow_list', defaults: ['page' => 1])]
+    #[Route('/list/page-{page}', name: 'workflow_list_page', requirements: ['page' => '\d+'])]
+    public function WorkflowListAction(Request $request, int $page = 1)
     {
+        if (!$this->tools->isPremium()) {
+            return $this->redirectToRoute('premium_list');
+        }
+
         try {
             
             // Récupérer les filtres depuis la requête
@@ -228,6 +231,11 @@ class WorkflowController extends AbstractController
      */
     public function WorkflowListByRuleAction(string $ruleId, int $page = 1, Request $request)
     {
+
+        if (!$this->tools->isPremium()) {
+            return $this->redirectToRoute('premium_list');
+        }
+
         try {
 
 
@@ -261,6 +269,11 @@ class WorkflowController extends AbstractController
      */
     public function WorkflowDeleteAction(string $id, Request $request)
     {
+
+        if (!$this->tools->isPremium()) {
+            return $this->redirectToRoute('premium_list');
+        }
+
         try {
 
 
@@ -289,7 +302,9 @@ class WorkflowController extends AbstractController
     public function saveWorkflowAudit($workflowId)
     {
 
-        
+        if (!$this->tools->isPremium()) {
+            return $this->redirectToRoute('premium_list');
+        }
 
         $em = $this->getDoctrine()->getManager();
         $workflowArray = $em->getRepository(Workflow::class)->findBy(['id' => $workflowId, 'deleted' => 0]);
@@ -345,6 +360,10 @@ class WorkflowController extends AbstractController
      */
     public function WorkflowActiveAction(string $id, Request $request)
     {
+        if (!$this->tools->isPremium()) {
+            return $this->redirectToRoute('premium_list');
+        }
+
         try {
 
             
@@ -373,6 +392,10 @@ class WorkflowController extends AbstractController
      */
     public function WorkflowActiveShowAction(string $id, Request $request)
     {
+        if (!$this->tools->isPremium()) {
+            return $this->redirectToRoute('premium_list');
+        }
+
         try {
 
             
@@ -399,7 +422,9 @@ class WorkflowController extends AbstractController
     #[Route('/workflow/toggle/{id}', name: 'workflow_toggle', methods: ['POST'])]
     public function toggleWorkflow(Request $request, EntityManagerInterface $em, WorkflowRepository $workflowRepository, string $id): JsonResponse
     {
-
+        if (!$this->tools->isPremium()) {
+            return $this->redirectToRoute('premium_list');
+        }
 
         $workflow = $workflowRepository->find($id);
 
@@ -420,12 +445,65 @@ class WorkflowController extends AbstractController
         return new JsonResponse(['status' => 'success', 'active' => $workflow->getActive()]);
     }
 
+    // public function to create a new workflow from a rule
+    /**
+    * @Route("/new/{rule_id}", name="workflow_create_from_rule")
+    */
+    public function WorkflowCreateFromRuleAction(Request $request, $rule_id)
+    {
+        if (!$this->tools->isPremium()) {
+            return $this->redirectToRoute('premium_list');
+        }
+
+        try {
+
+            $em = $this->getDoctrine()->getManager();
+            $workflow = new Workflow();
+            $workflow->setId(uniqid());
+            // set rule to the workflow
+            $rule = $em->getRepository(Rule::class)->find($rule_id);
+            $workflow->setRule($rule);
+            $form = $this->createForm(WorkflowType::class, $workflow, [
+                'entityManager' => $em,
+            ]);
+            $form->handleRequest($request);
+
+            if ($form->isSubmitted() && $form->isValid()) {
+                $workflow->setCreatedBy($this->getUser());
+                $workflow->setModifiedBy($this->getUser());
+                $em->persist($workflow);
+                $em->flush();
+
+                // Save the workflow audit
+                $this->saveWorkflowAudit($workflow->getId());
+
+                $this->addFlash('success', 'Workflow created successfully');
+
+                return $this->redirectToRoute('workflow_show', ['id' => $workflow->getId()]);
+            }
+
+            return $this->render(
+                'Workflow/new.html.twig',
+                [
+                    'form' => $form->createView(),
+                ]
+            );
+        } catch (Exception $e) {
+            throw $this->createNotFoundException('Error : ' . $e);
+        }
+    }
+
+    
     // public function to create a new workflow
     /**
      * @Route("/new", name="workflow_create")
      */
     public function WorkflowCreateAction(Request $request)
     {
+        if (!$this->tools->isPremium()) {
+            return $this->redirectToRoute('premium_list');
+        }
+
         try {
 
 
@@ -470,6 +548,10 @@ class WorkflowController extends AbstractController
      */
     public function WorkflowShowAction(string $id, Request $request, int $page): Response
     {
+        if (!$this->tools->isPremium()) {
+            return $this->redirectToRoute('premium_list');
+        }
+
         try {
 
             
@@ -514,6 +596,10 @@ class WorkflowController extends AbstractController
      */
     public function WorkflowEditAction(string $id, Request $request)
     {
+        if (!$this->tools->isPremium()) {
+            return $this->redirectToRoute('premium_list');
+        }
+
         try {
 
             

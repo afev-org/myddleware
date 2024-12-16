@@ -4,7 +4,7 @@ namespace App\Custom\Manager;
 
 use App\Solutions\suitecrm;
 use App\Manager\ruleManager;
-use App\Custom\Premium\Manager\DocumentManagerPremium;
+use App\Premium\Manager\DocumentManagerPremium;
 use App\Manager\LoadExternalListManager;
 use App\Entity\InternalListValue as InternalListValueEntity;
 

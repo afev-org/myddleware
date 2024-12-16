@@ -22,7 +22,7 @@
  along with Myddleware.  If not, see <http://www.gnu.org/licenses/>.
 *********************************************************************************/ #}
 
-<div class="link-help-view row text-end mx-4">
+<div class="link-help-view text-end mx-4">
 	<a href="#help-content-mapping">
 		<i class="fa fa-info-circle" aria-hidden="true"></i>
 		{{'rule.help'|trans}}
@@ -31,11 +31,13 @@
 
 <div id="fd-title" class="left">
 	<p>{{'view_rule.mapping.module_target'|trans}}
-		:{{ rule.getModuleTarget }}
+		:
+		{{ rule.getModuleTarget }}
 	</p>
 	<p></p>
 	<p>{{'view_rule.mapping.module_source'|trans}}
-		:{{ rule.getModuleSource }}
+		:
+		{{ rule.getModuleSource }}
 	</p>
 	<p></p>
 </div>
@@ -58,13 +60,20 @@
 						<p class="mapped-formula card-text mapping-card-text">{{'view_rule.mapping.formula_empty'|trans}}</p>
 					{% endif %}
 				</p>
-				<button type="button" class="btn btn-icon tooltip-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="Ajouter/Modifier le commentaire">
+				<button type="button" class="btn btn-icon tooltip-icon" onclick="toggleCommentBox(this)" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ 'view_rule.mapping.comment_title'| trans }}">
 					<i class="fa fa-info-circle" aria-hidden="true"></i>
 				</button>
 				<div class="comment-box">
-					<p class="comment-text">Votre com</p>
-					<button class="edit-btn">Modifier</button>
+					<i class="fa fa-times close-icon" aria-hidden="true" onclick="closeCommentBox(this)"></i>
+					<p class="comment-text m-2">{{ 'view_rule.mapping.comment'| trans }}</p>
+					<form method="post" action="{{ path('rulefield_update_comment', {'id': f.getId()}) }}">
+						<textarea class="form-control comment-textarea" name="comment" rows="3">{{ f.getComment is not empty ? f.getComment : '' }}</textarea>
+						<button type="submit" class="btn btn-primary m-2">{{ 'view_rule.mapping.add_comment'|trans }}</button>
+					</form>
 				</div>
+				{% if f.getComment is not empty %}
+					<div class="comment-outside">{{ f.getComment }}</div>
+				{% endif %}
 			</div>
 		</div>
 	{% endfor %}
@@ -77,3 +86,7 @@
 	<i class="fa fa-info-circle" aria-hidden="true"></i>
 </h2>
 <p>{{'help.viewrule.mapping'|trans|raw}}</p></div>
+
+<script>
+
+</script>
