@@ -2154,14 +2154,33 @@ function fields_exist(fields_duplicate) {
 function showBtnFlux(massFluxTab) {
   if (massFluxTab.length == 0) {
     $("#cancelflux").hide();
+    // if cancelflux-grey is defined, then hide it
+    if ($("#cancelflux-grey").length > 0) {
+      $("#cancelflux-grey").hide();
+    }
     $("#reloadflux").hide();
     $("#cancelreloadflux").hide();
+    if ($("#reloadflux-grey").length > 0) {
+      $("#reloadflux-grey").hide();
+    }
     $("#unlockAllFlux").hide();
+    if ($("#unlockAllFlux-grey").length > 0) {
+      $("#unlockAllFlux-grey").hide();
+    }
   } else {
     $("#cancelflux").show();
+    if ($("#cancelflux-grey").length > 0) {
+      $("#cancelflux-grey").show();
+    }
     $("#reloadflux").show();
+    if ($("#reloadflux-grey").length > 0) {
+      $("#reloadflux-grey").show();
+    }
     $("#cancelreloadflux").show();
     $("#unlockAllFlux").show();
+    if ($("#unlockAllFlux-grey").length > 0) {
+      $("#unlockAllFlux-grey").show();
+    }
   }
 }
 
@@ -2198,9 +2217,6 @@ $(document).ready(function() {
 		var storedFilters = JSON.parse(localStorage.getItem('storedFilters'));
 		// console.log(storedFilters);
 
-		// Remove the filter from the stored filters
-		delete storedFilters[filterClass];
-		// console.log(storedFilters);
 
 		// Save the updated filters back to local storage
 		localStorage.setItem('storedFilters', JSON.stringify(storedFilters));
