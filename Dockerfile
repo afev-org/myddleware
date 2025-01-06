@@ -57,11 +57,15 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Copy composer files first to leverage layer caching
-COPY composer.json composer.lock ./
-RUN composer install --no-scripts --no-autoloader
+## Install NodeJS
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get update && apt-get install -y nodejs=20.17.* build-essential && \
+    npm install -g npm yarn && \
+    apt-get clean && rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/*
 
-# Copy application files
+# Verify Node.js version
+RUN node --version
+
 COPY --chown=www-data:www-data . .
 
 # Final composer and yarn steps
