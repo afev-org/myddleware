@@ -93,7 +93,7 @@ class airtablecustom extends airtable {
 							);
 
     protected $FieldsDuplicate = array(
-        'CONTACTS' => array('fldXhleTPZRv0zBbd'),
+        'CONTACTS' => array('fldXhleTPZRv0zBbd','fldpSrPxUtj0apDA6'),
         'BINOMES' => array('fldpdbxLe9B1H2i2J'),
         'POLE' => array('fldxWO5Cs8t9z7ZP8'),
         'REFERENTS' => array('fldLt1pZEcUxKlTpH'),
