@@ -54,8 +54,8 @@
 							<tr>
 								<th class="title">{{ key }}</th>
 								 <td class="params" data-param="{{ key }}">
-									{% if key matches '/password|pwd|secret|token/i' and value is not null %}
-										******
+									{% if key|lower in sensitiveFields and value is not null %}
+										******************
 									{% else %}
 										{{ value }}
 									{% endif %}
@@ -97,9 +97,12 @@
 	</div>
 
  <script type="text/javascript">
-
-    var password = "{{ paramConnexion['password'] }}";
-    console.log("TTOTOTOTOTOT", password);
+    const sensitiveFields = {{ sensitiveFields|json_encode|raw }};
+    {% for field in sensitiveFields %}
+        {% if paramConnexion[field] is defined and paramConnexion[field] is not empty %}
+            var {{ field }} = "{{ paramConnexion[field] }}";
+        {% endif %}
+    {% endfor %}
 </script>
 {% endblock %}
 

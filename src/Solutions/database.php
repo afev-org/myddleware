@@ -31,7 +31,7 @@ use PDO;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 
-class databasecore extends solution
+class database extends solution
 {
     protected $driver;
     protected PDO $pdo;
@@ -789,7 +789,4 @@ class databasecore extends solution
     {
         return uniqid('', true);
     }
-}
-class database extends databasecore
-{
 }

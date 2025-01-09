@@ -1,7 +1,7 @@
 <?php
 namespace App\Custom\Manager;
 
-use App\Custom\Premium\Manager\ToolsManagerPremium;
+use App\Premium\Manager\ToolsManagerPremium;
 
 class ToolsManagerCustom extends ToolsManagerPremium {
 

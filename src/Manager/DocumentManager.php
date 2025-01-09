@@ -43,7 +43,7 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Swift_Mailer;
 use Swift_Message;
 
-class documentcore
+class DocumentManager
 {
     public $id;
 
@@ -82,6 +82,7 @@ class documentcore
     protected $docIdRefError;
 	protected $env;
     protected bool $transformError = false;
+    protected $filterDocRef;
     protected ?ToolsManager $tools;
     protected $api;    // Specify if the class is called by the API
     protected $ruleDocuments;
@@ -156,6 +157,7 @@ class documentcore
             'Send' => 'flux.status.send',
             'Filter' => 'flux.status.filter',
             'No_send' => 'flux.status.no_send',
+            'Error_expected' => 'flux.status.Error_expected',
             'Cancel' => 'flux.status.cancel',
             'Create_KO' => 'flux.status.create_ko',
             'Filter_KO' => 'flux.status.filter_ko',
@@ -179,6 +181,10 @@ class documentcore
 		
 	public function setId($id) {
 		$this->id = $id;
+	}
+
+	public function setDocumentType($documentType) {
+		$this->documentType = $documentType;
 	}
 
     public function setDocument($id_doc)
@@ -362,6 +368,7 @@ class documentcore
         $this->jobId = '';
         $this->docIdRefError = '';
         $this->transformError = false;
+        $this->filterDocRef = '';
         $this->api = '';    // Specify if the class is called by the API
         $this->ruleDocuments = [];
     }
@@ -541,7 +548,7 @@ class documentcore
             $stmt->bindValue(':doc_id', $this->id);
             $documentResult = $stmt->executeQuery();
             $documentData = $documentResult->fetchAssociative(); // 1 row
-			// No action if document not locked
+            // No action if document not locked
 			if (empty($documentData['job_lock'])) {
 				return true;
 			}
@@ -719,7 +726,10 @@ class documentcore
 				$docCancel->setParam($paramCancel, true);
 				$docCancel->docIdRefError = $this->id;
 				$docCancel->setMessage('This document is cancelled because a predecessor document has been generated (same source_id for the same rule). ');
-				$docCancel->updateStatus('Cancel');
+				// Set status predecessor_ko if the ref document couldn't be cancelled. 
+				if ($docCancel->updateStatus('Cancel') == false) {
+					throw new \Exception('The cancellation of the document '.$result['id'].' failed.');
+				}
 				// Add an error message to the current document
 				$this->docIdRefError = $result['id'];
 				$this->setMessage('The document in reference has been cancelled to execute the current one. ');
@@ -1017,6 +1027,10 @@ class documentcore
 					$this->updateStatus('Cancel',$this->workflowAction);
 					return false;
 				}
+				// If the value mdw_error_transformed is found in the target data of the document after transformation we send an error transformed
+				if (array_search('mdw_error_transformed',$transformed, true) !== false) {
+					 throw new \Exception('The code mdw_error_transformed found in document'); 
+				}
                 // If the type of this document is Create and if the field Myddleware_element_id isn't empty,
                 // it means that the target ID is mapped in the rule field
                 // In this case, we force the document's type to Update because Myddleware will update the record into the target application
@@ -1062,7 +1076,10 @@ class documentcore
                         throw new \Exception('The type of this document is Update. The id of the target is missing. This document is queued. ');
                     }
                 }
-            } else {
+			// if the filter status has been forced, we don't set the status Transformed or Error_transformed
+            } elseif(!empty($this->filterDocRef)) {
+				return true;
+			} else {
                 throw new \Exception('Failed to transformed data. This document is queued. ');
             }
             $this->updateStatus('Transformed',$this->workflowAction);
@@ -1519,7 +1536,8 @@ class documentcore
                         $dataInsert[$ruleFilter['target']] = (!empty($data[$ruleFilter['target']]) ? $data[$ruleFilter['target']] : '');
                     } 
                 }
-            }		
+            }
+			
             $documentEntity = $this->entityManager
                                     ->getRepository(Document::class)
                                     ->find($this->id);
@@ -1578,7 +1596,14 @@ class documentcore
                     $value = $this->getTransformValue($this->sourceData, $ruleField);
                     if (!empty($this->transformError)) {
                         throw new \Exception('Failed to transform the field '.$ruleField['target_field_name'].'.');
-                    }
+                    // Force the filter status if requested
+					} elseif (!empty($this->filterDocRef)) {
+						$this->docIdRefError = $this->filterDocRef;
+						$this->typeError = 'W';
+						$this->message .= 'Document filter because the parent document is filter too. Check reference column to open the parent document.';
+						$this->updateStatus('Filter');
+						return null;
+					}
                     $targetField[$ruleField['target_field_name']] = $value;
 					// If the target value equals mdw_no_send_field, the field isn't sent to the target
                     if ($value === "mdw_no_send_field") {
@@ -1693,6 +1718,11 @@ class documentcore
                         $$fieldNameDyn = $source[$ruleField['source_field_name']]; // Dynamic variable (e.g $name = name)
                     }
                 }
+				// Replace Document type variable 
+				if (str_contains($ruleField['formula'], "mdw_document_type")) {
+					$ruleField['formula'] = str_replace("mdw_document_type", $this->documentType, $ruleField['formula']);
+				}
+				
                 // préparation des variables
                 $this->formulaManager->init($ruleField['formula']); // mise en place de la règle dans la classe
                 $this->formulaManager->generateFormule(); // Genère la nouvelle formule à la forme PhP
@@ -1774,7 +1804,13 @@ class documentcore
             $this->message .= 'Error : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
             $this->logger->error($this->id.' - '.$this->message);
             // Set the error to true. We can't set a specific value in the return because this function could return any value (even false depending the formula)
-            $this->transformError = true;
+			// We set the ref id returned in the message (id lenght is 23 characters)
+			if (str_contains($e->getMessage(), 'mdw_set_filter_status')) {
+				$this->filterDocRef = substr($e->getMessage(), -23);
+			// Set the error to true. We can't set a specific value in the return because this function could return any value (even false depending the formula)
+			} else {
+				$this->transformError = true;
+			}
 
             return null;
         }
@@ -2251,8 +2287,6 @@ class documentcore
             $result = $stmt->executeQuery();
             // We don't clear the message because we could need it in the workflow, we clear it after the workflow execution
 			$this->createDocLog(false);
-			$this->message = '';
-			$this->docIdRefError = '';
 			// runWorkflow can't be executed if updateStatus is called from the solution class
 			if (
                     $new_status!='Send'
@@ -2260,6 +2294,9 @@ class documentcore
             ) {
 				$this->runWorkflow();
 			}
+			// Clear message after running workflow because we could use it in the workflow
+			$this->message = '';
+			$this->docIdRefError = '';
 			// Remove the lock on the document in the class and in the database
 			// Exception : status New because there is no lock on documet for this status, the lock in on the rule
 			// Exception : status No_send because the dcument has already been unlock by the status ready_to_send
@@ -2268,14 +2305,18 @@ class documentcore
 					!in_array($new_status, array('New','No_send'))
 				AND !$workflow
 			) {
-				$this->unsetLock();
+				if ($this->unsetLock() == false) {
+					throw new \Exception('Status has been changed but document has not been unlocked. ');
+				}
 			}
+			return true;
         } catch (\Exception $e) {
             $this->message .= 'Error status update : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
             $this->typeError = 'E';
             $this->logger->error($this->id.' - '.$this->message);
             $this->createDocLog();
-        }
+			return false;
+		}
     }
 
     /**
@@ -2723,8 +2764,4 @@ class documentcore
         $this->createDocLog();
     }
 	
-}
-
-class DocumentManager extends documentcore
-{
 }

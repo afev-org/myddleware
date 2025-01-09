@@ -31,12 +31,12 @@ panel:
         title2: Need technical assistance
         text1: For any technical issues, bugs, or development-related inquiries, feel free to contact us through the following channels
         text2: Technical contact 
-        text3: GitHub Repository, view or report issues directly on our GitHub
+        text3: GitHub Repository, view or report issues directly on our
         title3: New projects or buisiness opportunities ?
         text4: To discuss a new project, collaboration, or business opportunities, please reach out to us at the following address
         text5: Business contact
     documents:
-        title: Document sent by Myddleware
+        title: Documents sent by Myddleware
     solutions:
         title: Connect your data
         click: Click to see how to create this connector.
@@ -213,6 +213,9 @@ view_rule:
         formula: Formula
         module_target: Target module
         module_source: Source Module
+        comment: Comment
+        add_comment: Save
+        comment_title: Add/Edit comment
     relate:
         empty: No relation
         solution_source: Source
@@ -234,6 +237,39 @@ rule:
     yoursource: Your source solution
     yourtarget: Your target solution
     help: What should I do ?
+
+rulegroup:
+    list: Rule groups
+    title: Rule groups
+    create: Create a new rule group
+    back: Back to the list
+    title_one: Rule group
+    name: Name
+    description: Description
+    status: Status
+    create_by: Created by
+    modified_by: Modified by
+    delete: Delete
+    edit: Edit
+    updated_successfully: Rule group updated successfully
+    rules: List of rules
+    rule_removed_successfully: Rule removed successfully
+    no_rules: No rules in this group
+    rule:
+        name: Name
+        module_source: Source module
+        module_target: Target module
+        active: Active
+        confirm_remove_rule: Are you sure you want to remove this rule from the group?
+    add_rule: 'Add Rule'
+    select_rule: 'Select Rule'
+    rule_added_successfully: 'Rule added successfully'
+    confirm_transfer_title: 'Confirm Rule Transfer'
+    confirm_transfer_message: 'The rule "%rule%" is currently in group "%currentGroup%". Do you want to move it to "%newGroup%"?'
+    confirm_transfer: 'Yes, transfer rule'
+    confirm_transfer_final: 'Confirm and transfer rule'
+    cancel: 'Cancel'
+    no_available_rules: 'No available rules'
 
 list_rule:
     title: Rules
@@ -331,15 +367,18 @@ list_flux:
         filter: Filter
         filter_delete: Clear all filters
         cancel: Cancel documents
+        cancel_tooltip: This cancels the documents, they will not be sent.
         reloadcancel: Cancel and rerun documents
         unlockall: Unlock all documents
         mass_unlock_confirm: Unlock the selected documents?
         mass_cancel_confirm: Cancel the selected documents?
         reload: Reload documents
+        reload_tooltip: This reloads the documents with the same data and the same id, nothing changes.
         mass_reload_confirm: Reload the selected documents?   
         delete: Delete documents
         mass_delete_confirm: Delete the selected documents?
         exportcsv: Export Documents
+        unlockall_tooltip: If the document are locked by another process, they will be unlocked so they can be accessed again.
     filter:
         delete_confirm: Are you sure you want to delete the research filters?
         date_created: Creation date
@@ -394,6 +433,7 @@ flux:
         found: Found
         filter: Filter Cancelled
         no_send: Not sent
+        Error_expected: Erreur expected
         cancel: Sending cancelled
         filter_ko: Filter error
         create_ko: Creation error
@@ -430,6 +470,10 @@ view_flux:
         cancel: Cancel the document 
         readrecord: Run the same record
         unlock: Unlock the document
+        tooltip:
+            reload: Reload the synchronization of this document
+            cancel: Cancel execution of this document
+            readrecord: Re-execute the processing of this document
     header:
         rule: Rule
         statut: Status
@@ -449,6 +493,18 @@ view_flux:
         date_created: Creation date
         type: Type
         msg: Message
+    workflow_log:
+        id: "ID"
+        workflow: "Workflow"
+        job: "Job"
+        trigger_document: "Trigger Document"
+        generate_document: "Generate Document"
+        created_by: "Created By"
+        status: "Status"
+        date_created: "Date Created"
+        message: "Message"
+        action_name: "Action Name"
+        action_type: "Action Type"
 
 list_task:
     total: Total of tasks
@@ -469,8 +525,7 @@ list_task:
 
 
 view_task:
-    empty_log: No log
-    empty_workflow: No workflow  
+    empty_log: No log 
     task_stop: STOP TASK
     refresh: REFRESH
     nblogs: Number of logs  
@@ -515,7 +570,7 @@ view_workflow:
     description: Description
     rule: Rule
     conditions: Conditions
-    status: Status
+    status: Active
     actions_list: List of Actions
     create_action: Create a new action for this workflow
     name: Name
@@ -546,6 +601,9 @@ view_workflow_action:
     order: Order
     back_to_workflow: Back to the workflow
     create: Create a new action
+    multiple_runs: Multiple Runs
+    multiple_runs_yes: Yes
+    multiple_runs_no: No
 view_account:
     title: My account
     user_info: My information
@@ -562,9 +620,10 @@ view_account:
 function:
     all: All
     category:
-        mathematical: Maths
+        mathematical: Function
         text: Text
         date: Date and hour  
+        constant: Constant  
     description:
         text: 
             trim:  Delete the spaces (or other characters) at the beginning and the end of each string 
@@ -591,6 +650,11 @@ function:
             microtime: Return the current Unix timestamp with the microseconds
             changeTimeZone: changeTimeZone($dateToChange, $oldTimeZone, $newTimeZone) / Change the timezone of the previous date in first parameter
             changeFormatDate: changeFormatDate($dateToChange, $oldFormat, $newFormat) / Convert the previous date into first parameter in the previous format into second parameter
+        constant:
+            mdw_no_send_field: Do not send the field
+            mdw_cancel_document: Cancel the document
+            mdw_error_transformed: Set status error transformed
+            mdw_document_type: Document type (C, U ou D)
 
 solution:
     fields:
@@ -699,17 +763,17 @@ title:
         create_name: Creation of the rule
         create: Creation of a rule
         edit: Editing the rule
-        list: Rules list
-        view: Rule form
+        list: Rules
+        view: Rule
     connector:
         create: Creation of a connector
         edit: Editing the connector
-        list: Connectors list
+        list: Connectors
     flux: 
-        list: documents list
+        list: Documents
         view: document form
     task:
-        list: Tasks list
+        list: Tasks
         view: The task form
     credit:
         view: Credits purchases
@@ -720,6 +784,9 @@ title:
 
 menu:
     index: Homepage
+    rulegroup:
+        title: Rule groups
+        list: Rule groups
     rule:
         title: Rules
         createv1: Creation (v1)
@@ -744,12 +811,13 @@ menu:
     task:
         title: Tasks
         stopall: Stop all tasks
+    nav_history: Navigation History
 
 breadcrumb:
-    rule_list: Rules list
-    transfert_list: Documents list
-    task_list: Tasks list
-    connector_list: Connectors list
+    rule_list: Rules
+    transfert_list: Documents
+    task_list: Tasks
+    connector_list: Connectors
 
 menu_user:
     account: My account
@@ -980,6 +1048,7 @@ install:
     role_admin: Please note that these credentials will have administrator access rights to Myddleware
     check_button: Check now 
     next: Next
+    setup_database_button: Setup database
     previous: Previous
     requirements_info: Let's check whether your server meets the requirements to run a Myddleware project.
     php_ini_error: WARNING ! No configuration file (php.ini) used by PHP!
@@ -988,6 +1057,7 @@ install:
     errors_to_do_message: You need to do the following before continuing
     recommendations_to_do_message: Optional recommendations to improve your setup
     note_message: The command console could use a different php.ini file than the one used with your web server. To be on the safe side, please check the requirements from your web server using the command from your Myddleware directory
+    database_already_exists: A database already exists in the .env.local file. Please remove it to continue the installation.
 crontab:
     title: Jobscheduler with crontab
     title_cron: Crontab
@@ -1039,7 +1109,7 @@ variable:
     delete: Delete
     view: View
   create_new: Create a new variable
-  list_title: List of Variables
+  list_title: Variables
   confirm_delete: Are you sure you want to delete this variable?
   no_variables: No variables found.
   table_headers:

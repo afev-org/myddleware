@@ -36,6 +36,9 @@
 						{{ form_row(form.order) }}
 					</div>
 					<div class="col-md-6">
+						{{ form_row(form.multipleRuns) }}
+					</div>
+					<div class="col-md-6">
 						{{ form_row(form.status) }}
 					</div>
 				</div>
@@ -52,6 +55,9 @@
 						{{ form_row(form.message) }}
 					</div>
 					<div class="col-md-6">
+						{{ form_row(form.ruleId) }}
+					</div>
+					<div class="col-md-6">
 						{{ form_row(form.searchField) }}
 					</div>
 				</div>
@@ -59,13 +65,10 @@
 					<div class="col-md-6">
 						{{ form_row(form.searchValue) }}
 					</div>
-					<div class="col-md-6">
-						{{ form_row(form.rerun) }}
-					</div>
 				</div>
 				<div class="row mb-4">
 					<div class="col-md-6">
-						{{ form_row(form.ruleId) }}
+						{{ form_row(form.rerun) }}
 					</div>
 					<div class="col-md-6">
 						{{ form_row(form.to) }}
