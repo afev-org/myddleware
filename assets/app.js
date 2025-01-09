@@ -50,6 +50,11 @@ if (window.location.href.includes('workflowAction') || window.location.href.incl
     require('./js/workflows.js')
     require('./js/editAction.js')
 }
+if (window.location.href.includes('workflow/show')) {
+    require('./js/workflow-actions-collapse.js')
+    require('./js/workflow-logs-collapse.js')
+}
+
 
 if (window.location.href.includes('rule/panel') || window.location.href.includes('premium/list')) {
     require('./js/home.js')

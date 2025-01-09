@@ -422,3 +422,19 @@ td > a {
 	margin-top: 3em;
 	align-items: flex-start !important;
 }
+
+#limit {
+	margin-top: 29px;
+}
+
+#description {
+	margin-top: 77px;
+}
+
+.workflow-name-link-rule {
+	color: #0a58ca !important;
+}
+
+.workflow-name-link-rule:hover {
+	text-decoration: underline !important;
+}

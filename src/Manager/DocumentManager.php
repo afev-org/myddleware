@@ -1330,6 +1330,13 @@ class DocumentManager
             // If one is different we stop the function
             if (!empty($this->ruleFields)) {
                 foreach ($this->ruleFields as $field) {
+					// If one of the field isn't set then we return false
+					if (
+							!isset($history[$field['target_field_name']])
+						 OR !isset($target[$field['target_field_name']]) 
+					){
+						return false;
+					}
                     if (stripslashes(trim($history[$field['target_field_name']])) != stripslashes(trim($target[$field['target_field_name']]))) {
                         // Null text is considered as empty for comparaison
 						if ($target[$field['target_field_name']] === 'null') {
@@ -2298,8 +2305,8 @@ class DocumentManager
 			$this->message = '';
 			$this->docIdRefError = '';
 			// Remove the lock on the document in the class and in the database
-			// Exception : status New because there is no lock on documet for this status, the lock in on the rule
-			// Exception : status No_send because the dcument has already been unlock by the status ready_to_send
+			// Exception : status New because there is no lock on document for this status, the lock in on the rule
+			// Exception : status No_send because the document has already been unlock by the status ready_to_send
 			// Exception : Update status call by a workflow, the lock will be removed only by the main call
 			if (
 					!in_array($new_status, array('New','No_send'))

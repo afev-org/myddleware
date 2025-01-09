@@ -4,7 +4,7 @@ namespace App\Custom\Solutions;
 use App\Solutions\mysql;
 use App\Solutions\suitecrm;
 use App\Custom\Manager\DocumentManagerCustom;
-use App\Manager\DocumentManager;
+// use App\Manager\DocumentManager;
 
 use Symfony\Bridge\Monolog\Logger;
 use Myddleware\RegleBundle\Classes\rule as ruleMyddleware;
@@ -33,7 +33,6 @@ class mysqlcustom extends mysql {
 	 */
 	private $solutionManager;
 
-	private $documentManager;
 		
 	// Si le connecteur est MySQL pour le COMET alros on change la connexion pour utiliser le webservice custom de SuiteCRM
 	public function login($paramConnexion) {	
@@ -120,14 +119,7 @@ class mysqlcustom extends mysql {
 
 				// Change the document data 
 				if (!isset($this->documentManager)) {
-					$chlidEntityManager = clone $this->entityManager;
-					$chlidEntityManager->clear();
-					$this->documentManager = new DocumentManager(
-						$this->logger, 
-						$this->connection, 
-						$chlidEntityManager,
-						$this->formulaManager
-					);
+					$this->setDocumentManager();
 				}
 				$paramDoc['id_doc_myddleware'] = $idDoc;
 				$paramDoc['jobId'] = $param['jobId'];

@@ -16,17 +16,16 @@
 				{% for workflow in entities %}
 					<tr>
 						<td>
-							<a href="{{ path('workflow_show', {'id': workflow.id}) }}" class="help-link all-link">{{ workflow.name }}</a>
+							<a href="{{ path('workflow_show', {'id': workflow.id}) }}" class="help-link all-link link-fit-workflow-name">{{ workflow.name }}</a>
 						</td>
 						<td>
-							<a href="{{ path('regle_open',{'id' : workflow.rule.id }) }}" title="{{ workflow.rule.name }}" class="text-decoration-none help-link all-link">
+							<a href="{{ path('regle_open',{'id' : workflow.rule.id }) }}" title="{{ workflow.rule.name }}" class="text-decoration-none help-link all-link link-fit-rule-name">
 								{{ workflow.rule.name }}</a>
 						</td>
 						<td style="word-break: keep-all; overflow-wrap: break-word; max-width: 150px;">
 							{% if workflow.description|length > 60 %}
-								{{ workflow.description|slice(0, 30) ~ '...' }}
 								<div id="param-short-{{ loop.index }}">
-									{{ workflow.description|slice(0, 100) ~ '...' }}
+									{{ workflow.description|slice(0, 60) ~ '...' }}
 									<button onclick="document.getElementById('param-short-{{ loop.index }}').style.display='none';document.getElementById('param-full-{{ loop.index }}').style.display='block';">Show more</button>
 								</div>
 								<div id="param-full-{{ loop.index }}" style="display: none;">

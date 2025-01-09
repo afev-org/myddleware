@@ -23,10 +23,6 @@ class ManagerCompilerPass implements CompilerPassInterface
 									'UpgradeManager' => 'standard', 
 								);
 
-	protected $solutions = array(
-									'mysql' => 'standard',
-								);
-
     public function process(ContainerBuilder $container)
     {
 		// Manage each manager class depending of its type
@@ -50,7 +46,7 @@ class ManagerCompilerPass implements CompilerPassInterface
 			// For non premium classes
 			} else {
 				// If the custom class exists we use it 
-				if (class_exists("App\Custom\Manager\$customClass")) {
+				if (class_exists("App\Custom\Manager\\$customClass")) {
 					// Change service name
 					$definition = $container->getDefinition("App\Manager\\$class");
 					$definition->setClass("App\Custom\Manager\\$customClass");
