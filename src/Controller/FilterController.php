@@ -151,7 +151,7 @@ public function emptySearchAction(Request $request): Response
         'page' => 1,
     ], false);
 
-    return $this->render('testFilter.html.twig', [
+    return $this->render('documentFilter.html.twig', [
         'form' => $form->createView(),
         'formFilter'=> $formFilter->createView(),
         'documents' => $documents,
@@ -187,7 +187,7 @@ public function removeFilter(Request $request): JsonResponse
      * @Route("/document/list/search-{search}", name="document_list", defaults={"page"=1})
      * @Route("/document/list/page-{page}", name="document_list_page", requirements={"page"="\d+"})
      */
-    public function testFilterAction(Request $request, int $page = 1, int $search = 1): Response
+    public function documentFilterAction(Request $request, int $page = 1, int $search = 1): Response
     {
         $formFilter = $this->createForm(FilterType::class, null);
         $form = $this->createForm(CombinedFilterType::class, null, [
@@ -344,7 +344,7 @@ public function removeFilter(Request $request): JsonResponse
 
         
         
-        return $this->render('testFilter.html.twig', [
+        return $this->render('documentFilter.html.twig', [
             'form' => $form->createView(),
             'formFilter'=> $formFilter->createView(),
             'documents' => $documents,
@@ -541,6 +541,7 @@ public function removeFilter(Request $request): JsonResponse
             'flux.status.send' => 'Send',
             'flux.status.filter' => 'Filter',
             'flux.status.no_send' => 'No_send',
+            'flux.status.Error_expected' => 'Error_expected',
             'flux.status.cancel' => 'Cancel',
             'flux.status.filter_ko' => 'Filter_KO',
             'flux.status.predecessor_ko' => 'Predecessor_KO',
@@ -684,11 +685,14 @@ public function removeFilter(Request $request): JsonResponse
                 !empty($data['rule'])
             OR !empty($data['customWhere']['rule'])
         ) {
+
+            $singleRuleId = $this->getSingleRuleIdFromRuleName($data['rule'] ?? $data['customWhere']['rule']);
+
             if (isset($data['operators']['name'])) {
-                    $where .= " AND rule.name != :ruleName ";
+                    $where .= " AND rule.id != :ruleId ";
                 
             } else {
-                $where .= " AND rule.name = :ruleName ";
+                $where .= " AND rule.id = :ruleId ";
             }
         }
 
@@ -840,8 +844,7 @@ public function removeFilter(Request $request): JsonResponse
                 !empty($data['rule'])
              OR !empty($data['customWhere']['rule'])
          ) {
-            $ruleFilter = trim((!empty($data['customWhere']['rule']) ? $data['customWhere']['rule'] : $data['rule']));
-            $stmt->bindValue(':ruleName', $ruleFilter);
+            $stmt->bindValue(':ruleId', $singleRuleId);
         }
         // Status
         if (!empty($data['status'])) {
@@ -879,6 +882,12 @@ public function removeFilter(Request $request): JsonResponse
         }
         // Run the query and return the results
         return $stmt->executeQuery()->fetchAllAssociative();
+    }
+
+    public function getSingleRuleIdFromRuleName($ruleName)
+    {
+        $ruleRepository = $this->entityManager->getRepository(Rule::class);
+        return $ruleRepository->findOneBy(['name' => $ruleName])->getId();
     }
 
     //Create pagination using the Pagerfanta Bundle based on a request
@@ -921,120 +930,135 @@ public function removeFilter(Request $request): JsonResponse
             throw $this->createNotFoundException('No document selected');
         }
 
-        // converts the string of document ids into an array
-        $_POST['csvdocumentids'] = explode(',', $_POST['csvdocumentids']);
-
-        // fetches the documents from the database
-        $documents = $this->entityManager->getRepository(Document::class)->findBy(['id' => $_POST['csvdocumentids']]);
-        $rootPath = $this->getParameter('kernel.project_dir');
-        $envFilePath = $rootPath . '/.env.local';
-
-        // check if te .env.local file exists, if not then use the .env
-        if (!file_exists($envFilePath)) {
-            $envFilePath = $rootPath . '/.env';
+        // Clean and prepare IDs
+        $documentIds = array_filter(explode(',', $_POST['csvdocumentids']));
+        
+        if (empty($documentIds)) {
+            throw $this->createNotFoundException('No valid document IDs provided');
         }
 
-        if (file_exists($envFilePath)) {
-            $lines = file($envFilePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            foreach ($lines as $line) {
-                if (str_starts_with($line, 'APP_ENV')) {
-                    $env = explode('=', $line, 2)[1] ?? null;
-                    break;
-                }
-            }
-            if (!isset($env)) {
-                throw new Exception('APP_ENV not found in .env.local file');
-            }
+        // Create placeholders for the IN clause
+        $placeholders = str_repeat('?,', count($documentIds) - 1) . '?';
 
-            // Define the path of your cache directory
-            $cacheDir = $rootPath . '/var/cache/' . $env;
+        // Build query
+        $query = "
+            SELECT 
+                document.id,
+                document.rule_id,
+                document.created_by,
+                document.modified_by, 
+                document.date_created,
+                document.date_modified,
+                document.status,
+                document.source_id,
+                document.target_id,
+                document.source_date_modified,
+                document.mode,
+                document.type,
+                document.attempt,
+                document.global_status,
+                document.parent_id,
+                document.deleted,
+                source_data.data as source_data,
+                target_data.data as target_data,
+                history_data.data as history_data
+            FROM document
+            LEFT JOIN documentdata source_data 
+                ON document.id = source_data.doc_id AND source_data.type = 'S'
+            LEFT JOIN documentdata target_data 
+                ON document.id = target_data.doc_id AND target_data.type = 'T'
+            LEFT JOIN documentdata history_data 
+                ON document.id = history_data.doc_id AND history_data.type = 'H'
+            WHERE document.id IN ($placeholders)";
 
-            // Check if the cache directory exists, if not, create it
-            if (!is_dir($cacheDir)) {
-                mkdir($cacheDir, 0777, true);  // true means it will create nested directories as needed
-            }
+        $stmt = $this->entityManager->getConnection()->prepare($query);
+        
+        // Bind parameters individually
+        foreach ($documentIds as $index => $id) {
+            $stmt->bindValue($index + 1, $id);
+        }
+        
+        $results = $stmt->executeQuery()->fetchAllAssociative();
 
-            // Now try to open the file
-            $fp = fopen($cacheDir . '/documents.csv', 'w');
-            if ($fp === false) {
-                throw new Exception('Failed to open file for writing');
-            }
+        // Create a temporary file in memory
+        $fp = fopen('php://temp', 'w+');
 
-            // creates the header of the csv file according to the following sql of the document table
+        // creates the header of the csv file
+        $header = [
+            'id',
+            'rule_id',
+            'created_by',
+            'modified_by',
+            'date_created',
+            'date_modified',
+            'status',
+            'source_id',
+            'target_id',
+            'source_date_modified',
+            'mode',
+            'type',
+            'attempt',
+            'global_status',
+            'parent_id',
+            'deleted',
+            'source',
+            'target',
+            'history'
+        ];
 
-            $header = [
-                'id',
-                'rule_id',
-                'created_by',
-                'modified_by',
-                'date_created',
-                'date_modified',
-                'status',
-                'source_id',
-                'target_id',
-                'source_date_modified',
-                'mode',
-                'type',
-                'attempt',
-                'global_status',
-                'parent_id',
-                'deleted',
-                'source',
-                'target',
-                'history'
+        // writes the header in the csv file
+        fputcsv($fp, $header);
+
+        // the results are serialized, so we need to unserialize them
+        foreach ($results as $key => $row) {
+            // Unserialize the PHP serialization
+            $sourceData = unserialize($row['source_data']);
+            $targetData = unserialize($row['target_data']); 
+            $historyData = unserialize($row['history_data']);
+            
+            // Remove extra quotes and semicolon that were added during serialization
+            $results[$key]['source_data'] = trim($sourceData, '";');
+            $results[$key]['target_data'] = trim($targetData, '";');
+            $results[$key]['history_data'] = trim($historyData, '";');
+        }
+
+
+        // Write data
+        foreach ($results as $row) {
+            $csvRow = [
+                $row['id'],
+                $row['rule_id'],
+                $row['created_by'],
+                $row['modified_by'],
+                $row['date_created'],
+                $row['date_modified'],
+                $row['status'],
+                $row['source_id'],
+                $row['target_id'],
+                $row['source_date_modified'],
+                $row['mode'],
+                $row['type'],
+                $row['attempt'],
+                $row['global_status'],
+                $row['parent_id'],
+                $row['deleted'],
+                $row['source_data'] ?? '',
+                $row['target_data'] ?? '',
+                $row['history_data'] ?? ''
             ];
-
-            // writes the header in the csv file
-            fputcsv($fp, $header);
-            // puts the data of each document in the csv file
-            foreach ($documents as $document) {
-                // Fetch the docmunet data: for each document, we have 3 types of data: source, target and history
-                // We fetch the data of each type and we put it in an string. If there is data, then we put it in the row, otherwise we put an empty string
-
-                $documentDataSource = $this->entityManager->getRepository(DocumentData::class)->findOneBy(['doc_id' => $document->getId(), 'type' => 'S']) ? $this->entityManager->getRepository(DocumentData::class)->findOneBy(['doc_id' => $document->getId(), 'type' => 'S'])->getData() : '';
-                $documentDataTarget = $this->entityManager->getRepository(DocumentData::class)->findOneBy(['doc_id' => $document->getId(), 'type' => 'T']) ? $this->entityManager->getRepository(DocumentData::class)->findOneBy(['doc_id' => $document->getId(), 'type' => 'T'])->getData() : '';
-                $documentDataHistory = $this->entityManager->getRepository(DocumentData::class)->findOneBy(['doc_id' => $document->getId(), 'type' => 'H']) ? $this->entityManager->getRepository(DocumentData::class)->findOneBy(['doc_id' => $document->getId(), 'type' => 'H'])->getData() : '';
-
-                $row = [
-                    $document->getId(),
-                    $document->getRule()->getId(),
-                    $document->getCreatedBy(),
-                    $document->getModifiedBy(),
-                    $document->getDateCreated()->format('Y-m-d H:i:s'),
-                    $document->getDateModified()->format('Y-m-d H:i:s'),
-                    $document->getStatus(),
-                    $document->getSource(),
-                    $document->getTarget(),
-                    $document->getSourceDateModified()->format('Y-m-d H:i:s'),
-                    $document->getMode(),
-                    $document->getType(),
-                    $document->getAttempt(),
-                    $document->getGlobalStatus(),
-                    $document->getParentId(),
-                    $document->getDeleted(),
-                    $documentDataSource,
-                    $documentDataTarget,
-                    $documentDataHistory
-                    // get the document document data if the doc id is the same as the document id and getType() is S, otherwise empty string
-
-                ];
-                try {
-                    fputcsv($fp, $row);
-                } catch (\Throwable $e) {
-                    throw $this->createNotFoundException('Page not found.' . $e->getMessage() . ' ' . $e->getFile() . ' ' . $e->getLine());
-                }
-            }
-
-            // closes the csv file
-            fclose($fp);
-
-            // adds message to the flashbag
-            $this->addFlash('success', 'Documents exported successfully');
-
-            // return response with status ok
-            return new Response('csv exported successfully', Response::HTTP_OK);
-        } else {
-            throw new Exception('.env.local file not found');
+            fputcsv($fp, $csvRow);
         }
+
+        rewind($fp);
+        $content = stream_get_contents($fp);
+        fclose($fp);
+
+        $response = new Response($content);
+        $response->headers->set('Content-Type', 'text/csv');
+        $response->headers->set('Content-Disposition', 'attachment; filename="documents_export_'.date('Y-m-d_His').'.csv"');
+        $response->headers->set('Pragma', 'no-cache');
+        $response->headers->set('Expires', '0');
+        
+        return $response;
     }
 }

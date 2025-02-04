@@ -30,7 +30,7 @@ use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 //use Psr\LoggerInterface;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 
-class moodlecore extends solution
+class moodle extends solution
 {
     protected $moodleClient;
     protected array $required_fields = [
@@ -193,13 +193,18 @@ class moodlecore extends solution
     public function read($param): array
     {
         try {
-			// No read action in case of history on enrolment module (except if user_id and course_id are duplicate search parameters)
+			// No read action in case of history on enrolment module (except if user_id and course_id are duplicate search parameters for enrolment)
 			if (
-					in_array($param['module'], array('manual_enrol_users', 'manual_unenrol_users'))
-				AND $param['call_type'] == 'history'
+					$param['call_type'] == 'history'
 				AND (
-						empty($param['query']['userid'])
-					 OR empty($param['query']['courseid'])
+						$param['module'] == 'manual_unenrol_users' // Don't want a no_send for manual_unenrol_users
+					OR (
+							$param['module'] == 'manual_enrol_users'
+						AND (
+								empty($param['query']['userid'])
+							 OR empty($param['query']['courseid'])
+						)
+					)
 				)
 			) {
 				return array();
@@ -774,8 +779,4 @@ class moodlecore extends solution
 			}
 		}
 	}
-}
-
-class moodle extends moodlecore
-{
 }

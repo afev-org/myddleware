@@ -38,6 +38,7 @@ use App\Entity\RuleParamAudit;
 use App\Entity\RuleRelationShip;
 use App\Entity\Solution;
 use App\Entity\User;
+use App\Entity\Variable;
 use App\Form\ConnectorType;
 use App\Form\DuplicateRuleFormType;
 use App\Manager\DocumentManager;
@@ -75,7 +76,7 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use App\Form\Type\RelationFilterType;
 use App\Entity\Workflow;
-
+use App\Entity\WorkflowAction;
     /**
      * @Route("/rule")
      */
@@ -154,81 +155,66 @@ use App\Entity\Workflow;
      * LISTE DES REGLES.
      *
      * @return RedirectResponse|Response
-     *
-     * @Route("/list", name="regle_list", defaults={"page"=1})
-     * @Route("/list/page-{page}", name="regle_list_page", requirements={"page"="\d+"})
      */
-    public function ruleListAction(int $page = 1, Request $request)
+    #[Route('/list', name: 'regle_list', defaults: ['page' => 1])]
+    #[Route('/list/page-{page}', name: 'regle_list_page', requirements: ['page' => '\d+'])]
+    public function ruleListAction(Request $request, int $page = 1)
     {
         try {
-
             $ruleName = $request->query->get('rule_name');
+            
+            // Initialize compact array early
+            $compact = [
+                'nb' => 0,
+                'entities' => '',
+                'pager' => ''
+            ];
 
+            $this->getInstanceBdd();
+            $pager = $this->tools->getParamValue('ruleListPager');
+
+            // Get rules based on search or not
             if ($ruleName) {
-
-                $key = $this->sessionService->getParamRuleLastKey();
-                if (null != $key && $this->sessionService->isRuleIdExist($key)) {
-                    $id = $this->sessionService->getRuleId($key);
-                    $this->sessionService->removeRuleId($key);
-
-                    return $this->redirect($this->generateUrl('regle_open', ['id' => $id]));
-                }
-
-                $this->getInstanceBdd();
-                $compact['nb'] = 0;
-                $pager = $this->tools->getParamValue('ruleListPager');
-                $compact = $this->nav_pagination([
-                    'adapter_em_repository' => $this->entityManager->getRepository(Rule::class)->findListRuleByUser($this->getUser(), $ruleName),
-                    'maxPerPage' => isset($pager) ? $pager : 20,
-                    'page' => $page,
-                ]);
-
+                $intermediateResult = $this->entityManager->getRepository(Rule::class)
+                    ->findListRuleByUser($this->getUser(), $ruleName);
             } else {
-
-                $key = $this->sessionService->getParamRuleLastKey();
-                if (null != $key && $this->sessionService->isRuleIdExist($key)) {
-                    $id = $this->sessionService->getRuleId($key);
-                    $this->sessionService->removeRuleId($key);
-
-                    return $this->redirect($this->generateUrl('regle_open', ['id' => $id]));
-                }
-
-                $this->getInstanceBdd();
-
-                $compact['nb'] = 0;
-                $pager = $this->tools->getParamValue('ruleListPager');
-                $compact = $this->nav_pagination([
-                    'adapter_em_repository' => $this->entityManager->getRepository(Rule::class)->findListRuleByUser($this->getUser()),
-                    'maxPerPage' => isset($pager) ? $pager : 20,
-                    'page' => $page,
-                ]);
-
+                $intermediateResult = $this->entityManager->getRepository(Rule::class)
+                    ->findListRuleByUser($this->getUser());
             }
 
-                // Si tout se passe bien dans la pagination
-                if ($compact) {
-                    // Si aucune règle
-                    if ($compact['nb'] < 1 && !intval($compact['nb'])) {
-                        $compact['entities'] = '';
-                        $compact['pager'] = '';
-                    }
+            // Only do pagination if we have results
+            if (!empty($intermediateResult)) {
+                $compact = $this->nav_pagination([
+                    'adapter_em_repository' => $intermediateResult,
+                    'maxPerPage' => isset($pager) ? $pager : 20,
+                    'page' => $page,
+                ]);
 
-                    return $this->render(
-                        'Rule/list.html.twig',
-                        [
-                            'nb_rule' => $compact['nb'],
-                            'entities' => $compact['entities'],
-                            'pager' => $compact['pager'],
-                        ]
-                    );
-                }
-                throw $this->createNotFoundException('Error');
+                
+            }
             
+            $finalNbRules = $compact['nb'];
+            // if compact nb is 0 set final enitites to empty array
+            if ($finalNbRules === 0) {
+                $finalEntities = [];
+            } else {
+                $finalEntities = $compact['entities'];
+            }
+
+            // Render the template with results (even if empty)
+            return $this->render(
+                'Rule/list.html.twig',
+                [
+                    'nb_rule' => $finalNbRules,
+                    'entities' => $finalEntities,
+                    'pager' => $compact['pager'],
+                ]
+            );
+
         } catch (Exception $e) {
             throw $this->createNotFoundException('Error : ' . $e);
         }
     }
-
 
         /**
          * SUPPRESSION D'UNE REGLE.
@@ -458,6 +444,8 @@ use App\Entity\Workflow;
                         $this->addFlash('success', $success);
                     }
 
+                    $this->duplicateWorkflows($id, $newRule);
+
                     return $this->redirect($this->generateURL('regle_list'));
                 }
 
@@ -470,6 +458,71 @@ use App\Entity\Workflow;
             } catch (Exception $e) {
                 return new JsonResponse($e->getMessage());
             }
+        }
+
+        public function duplicateWorkflows($id, Rule $newRule)
+        {
+            // start by getting the rule fromthe id
+            $rule = $this->getDoctrine()
+                ->getManager()
+                ->getRepository(Rule::class)
+                ->findOneBy([
+                    'id' => $id,
+                ]);
+
+            // then get all the workflows linked to this rule
+            $workflows = $rule->getWorkflows();
+
+            // then duplicate each workflow, create a new one with the same name and link it to the new rule
+            foreach ($workflows as $workflow) {
+                $newWorkflow = new Workflow();
+                $newWorkflow->setId(uniqid());
+                $ruleName = substr($newRule->getName(), 0, 5);
+                $workflowName = $workflow->getName();
+                $newWorkflow->setName($workflowName. "-duplicate-".$ruleName);
+                $newWorkflow->setRule($newRule);
+                $newWorkflow->setDeleted(false);
+                $newWorkflow->setCreatedBy($this->getUser());
+                $newWorkflow->setModifiedBy($this->getUser());
+                $newWorkflow->setDateCreated(new \DateTime());
+                $newWorkflow->setDateModified(new \DateTime());
+                $newWorkflow->setCondition($workflow->getCondition());
+                $newWorkflow->setDescription($workflow->getDescription());
+                $newWorkflow->setActive($workflow->getActive());
+                $newWorkflow->setOrder($workflow->getOrder());
+                $this->entityManager->persist($newWorkflow);
+
+                $this->entityManager->flush();
+
+                $this->duplicateWorkflowActions($workflow, $newWorkflow);
+            }
+
+
+        }
+
+        public function duplicateWorkflowActions(Workflow $workflow, Workflow $newWorkflow): void
+        {
+            // duplicate the actions of the workflow
+            $actions = $workflow->getWorkflowActions();
+            foreach ($actions as $action) {
+                $newAction = new WorkflowAction();
+                $newAction->setId(uniqid());
+                $newAction->setWorkflow($newWorkflow);
+                $newAction->setCreatedBy($this->getUser());
+                $newAction->setModifiedBy($this->getUser());
+                $newAction->setDateCreated(new \DateTime());
+                $newAction->setDateModified(new \DateTime());
+                $newAction->setName($action->getName());
+                $newAction->setAction($action->getAction());
+                $newAction->setDescription($action->getDescription());
+                $newAction->setOrder($action->getOrder());
+                $newAction->setArguments($action->getArguments());
+                $newAction->setDeleted(false);
+                $newAction->setActive($action->getActive());
+                $this->entityManager->persist($newAction);
+            }
+
+            $this->entityManager->flush();
         }
 
         /**
@@ -1423,6 +1476,16 @@ use App\Entity\Workflow;
 
 								// Add rule id for simulation purpose when using lookup function
 								$this->documentManager->setRuleId($ruleKey);
+								// Add variables for simulation purpose
+								$variablesEntity = $this->entityManager->getRepository(Variable::class)->findAll();
+								if (!empty($variablesEntity)) {
+									foreach ($variablesEntity as $variable) {
+										$variables[$variable->getName()] = $variable->getvalue();
+									}
+									$this->documentManager->setParam(array('variables'=>$variables));
+								}
+								// Fix the document type for the simulation 
+								$this->documentManager->setDocumentType('C');
                                 // Transformation
 								$response = $this->documentManager->getTransformValue($record, $target_fields);
                                 if (!isset($response['message'])) {
@@ -2024,8 +2087,12 @@ use App\Entity\Workflow;
                     }
                 }
 
+                // get the full rule object
+                $rule = $this->entityManager->getRepository(Rule::class)->find($ruleKey);
+
                 //  rev 1.07 --------------------------
                 $result = [
+                    'rule' => $rule,
                     'filters' => $filters,
                     'source' => $source['table'],
                     'cible' => $cible['table'],
@@ -2093,10 +2160,7 @@ use App\Entity\Workflow;
             } catch (Exception $e) {
                 $this->logger->error($e->getMessage().' ('.$e->getFile().' line '.$e->getLine());
                 $this->sessionService->setCreateRuleError($ruleKey, $this->translator->trans('error.rule.mapping').' : '.$e->getMessage().' ('.$e->getFile().' line '.$e->getLine().')');
-
-                // return $this->redirect($this->generateUrl('regle_stepone_animation'));
-                // exit;
-                dump($e->getMessage().' ('.$e->getFile().' line '.$e->getLine());
+                return $this->redirect($this->generateUrl('regle_stepone_animation'));
             }
         }
 
@@ -2623,18 +2687,11 @@ use App\Entity\Workflow;
 
             /** @var User $user */
             $user = $this->getUser();
-            $nbFlux = 0;
-            $listFlux = $this->documentRepository->countTypeDoc($user);
-            foreach ($listFlux as $field => $value) {
-                $nbFlux = $nbFlux + (int) $value['nb'];
-            }
 
             $countNbDocuments = $this->documentRepository->countNbDocuments();
 
             return $this->render('Home/index.html.twig', [
                 'errorByRule' => $this->ruleRepository->errorByRule($user),
-                'listJobDetail' => $this->jobRepository->listJobDetail(),
-                'nbFlux' => $nbFlux,
                 'solutions' => $lstArray,
                 'locale' => $language,
                 'countNbDocuments' => $countNbDocuments,
@@ -2749,10 +2806,8 @@ use App\Entity\Workflow;
 				'.$rows.'
                 </tbody>
             </table>');
-            }
-
-            return new Response('<div class="alert alert-warning" role="alert"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle" viewBox="0 0 16 16"><path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.146.146 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.163.163 0 0 1-.054.06.116.116 0 0 1-.066.017H1.146a.115.115 0 0 1-.066-.017.163.163 0 0 1-.054-.06.176.176 0 0 1 .002-.183L7.884 2.073a.147.147 0 0 1 .054-.057zm1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566z"/><path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995z"/></svg> '.$this->translator->trans('animate.choice.empty').'</div>');
         }
+    }
 
         /**
          * CREATION - STEP ONE - ANIMATION.
@@ -2949,14 +3004,14 @@ use App\Entity\Workflow;
 
                 $compact = [];
 
-                //On passe l’adapter au bundle qui va s’occuper de la pagination
+                //On passe l'adapter au bundle qui va s'occuper de la pagination
                 if ($orm) {
                     $compact['pager'] = new Pagerfanta(new QueryAdapter($params['adapter_em_repository']));
                 } else {
                     $compact['pager'] = new Pagerfanta(new ArrayAdapter($params['adapter_em_repository']));
                 }
 
-                //On définit le nombre d’article à afficher par page (que l’on a biensur définit dans le fichier param)
+                //On définit le nombre d'article à afficher par page (que l'on a biensur définit dans le fichier param)
                 $compact['pager']->setMaxPerPage($params['maxPerPage']);
                 try {
                     $compact['entities'] = $compact['pager']
@@ -2967,7 +3022,7 @@ use App\Entity\Workflow;
 
                     $compact['nb'] = $compact['pager']->getNbResults();
                 } catch (\Pagerfanta\Exception\NotValidCurrentPageException $e) {
-                    //Si jamais la page n’existe pas on léve une 404
+                    //Si jamais la page n'existe pas on léve une 404
                     throw $this->createNotFoundException("Cette page n'existe pas.");
                 }
 
@@ -3038,12 +3093,11 @@ use App\Entity\Workflow;
             'rule' => $ruleId,
             'name' => 'description'
         ]);
-        // if $description is the same as the previous one or is equal to 0 or is empty
+
         if ($description === '0' || empty($description) || $description === $descriptionOriginal->getValue()) {
             return $this->redirect($this->generateUrl('regle_open', ['id' => $ruleId]));
         }
 
-        // Retrieve the RuleParam entity using the ruleId
         $rule = $entityManager->getRepository(RuleParam::class)->findOneBy(['rule' => $ruleId]);
 
         if (!$rule) {
@@ -3066,5 +3120,66 @@ use App\Entity\Workflow;
         $entityManager->flush();
 
         return new Response('', Response::HTTP_OK);
+    }
+
+    /**
+     * @Route("/rule/update_name", name="update_rule_name", methods={"POST"})
+     */
+    public function updateRuleName(Request $request): Response
+    {
+        $ruleId = $request->request->get('ruleId');
+        $name = $request->request->get('ruleName');
+        $entityManager = $this->getDoctrine()->getManager();
+        $rule = $entityManager->getRepository(Rule::class)->find($ruleId);
+
+        if (!$rule) {
+            throw $this->createNotFoundException('Couldn\'t find specified rule in the database');
+        }
+
+        if ($name === '0' || empty($name) || $name === $rule->getName()) {
+            return $this->redirect($this->generateUrl('regle_open', ['id' => $ruleId]));
+        }
+
+        $rule->setName($name);
+        $nameSlug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '_', $name), '_'));
+        $rule->setNameSlug($nameSlug);
+
+        $entityManager->flush();
+
+        return new Response('Update successful', Response::HTTP_OK);
+    }
+
+    /**
+     * @Route("/check-rule-name", name="check_rule_name", methods={"GET"})
+     */
+    public function checkRuleName(Request $request): JsonResponse
+    {
+        $name = $request->query->get('ruleName');
+        $ruleId = $request->query->get('ruleId');
+        $entityManager = $this->getDoctrine()->getManager();
+
+        $ruleRepository = $entityManager->getRepository(Rule::class);
+
+        $existingRule = $ruleRepository->findOneBy(['name' => $name]);
+        
+        if ($existingRule && $existingRule->getId() !== $ruleId) {
+            return new JsonResponse(['exists' => true]);
+        }
+
+        return new JsonResponse(['exists' => false]);
+    }
+
+    /**
+     * @Route("/rulefield/{id}/comment", name="rulefield_update_comment", methods={"POST"})
+     */
+    public function updateComment(RuleField $ruleField, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $comment = $request->request->get('comment');
+        
+        $ruleField->setComment($comment);
+        $entityManager->persist($ruleField);
+        $entityManager->flush();
+
+        return new Response('Update successful', Response::HTTP_OK);
     }
 }

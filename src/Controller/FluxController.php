@@ -59,6 +59,8 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use App\Manager\ToolsManager;
+
 
 /**
  * @Route("/rule")
@@ -72,14 +74,15 @@ class FluxController extends AbstractController
     private JobManager $jobManager;
     private SolutionManager $solutionManager;
     private DocumentRepository $documentRepository;
-
+    private ToolsManager $toolsManager;
     public function __construct(
         SessionService $sessionService,
         TranslatorInterface $translator,
         JobManager $jobManager,
         SolutionManager $solutionManager,
         DocumentRepository $documentRepository,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        ToolsManager $toolsManager
     ) {
         $this->sessionService = $sessionService;
         $this->translator = $translator;
@@ -87,6 +90,7 @@ class FluxController extends AbstractController
         $this->solutionManager = $solutionManager;
         $this->documentRepository = $documentRepository;
         $this->entityManager = $entityManager;
+        $this->toolsManager = $toolsManager;
         // Init parameters
         $configRepository = $this->entityManager->getRepository(Config::class);
         $configs = $configRepository->findAll();
@@ -131,7 +135,7 @@ class FluxController extends AbstractController
             $this->sessionService->removeFluxFilter();
         }
 
-        return $this->redirect($this->generateUrl('flux_list', ['search' => 1]));
+        return $this->redirect($this->generateUrl('document_list', ['search' => 1]));
     }
 
     /**
@@ -817,6 +821,7 @@ $logPagination = $this->nav_pagination_logs($logParams, false);
                 ['id' => 'DESC']
             );
 
+           // $firstParentDocumentId = $parentDocuments[0]->getId();
 
             // Call the view
             return $this->render(
@@ -840,6 +845,7 @@ $logPagination = $this->nav_pagination_logs($logParams, false);
                     'parent_documents' => $parentDocuments,
                     'parent_Documents_Rule' => $parentDocumentsRule,
                     'nb_parent_documents' => count($parentDocuments),
+                    //'firstParentDocumentId' => $firstParentDocumentId,
                     'history_documents' => $documentPagination['entities'],
                     'nb_history_documents' => $documentPagination['nb'],
                     'nb_logs' => $logPagination['nb'],
@@ -984,6 +990,12 @@ $logPagination = $this->nav_pagination_logs($logParams, false);
      */
     public function fluxMassCancelAction()
     {
+
+        // if we are not premium, then return
+        if (!$this->toolsManager->isPremium()) {
+            exit;
+        }
+
         if (isset($_POST['ids']) && count($_POST['ids']) > 0) {
             $this->jobManager->actionMassTransfer('cancel', 'document', $_POST['ids']);
         }
@@ -996,6 +1008,11 @@ $logPagination = $this->nav_pagination_logs($logParams, false);
      */
     public function fluxMassRunAction()
     {
+
+        if (!$this->toolsManager->isPremium()) {
+            exit;
+        }
+
         if (isset($_POST['ids']) && count($_POST['ids']) > 0) {
             $this->jobManager->actionMassTransfer('rerun', 'document', $_POST['ids']);
         }
@@ -1174,6 +1191,11 @@ $logPagination = $this->nav_pagination_logs($logParams, false);
      */
     public function unlockDocuments(Request $request) {
         try {
+
+            if (!$this->toolsManager->isPremium()) {
+                exit;
+            }
+
             $ids = $request->request->get('ids', []);
             if (empty($ids)) {
                 return new JsonResponse(['error' => 'No documents selected'], Response::HTTP_BAD_REQUEST);

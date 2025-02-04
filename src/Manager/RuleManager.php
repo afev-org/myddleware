@@ -52,7 +52,7 @@ use Symfony\Component\HttpKernel\KernelInterface; // Tools
 use Symfony\Component\Routing\RouterInterface;
 use App\Manager\NotificationManager;
 
-class rulecore
+class RuleManager
 {
     protected Connection $connection;
     protected LoggerInterface $logger;
@@ -1262,6 +1262,10 @@ class rulecore
 		$param['ruleWorkflows'] = $this->ruleWorkflows;
 		// Set the param values and clear all document attributes
 		$this->documentManager->setParam($param, true);
+		// Set the message that could be used in workflow
+		if (!empty($param['error'])) {
+			$this->documentManager->setMessage($param['error']);
+		}
 		$this->documentManager->runWorkflow(true);
     }
 
@@ -1315,6 +1319,11 @@ class rulecore
     protected function runMyddlewareJob($ruleId, $event = null, $documentId = null)
     {
         try {
+            // Check if exec function is disabled
+            if (!function_exists('exec') || in_array('exec', array_map('trim', explode(',', ini_get('disable_functions'))))) {
+                throw new \Exception('The PHP exec() function is disabled. Please enable it in php.ini to run background jobs.');
+            }
+
             $session = new Session();
             // create temp file
             $guid = uniqid();
@@ -2489,7 +2498,4 @@ class rulecore
             ],
         ];
     }
-}
-class RuleManager extends rulecore
-{
 }

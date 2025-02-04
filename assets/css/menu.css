@@ -60,14 +60,12 @@ menu li li, #myd_top li li {
 	background: white;
     text-align: left;
     overflow:hidden;  
-    height: 27px; 	
+    height: 33px; 	
 	padding: 0;
 	padding-left: 10px;
 }
 
-
 /* Dropdown menu */
-
 
 .dropdown-menu{
 	margin-left: -5px !important;
@@ -161,7 +159,7 @@ header{
 }
 
 .svg_user {
-    min-width: 30px;
+    min-width: 24px;
     height: auto;
 }
 
@@ -174,6 +172,35 @@ header{
 }
 
 .icon_navbar {
-	margin-left: 191px;
+	margin-left: 130px;
     margin-right: -140px;
+}
+
+.star-icon {
+    transition: transform 0.3s ease, font-size 3.3s ease;
+    font-size: 16px;
+    margin-left: -12px;
+    color: gold;
+    position: relative;
+    top: 8px;
+}
+
+.star-icon-btn-filter{
+    top: 13px !important;
+    left: 10px;
+}
+
+.title_section_menu:hover .star-icon {
+	transform: rotate(20deg) scale(1.5);
+}
+
+.star-cron{
+	font-size: 12px !important;
+	margin-left: -76px !important;
+	top: 7px !important;
+}
+.star-cron:hover{
+	font-size: 12px !important;
+	margin-left: -76px !important;
+	top: 7px !important;
 }

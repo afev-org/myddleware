@@ -93,7 +93,7 @@ class airtablecustom extends airtable {
 							);
 
     protected $FieldsDuplicate = array(
-        'CONTACTS' => array('fldXhleTPZRv0zBbd'),
+        'CONTACTS' => array('fldXhleTPZRv0zBbd','fldpSrPxUtj0apDA6'),
         'BINOMES' => array('fldpdbxLe9B1H2i2J'),
         'POLE' => array('fldxWO5Cs8t9z7ZP8'),
         'REFERENTS' => array('fldLt1pZEcUxKlTpH'),
@@ -113,8 +113,6 @@ class airtablecustom extends airtable {
 		'Relation_POLE' => array('fldxgZxZXc0q08U9C', 'fldG1SI869ikEvg9n','fldUko2rmiJv8uooM'),
 		'VSC' => array('fldAeyp1OXzWdrn9i')
         );
-
-	private $documentManager;
 	
 	// Redefine read function
 	public function readData($param): array {
@@ -230,15 +228,7 @@ class airtablecustom extends airtable {
 					or strpos($result['error'], '404  returned')	// Airtable has changed the error message
 				)
 			) {
-				$chlidEntityManager = clone $this->entityManager;
-				$chlidEntityManager->clear();
-				// Change the document type 
-				$documentManager = new DocumentManager(
-					$this->logger,
-					$this->connection,
-					$chlidEntityManager,
-					$this->formulaManager
-				);
+				$this->setDocumentManager();
 				$paramDoc['id_doc_myddleware'] = $param['document']['id'];
 				$paramDoc['jobId'] = $param['jobId'];
 				$documentManager->setParam($paramDoc);

@@ -100,7 +100,7 @@ class SynchroCommand extends Command
             // Clear message in case this task is run by jobscheduler. In this case message has to be refreshed.
             $this->jobManager->message = '';
             $this->jobManager->setApi($api);
-            $data = $this->jobManager->initJob('Synchro : '.$rule);
+            $data = $this->jobManager->initJob("synchro $rule $force $api");
             if (true === $data['success']) {
                 $output->writeln('1;'.$this->jobManager->getId());  // Not removed, user for manual job and webservices
 
@@ -161,7 +161,7 @@ class SynchroCommand extends Command
 										// Envoi des documents à la cible
 										$this->jobManager->sendDocuments();
 									} catch (\Exception $e) {
-										$this->jobManager->message .= 'Error rule '.$value.' '.$e->getMessage();
+										$this->jobManager->message .= 'Error rule '.$value.' '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
 										// Reset entity manager in case it has been closed by the exception
 										if (!$this->entityManager->isOpen()) {
 											$this->entityManager = $this->registry->resetManager();
@@ -178,7 +178,7 @@ class SynchroCommand extends Command
                 }
             }
         } catch (\Exception $e) {
-            $this->jobManager->message .= $e->getMessage();
+            $this->jobManager->message .= $e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
         }
 
         // Close job if it has been created

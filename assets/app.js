@@ -37,8 +37,9 @@ require('./js/animation.js')
 require('./js/task.js')
 require('./js/connector.js')
 require('./js/rule_relation_filter.js')
-require('./js/connector_detail.js')
 require('./js/regle.js')
+require('./js/historique.js')
+require('./js/mappingRule.js')
 
 
 if (window.location.href.includes('rule/document/list')) {
@@ -49,8 +50,13 @@ if (window.location.href.includes('workflowAction') || window.location.href.incl
     require('./js/workflows.js')
     require('./js/editAction.js')
 }
+if (window.location.href.includes('workflow/show')) {
+    require('./js/workflow-actions-collapse.js')
+    require('./js/workflow-logs-collapse.js')
+}
 
-if (window.location.href.includes('rule/panel')) {
+
+if (window.location.href.includes('rule/panel') || window.location.href.includes('premium/list')) {
     require('./js/home.js')
 }
 
@@ -63,8 +69,23 @@ if (window.location.href.includes('rule/managementsmtp')) {
     require('./js/smtp.js')
 }
 
+if (window.location.href.match(/rule\/connector\/(\d+\/detail|view\/\d+)/)) {
+    require('./js/connector_detail.js')
+}
+
+if (window.location.href.includes('workflowAction/new') || window.location.href.includes('workflowAction/editWorkflowAction')) {
+    require('./js/workflowActionSearchFields.js')
+}
 
 
+if (!(window.location.href.includes('install'))) {
+    require('./js/historique.js')
+}
+
+
+if (window.location.href.includes('flux')) {
+    require('./js/imagemousehoverbutton.js')
+}
 
 // start the Stimulus application
 import './bootstrap';
