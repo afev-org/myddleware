@@ -593,6 +593,11 @@ $moduleFields['appP31F11PgaT1f6H'] = array (
 		'fldyOeSBGfhtIHz8J'=> array( 'label' => 'Pole: Comet ID', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false), 
 		'fldMmoym1i2nC6oJJ'=> array( 'label' => 'Référent', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => true),
 		'fldEJ7Zb3J7Dt0NpY'=> array( 'label' => 'ID 1J1M', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fld1cJXE0KI2XCXlF'=> array( 'label' => 'Visa', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldeJ5h1JMbhEo5Tl'=> array( 'label' => 'Date de fin de validité du visa', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldnxSncGmZTKza0Z'=> array( 'label' => 'Ressources financières', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldJxuwOs1nvfzMru'=> array( 'label' => 'Provenance ressources financières', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fld019QmnA2qtUgjP'=> array( 'label' => 'Heures indisponibles', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 	),
 	'Relation_POLE' => array(
         
