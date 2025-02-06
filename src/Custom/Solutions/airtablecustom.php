@@ -67,7 +67,8 @@ class airtablecustom extends airtable {
 														'UTILISATEURS' => 'UTILISATEURS',
 														'PARTICIPATION_RI' => 'PARTICIPATION RI',
 														'RECONDUCTION' => 'RECONDUCTION',
-														'RENDEZ-VOUS' => 'RENDEZ-VOUS'
+														'RENDEZ-VOUS' => 'RENDEZ-VOUS',
+														'DOSSIER RECRUTEMENT' => 'DOSSIER RECRUTEMENT'
 													),
 								'appALljzTMc2wjLV1' => array(
 														'VSC' => 'VSC'
