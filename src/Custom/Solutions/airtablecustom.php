@@ -67,7 +67,8 @@ class airtablecustom extends airtable {
 														'UTILISATEURS' => 'UTILISATEURS',
 														'PARTICIPATION_RI' => 'PARTICIPATION RI',
 														'RECONDUCTION' => 'RECONDUCTION',
-														'RENDEZ-VOUS' => 'RENDEZ-VOUS'
+														'RENDEZ-VOUS' => 'RENDEZ-VOUS',
+														'DOSSIER RECRUTEMENT' => 'DOSSIER RECRUTEMENT'
 													),
 								'appALljzTMc2wjLV1' => array(
 														'VSC' => 'VSC'
@@ -104,7 +105,7 @@ class airtablecustom extends airtable {
         );
 
 	protected $fieldsDuplicatePreprod = array(
-        'CONTACTS' => array('fld9XGHFATCBdkoD8'),
+        'CONTACTS' => array('fld9XGHFATCBdkoD8','fld9r01QCAuHTzVXV'),
         'BINOMES' => array('fldBTw0xZ3m7UN5uE'),
         'POLE' => array('fldJC9yod2efMSMh3'),
         'REFERENTS' => array('fldX9mSLp6FDX6GRC'),
