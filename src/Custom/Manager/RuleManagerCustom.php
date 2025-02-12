@@ -237,10 +237,7 @@ class RuleManagerCustom extends RuleManager
 							$documentData['attempt'] == 1 		// Only the first try
 						 OR !empty($this->manual)				// Or manual run
 					) 
-					AND	(
-							strpos($response['error'], 'Unprocessable Entity returned') !== false
-						 OR	strpos($response['error'], 'HTTP/2 422') !== false
-					)
+					AND	strpos($response['error'], 'HTTP/2 422') !== false
 				) {	
 					$sourceData = $this->getDocumentData($docId, 'S');
 					if (!empty($sourceData['MydCustRelSugarcrmc_binome_crmc_mentorecrmc_mentore_ida'])) { // Mentoré
@@ -267,10 +264,7 @@ class RuleManagerCustom extends RuleManager
 							$documentData['attempt'] == 1 		// Only the first try
 						 OR !empty($this->manual)				// Or manual run
 					) 
-					AND	(
-							strpos($response['error'], 'Unprocessable Entity returned') !== false
-						 OR	strpos($response['error'], 'HTTP/2 422') !== false
-					)
+					AND	strpos($response['error'], 'HTTP/2 422') !== false
 				) {	
 					$sourceData = $this->getDocumentData($docId, 'S');
 					if (!empty($sourceData['parent_id'])) { // Coupon
@@ -294,14 +288,11 @@ class RuleManagerCustom extends RuleManager
 							$documentData['attempt'] == 1 		// Only the first try
 						 OR !empty($this->manual)				// Or manual run
 					) 
-					AND	(
-							strpos($response['error'], 'Unprocessable Entity returned') !== false
-						 OR	strpos($response['error'], 'HTTP/2 422') !== false
-					)
+					AND	strpos($response['error'], 'HTTP/2 422') !== false
 				) {	
 					$sourceData = $this->getDocumentData($docId, 'S');
 					if (!empty($sourceData['assigned_user_id'])) { // Mentoré
-						$this->generatePoleRelationship('6423f5d4ad07e', $sourceData['assigned_user_id'], 'id', true);  // Aiko contact
+						$this->generatePoleRelationship('6423f5d4ad07e', $sourceData['assigned_user_id'], 'id', true);  // Mobilisation - Utilisateur
 					}
 					// Set back the status to predecessor OK and remove target data to allow Myddleware to recalcultae thetarget data with the new records sent
 					$deleteTargetData = $this->deleteDocumentData($docId, 'T');
@@ -318,10 +309,7 @@ class RuleManagerCustom extends RuleManager
 							$documentData['attempt'] == 1 		// Only the first try
 						 OR !empty($this->manual)				// Or manual run
 					) 
-					AND	(
-							strpos($response['error'], 'Unprocessable Entity returned') !== false
-						OR	strpos($response['error'], 'HTTP/2 422') !== false
-					)
+					AND	strpos($response['error'], 'HTTP/2 422') !== false
 				) {	
 					$sourceData = $this->getDocumentData($docId, 'S');
 					if (!empty($sourceData['fp_events_leads_1leads_idb'])) { // Coupon
