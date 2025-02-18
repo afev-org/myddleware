@@ -943,6 +943,8 @@ $moduleFields['appP31F11PgaT1f6H'] = array (
 		'fldG2Z7xQn76moYeA' => array( 'label' => 'Lien Personne d__Urgence', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldCrt06C8CZpltem' => array( 'label' => 'Commentaires', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldtUCQ2r9i5Sx7Vk' => array( 'label' => 'Coupon ID', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => true),
+		'fldzi5bUhAXMjIXz1' => array( 'label' => 'Record ID', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => true),
+		'fldBX7xb3naOvNwWv' => array( 'label' => 'Last Modified', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 	),
 ); 
 
