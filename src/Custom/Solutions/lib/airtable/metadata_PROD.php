@@ -923,6 +923,11 @@ $moduleFields['appALljzTMc2wjLV1'] = array (
 		'fldbQwWAFkDkEo6nZ'=> array( 'label' => 'Nom de naissance', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldkLnubCfLFnhrLi'=> array( 'label' => 'Refus Elisa', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldUQle0M9lY5Q3Ft'=> array( 'label' => 'DEV Suspendre Synchro', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldjndrFHlfqQPdvg'=> array( 'label' => 'Visa', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldLUi4UG9dXZNsVm'=> array( 'label' => 'Date de fin de validité du visa', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldyjCEPyzI9gTPhd'=> array( 'label' => 'Ressources financières', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldKAhmfCLZQstDmY'=> array( 'label' => 'Provenance ressources financières', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldVA1UjTjx3RQvEj'=> array( 'label' => 'Heures indisponibles', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 	),
 );
 
