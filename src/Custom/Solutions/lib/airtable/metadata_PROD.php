@@ -936,6 +936,7 @@ $moduleFields['app5ustIjI5taRXJS'] = array (
 		'fldmol24xSWRjK0r8' => array( 'label' => 'Commentaires', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldKzN434em3fKYhW' => array( 'label' => 'Last Modified', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldqZVd8dmxDGqBGx' => array( 'label' => 'Maj par', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+	)
 ); 
 
 // USC
