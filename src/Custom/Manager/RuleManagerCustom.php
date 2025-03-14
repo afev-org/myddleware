@@ -237,10 +237,7 @@ class RuleManagerCustom extends RuleManager
 							$documentData['attempt'] == 1 		// Only the first try
 						 OR !empty($this->manual)				// Or manual run
 					) 
-					AND	(
-							strpos($response['error'], 'Unprocessable Entity returned') !== false
-						 OR	strpos($response['error'], 'HTTP/2 422') !== false
-					)
+					AND	strpos($response['error'], '422 error') !== false
 				) {	
 					$sourceData = $this->getDocumentData($docId, 'S');
 					if (!empty($sourceData['MydCustRelSugarcrmc_binome_crmc_mentorecrmc_mentore_ida'])) { // Mentoré
@@ -267,10 +264,7 @@ class RuleManagerCustom extends RuleManager
 							$documentData['attempt'] == 1 		// Only the first try
 						 OR !empty($this->manual)				// Or manual run
 					) 
-					AND	(
-							strpos($response['error'], 'Unprocessable Entity returned') !== false
-						 OR	strpos($response['error'], 'HTTP/2 422') !== false
-					)
+					AND strpos($response['error'], '422 error') !== false
 				) {	
 					$sourceData = $this->getDocumentData($docId, 'S');
 					if (!empty($sourceData['parent_id'])) { // Coupon
@@ -294,10 +288,7 @@ class RuleManagerCustom extends RuleManager
 							$documentData['attempt'] == 1 		// Only the first try
 						 OR !empty($this->manual)				// Or manual run
 					) 
-					AND	(
-							strpos($response['error'], 'Unprocessable Entity returned') !== false
-						 OR	strpos($response['error'], 'HTTP/2 422') !== false
-					)
+					AND	strpos($response['error'], '422 error') !== false
 				) {	
 					$sourceData = $this->getDocumentData($docId, 'S');
 					if (!empty($sourceData['assigned_user_id'])) { // Mentoré
@@ -318,10 +309,7 @@ class RuleManagerCustom extends RuleManager
 							$documentData['attempt'] == 1 		// Only the first try
 						 OR !empty($this->manual)				// Or manual run
 					) 
-					AND	(
-							strpos($response['error'], 'Unprocessable Entity returned') !== false
-						OR	strpos($response['error'], 'HTTP/2 422') !== false
-					)
+					AND strpos($response['error'], '422 error') !== false
 				) {	
 					$sourceData = $this->getDocumentData($docId, 'S');
 					if (!empty($sourceData['fp_events_leads_1leads_idb'])) { // Coupon
