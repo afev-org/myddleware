@@ -945,6 +945,7 @@ $moduleFields['appP31F11PgaT1f6H'] = array (
 		'fldtUCQ2r9i5Sx7Vk' => array( 'label' => 'Coupon ID', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => true),
 		'fldzi5bUhAXMjIXz1' => array( 'label' => 'Record ID', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => true),
 		'fldBX7xb3naOvNwWv' => array( 'label' => 'Last Modified', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldm6jMn4naqO8Xcx' => array( 'label' => 'Autre Chose à Ajouter', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 	),
 ); 
 

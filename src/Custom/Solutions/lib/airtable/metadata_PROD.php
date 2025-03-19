@@ -942,6 +942,7 @@ $moduleFields['app5ustIjI5taRXJS'] = array (
 		'fldKzN434em3fKYhW' => array( 'label' => 'Last Modified', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldqZVd8dmxDGqBGx' => array( 'label' => 'Maj par', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldqOgBE004Uii46c' => array( 'label' => 'Record ID', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldUcPQe61HZgxi93' => array( 'label' => 'Autre Chose à Ajouter', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 	)
 ); 
 
