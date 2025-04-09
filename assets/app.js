@@ -53,6 +53,16 @@ if (window.location.href.includes('workflowAction') || window.location.href.incl
 if (window.location.href.includes('workflow/show')) {
     require('./js/workflow-actions-collapse.js')
     require('./js/workflow-logs-collapse.js')
+    require('./js/workflow-toggle-detail.js')
+}
+
+if (window.location.href.includes('workflowAction/showAction')) {
+    require('./js/workflow-action-toggle-detail.js')
+}
+
+if (window.location.href.includes('workflow/list')) {
+    require('./js/workflow-toggle-list.js')
+    require('./js/workflowsearchworkflowname.js')
 }
 
 
@@ -75,6 +85,7 @@ if (window.location.href.match(/rule\/connector\/(\d+\/detail|view\/\d+)/)) {
 
 if (window.location.href.includes('workflowAction/new') || window.location.href.includes('workflowAction/editWorkflowAction')) {
     require('./js/workflowActionSearchFields.js')
+    require('./js/workflow-action-label-rule-change.js')
 }
 
 

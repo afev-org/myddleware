@@ -547,7 +547,7 @@ class suitecrm extends solution
         }
 
         // Build the URL (delete if exists / to be sure to not have 2 / in a row)
-        return rtrim($url, '/').'/index.php?module='.$module.'&action=DetailView&record='.$recordId;
+        return rtrim($url, '/').'/#/'.strtolower($module).'/record/'.$recordId;
     }
 
     protected function readRelationship($param, $dataParent): array
@@ -935,6 +935,7 @@ class suitecrm extends solution
     // Get the list of field (name and id) for each custom relationship
     protected function getCustomRelationshipListFields($module): array
     {
+		$result = array();
         $get_module_fields_parameters = [
             'session' => $this->session,
             'module_name' => $module,

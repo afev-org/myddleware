@@ -1235,6 +1235,8 @@ class RuleManager
         $param['jobId'] = $this->jobId;
         $param['api'] = $this->api;
         // Set the param values and clear all document attributes
+		// We don't lock the document because the action is : unset the current lock on the document
+        $this->documentManager->setNoLock(true);
         $this->documentManager->setParam($param, true);
         $this->documentManager->unsetLock(true);
         $session = new Session();
@@ -1243,7 +1245,10 @@ class RuleManager
         // Si on a pas de jobId cela signifie que l'opération n'est pas massive mais sur un seul document
         // On affiche alors le message directement dans Myddleware
         if (empty($this->jobId)) {
-            if (empty($message)) {
+            if (
+					empty($message)
+				OR $this->documentManager->getTypeError() == 'S'
+			) {
                 $session->set('success', ['Data transfer has been successfully unlocked.']);
             } else {
                 $session->set('error', [$this->documentManager->getMessage()]);
@@ -1256,17 +1261,23 @@ class RuleManager
      */
     protected function rerunWorkflowDocument($id_document)
     {
-		$param['id_doc_myddleware'] = $id_document;
-		$param['jobId'] = $this->jobId;
-		$param['api'] = $this->api;
-		$param['ruleWorkflows'] = $this->ruleWorkflows;
-		// Set the param values and clear all document attributes
-		$this->documentManager->setParam($param, true);
-		// Set the message that could be used in workflow
-		if (!empty($param['error'])) {
-			$this->documentManager->setMessage($param['error']);
-		}
-		$this->documentManager->runWorkflow(true);
+		try {
+			$param['id_doc_myddleware'] = $id_document;
+			$param['jobId'] = $this->jobId;
+			$param['api'] = $this->api;
+			$param['ruleWorkflows'] = $this->ruleWorkflows;
+			// Set the param values and clear all document attributes
+			$this->documentManager->setParam($param, true);
+			// Set the message that could be used in workflow
+			if (!empty($param['error'])) {
+				$this->documentManager->setMessage($param['error']);
+			}
+			$this->documentManager->runWorkflow(true);
+			$this->documentManager->updateWorkflowError(0);
+		} catch (\Exception $e) {
+			$this->logger->error('Failed to rerun the workflow : '.$e->getMessage());
+			$this->documentManager->generateDocLog('E','Failed to rerun the workflow : '.$e->getMessage());
+		} 
     }
 
     /**
@@ -1380,8 +1391,12 @@ class RuleManager
 
             // transform all information of the first line in an arry
             $result = explode(';', $firstLine);
-            // Renvoie du message en session
-            if ($result[0]) {
+            // if result 1 contains the substring "Failed to create the task because another task is already running"
+            // then we generate a message to inform the user that another task is running and that he can stop it manually
+            // this was originally not handled by the else at the bottom because there was a 1 in the result[0]
+            if ($result[0] == '1' && strpos($result[1], 'Failed to create the task because another task is already running') !== false) {
+                $session->set('error', [$result[1].(!empty($result[2]) ? '<a href="'.$this->router->generate('task_view', ['id' => trim($result[2])]).'" target="blank_">'.$this->tools->getTranslation(['messages', 'rule', 'open_running_task']).'</a>' : '')]);
+            }else if ($result[0]) {
                 $session->set('info', ['<a href="'.$this->router->generate('task_view', ['id' => trim($result[1])]).'" target="blank_">'.$this->tools->getTranslation(['messages', 'rule', 'open_running_task']).'</a>.']);
             } else {
                 $session->set('error', [$result[1].(!empty($result[2]) ? '<a href="'.$this->router->generate('task_view', ['id' => trim($result[2])]).'" target="blank_">'.$this->tools->getTranslation(['messages', 'rule', 'open_running_task']).'</a>' : '')]);

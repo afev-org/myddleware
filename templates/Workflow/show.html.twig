@@ -24,7 +24,7 @@
 		</div>
 
 		<div class="link-help-view text-end mb-4 mx-4">
-			<a href="https://myddleware.github.io/myddleware/#/advanced_usage?id=workflows">
+			<a href="https://myddleware.github.io/myddleware-docs/#/advanced_usage?id=workflows">
 				<i class="fa fa-info-circle" aria-hidden="true"></i>
 				{{ 'rule.help' | trans }}
 			</a>
@@ -285,5 +285,11 @@
 						<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 						<script src="https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.min.js"></script>
 					{% endblock js %}
+
+					{% block js_workflow_toggle %}
+						<script type="text/javascript">
+							var pathWorkflowtoggle = "{{ path('workflow_toggle', {'id': workflow.id}) }}";
+						</script>
+					{% endblock js_workflow_toggle %}
 
 				{% endblock %}

@@ -64,16 +64,22 @@ $(function () {
   });
 
   $("#rule_previous").on("click", function () {
+    // console.log("previous start");
     previous_next(0);
+    // console.log("previous end");  
   });
 
   $("#rule_next").on("click", function () {
+    // console.log("next start");
     previous_next(1);
+    // console.log("next end");
   });
 
   $("#tabs", "#rule_mapping").tabs({
     activate: function (event, ui) {
+      // console.log("activate rule mapping start");
       previous_next(2);
+      // console.log("activate rule mapping end");
     },
   });
   // rev 1.08 ----------------------------
@@ -366,7 +372,7 @@ $.fn.setCursorPosition = function(pos) {
         var open = pairTypes[t];
         var close = map[open];
 
-        // console.log('Checking pair type:', open+close);
+// console.log('Checking pair type:', open+close);
 
         for (var i = 0; i < formula.length; i++) {
           if (formula[i] === open) {
@@ -376,17 +382,17 @@ $.fn.setCursorPosition = function(pos) {
               position: i,
               pairNum: currentPair,
             });
-            // console.log('Found opening symbol at', i, 'Pair Number:', currentPair);
+// console.log('Found opening symbol at', i, 'Pair Number:', currentPair);
           } else if (formula[i] === close) {
             var last = stack.pop();
 
             if (!last) {
-              // console.log('Found closing symbol without matching opening symbol at', i);
+// console.log('Found closing symbol without matching opening symbol at', i);
               errorAt = i;
               currentPair++;
               break;
             } else {
-              // console.log('Found matching closing symbol for pair', last.pairNum, 'at', i);
+// console.log('Found matching closing symbol for pair', last.pairNum, 'at', i);
               if (!pairs.includes(last.pairNum)) {
                 pairs.push(last.pairNum);
               }
@@ -396,7 +402,7 @@ $.fn.setCursorPosition = function(pos) {
 
         // If we still have unclosed brackets at the end of parsing, record an error
         if (stack.length > 0) {
-          // console.log('Found unbalanced pair at the end of the formula');
+// console.log('Found unbalanced pair at the end of the formula');
           var lastUnbalanced = stack.pop();
           errorAt = lastUnbalanced.position;
           currentPair = lastUnbalanced.pairNum;
@@ -410,11 +416,11 @@ $.fn.setCursorPosition = function(pos) {
           pairs.splice(index, 1);
         }
 
-        // console.log('Pair Type:', open + close);
-        // console.log('Status:', status);
-        // console.log('Error Position:', errorAt);
-        // console.log('Unbalanced Pair:', unbalancedPair);
-        // console.log('Balanced Pairs:', pairs);
+// console.log('Pair Type:', open + close);
+// console.log('Status:', status);
+// console.log('Error Position:', errorAt);
+// console.log('Unbalanced Pair:', unbalancedPair);
+// console.log('Balanced Pairs:', pairs);
 
         if (!status) {
           return {
@@ -447,7 +453,7 @@ $.fn.setCursorPosition = function(pos) {
         values.push($(this).val());
       });
 
-      // console.log('these are the values', values);
+// console.log('these are the values', values);
 
       var bracketError = false;
       var emptyBracketError = false;
@@ -586,7 +592,7 @@ $.fn.setCursorPosition = function(pos) {
       // empty the values array
       missingFieldList = [];
       values = [];
-      // console.log('these are the values', values);
+// console.log('these are the values', values);
 
       $.ajax({
         type: "POST",
@@ -603,6 +609,11 @@ $.fn.setCursorPosition = function(pos) {
             $("#formule").dialog("close"); // Aucune erreur
           } else {
             alert(formula_error);
+            // we alert but close anyway and validate the formula anyway
+            zone = $.trim(zone);
+            $("#formule_" + zone + " li").remove();
+            $("#formule_" + zone).append("<li>" + myFormula + "</li>");
+            $("#formule").dialog("close");
           }
         },
       });
@@ -614,7 +625,7 @@ $.fn.setCursorPosition = function(pos) {
       var newContent =
         content.substr(0, position) +
         '"' +
-        $.trim($("select", "#source_info").val()) +
+        $.trim($("#source_value_select").val()) +
         '"' +
         content.substr(position);
       $("#area_insert").val(newContent);
@@ -628,20 +639,7 @@ $.fn.setCursorPosition = function(pos) {
       var newContent =
         content.substr(0, position) +
         '"' +
-        $.trim($("select", "#target_info").val()) +
-        '"' +
-        content.substr(position);
-      $("#area_insert").val(newContent);
-      colorationSyntax();
-      theme(style_template);
-    });
-    $("button", "#lookup_rules").on("click", function () {
-      var position = $("#area_insert").getCursorPosition();
-      var content = $("#area_insert").val();
-      var newContent =
-        content.substr(0, position) +
-        '"' +
-        $.trim($("select", "#lookup_rules").val()) +
+        $.trim($("#target_value_select").val()) +
         '"' +
         content.substr(position);
       $("#area_insert").val(newContent);
@@ -829,7 +827,7 @@ $.fn.setCursorPosition = function(pos) {
         },
         statusCode: {
           500: function (e) {
-            console.log(e.responseText);
+            // console.log(e.responseText);
             alert(
               "An error occured. Please check your server logs for more detailed information."
             );
@@ -1015,27 +1013,33 @@ $.fn.setCursorPosition = function(pos) {
 
   $("#unlockAllFlux").on("click", function () {
     if (confirm(confirm_unlock)) {
-      $.ajax({
-        type: "POST",
-        url: mass_unlock,
-        beforeSend: function () {
-          btn_action_fct();
-        },
-        data: {
-          ids: massFluxTab,
-        },
-        success: function (data) {
-          location.reload();
-        },
-        error: function () {
-          alert("Erreur lors de la communication avec le serveur.");
-        },
-      });
+        $.ajax({
+            type: "POST",
+            url: mass_unlock,
+            beforeSend: function () {
+                btn_action_fct();
+            },
+            data: {
+                ids: massFluxTab,
+            },
+            success: function (response) {
+                if (response.success) {
+                    alert(response.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + response.error);
+                }
+            },
+            error: function (jqXHR) {
+                // console.log('Error response:', jqXHR.responseText);
+                alert('An error occurred while unlocking documents.');
+            },
+        });
     }
-  });
+});
 
   $("#reloadflux").on("click", function () {
-    console.log(mass_run);
+    // console.log(mass_run);
     if (confirm(confirm_reload)) {
       // Clic sur OK
       $.ajax({
@@ -1073,7 +1077,7 @@ $.fn.setCursorPosition = function(pos) {
         // If it does, show an alert to the user
         alert('Please close the first one before adding a new one.');
       } else {
-        value = $(this).find(".value").text();
+        value = $(this).find(".value").text().trim();
         $(this).find(".value").remove();
         newElement = $(this).append(
           '<input id="' +
@@ -1273,33 +1277,69 @@ function fields_target_hover() {
 
 // rev 1.08 ----------------------------
 function previous_next(tab) {
+  // console.log("previous_next start inside the function charlie");
+  // console.log("tab", tab);
   // tab 0 : default
   // tab 1 : plus
   // tab 2 : manual tab
   name_current = $(".active").attr("aria-controls");
+  // console.log("Current active tab name:", name_current);
+  
   number = 0;
   number = name_current.split("-");
   number = parseInt(number[1]);
+  // console.log("Parsed tab number:", number);
 
   $("#rule_previous").show();
   $("#rule_next").show();
 
   if (number == 3) {
+    // console.log("Hiding previous button because number is 3");
     $("#rule_previous").hide();
     $("#rule_next").show();
   }
 
   if (number == 7) {
+    // console.log("Hiding next button because number is 7");
     $("#rule_next").hide();
     $("#rule_previous").show();
   }
 
   if (tab == 1) {
     number_next = number + 1;
-    $(".tab-" + number_next).trigger("click");
+    // console.log("Next tab number:", number_next);
+    let nextTab = $(".tab-" + number_next);
+    
+    // Check if tab-5 exists, if not, skip to tab-6
+    if (number_next === 5 && nextTab.length === 0) {
+      // console.log("Tab-5 does not exist, skipping to tab-6");
+      number_next = 6;
+      nextTab = $(".tab-" + number_next);
+    }
+
+    if (nextTab.length > 0) {
+      // console.log("Next tab exists, triggering click");
+      nextTab.trigger("click");
+    } else {
+      // console.log("Next tab does not exist");
+    }
   } else if (tab == 0) {
     number_previous = number - 1;
-    $(".tab-" + number_previous).trigger("click");
+    // console.log("Previous tab number:", number_previous);
+    
+    // Check if tab-5 exists, if not, skip back to tab-4
+    if (number_previous === 5 && $(".tab-" + number_previous).length === 0) {
+      // console.log("Tab-5 does not exist, skipping back to tab-4");
+      number_previous = 4;
+    }
+
+    const previousTab = $(".tab-" + number_previous);
+    if (previousTab.length > 0) {
+      // console.log("Previous tab exists, triggering click");
+      previousTab.trigger("click");
+    } else {
+      // console.log("Previous tab does not exist");
+    }
   }
 }
 
@@ -2207,20 +2247,20 @@ $(document).ready(function() {
 	$('.removeFilters').click(function() {
 		// Get the class list of the clicked element
 		var classList = $(this).attr('class').split(/\s+/);
-		// console.log(classList);
+// console.log(classList);
 
 		// Find the filter class (it's the last class in the list)
 		var filterClass = classList[classList.length - 1];
-		// console.log(filterClass);
+// console.log(filterClass);
 
 		// Get the stored filters from local storage
 		var storedFilters = JSON.parse(localStorage.getItem('storedFilters'));
-		// console.log(storedFilters);
+// console.log(storedFilters);
 
 
 		// Save the updated filters back to local storage
 		localStorage.setItem('storedFilters', JSON.stringify(storedFilters));
-		// console.log(localStorage.getItem('storedFilters'));
+// console.log(localStorage.getItem('storedFilters'));
 
 		    // Make an AJAX request to the server to remove the filter from the session
 			$.ajax({
@@ -2229,14 +2269,14 @@ $(document).ready(function() {
 				data: { filterName: 'FluxFilter' + toCamelCase(filterClass) },
 				success: function(response) {
 					if (response.status === 'success') {
-						// console.log('Filter successfully removed Argonien');
+// console.log('Filter successfully removed Argonien');
 						
 						// Clear the form field
 						var formFieldName = 'combined_filter[document][' + filterClass + ']';
 						$('input[name="' + formFieldName + '"]').val('');
-						// console.log('Filter input cleared');
+// console.log('Filter input cleared');
 					} else {
-						// console.log('Error removing filter: ' + response.message);
+// console.log('Error removing filter: ' + response.message);
 					}
 				}
 			});
@@ -2288,27 +2328,33 @@ function toCamelCase(str) {
 
 // Save the modified field data by using an ajax request
 function saveInputFlux(div, link) {
+    // Trim the field name to remove any trailing spaces
+    fields = div.attr('data-value').trim();
+    
+    // Get the input element - look for it within the parent li element
+    var inputElement = div.closest('li').find('input');
+    
+    // Get the value from the input element
+    var inputValue = inputElement.val();
 
-	fields = div.attr('data-value');
-	div.attr('data-value');
-	value = $('#' + fields);
+    // Ajax request to save the data in the database
+    $.ajax({
+        type: "POST",
+        url: link,
+        data: {
+            flux: $('#flux_target').attr('data-id'),
+            rule: $('#flux_target').attr('data-rule'),
+            fields: fields,
+            value: inputValue
+        },
+        success: function (val) {
+            // Add the 'value' class to the span so it can be found for future edits
+            div.parent().append('<span class="value">' + val + '</span>');
+            div.remove();
+            inputElement.remove();
+        }
+    });
 
-	// Ajax request to save the data in the database
-	$.ajax({
-		type: "POST",
-		url: link,
-		data: {
-			flux: $('#flux_target').attr('data-id'),
-			rule: $('#flux_target').attr('data-rule'),
-			fields: fields,
-			value: value.val()
-		},
-		success: function (val) {
-			div.parent().append('<span>' + val + '</span>');
-			div.remove();
-			value.remove();
-		}
-	});
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -2316,4 +2362,274 @@ document.addEventListener('DOMContentLoaded', function () {
   tooltipTriggerList.forEach(tooltipTriggerEl => {
       new bootstrap.Tooltip(tooltipTriggerEl);
   });
+});
+
+// Function wizard handling
+$(document).ready(function() {
+    const functionSelect = $('#function-select');
+    const lookupOptions = $('#lookup-options');
+    const lookupRule = $('#lookup-rule');
+    const lookupField = $('#lookup-field');
+    const flagFunctionWizardEnd = $('#flag-function-wizard-end');
+    const functionParameter = $('#function-parameter');
+    const insertFunctionBtn = $('#insert-function-parameter');
+    let tooltipVisible = false; // Changed to false by default
+    let currentTooltip = '';
+    let selectedFunction = '';
+    
+    // Handle tooltip toggle button
+    $('#toggle-tooltip').on('click', function() {
+        tooltipVisible = !tooltipVisible;
+        const tooltipBox = $('#function-tooltip');
+        
+        if (tooltipVisible) {
+            $(this).find('i').removeClass('fa-question').addClass('fa-question-circle');
+            if (functionSelect.val() && currentTooltip) {
+                tooltipBox.text(currentTooltip).show();
+            }
+        } else {
+            $(this).find('i').removeClass('fa-question-circle').addClass('fa-question');
+            tooltipBox.hide();
+        }
+    });
+
+    // Show tooltip when option changes
+    functionSelect.on('change', function() {
+        const selectedOption = $(this).find('option:selected');
+        const tooltip = selectedOption.data('tooltip');
+        const tooltipBox = $('#function-tooltip');
+        
+        selectedFunction = $(this).val();
+        currentTooltip = tooltip;
+
+        // if the selected function is a mwd function, we need to hide the function-parameter input, else we need to show it
+        if (selectedFunction.startsWith('mdw_')) {
+            $('#function-parameter').hide();
+        } else {
+            $('#function-parameter').show();
+        }
+        
+        // Only show tooltip if tooltipVisible is true and a function is selected
+        if (tooltip && tooltipVisible && $(this).val()) {
+            tooltipBox.text(tooltip).show();
+        } else {
+            tooltipBox.hide();
+        }
+
+        if (selectedFunction === 'round') {
+          $('#round-precision-input').show();
+      } else {
+          $('#round-precision-input').hide();
+      }
+
+        if (selectedFunction === 'lookup') {
+            lookupOptions.show();
+            $('#function-parameter-input').hide(); // Hide parameter input for lookup
+            
+            // Populate rules dropdown
+            $.ajax({
+                url: lookupgetrule,
+                method: 'GET',
+                data: {
+                    arg1: connectorsourceidlookup,
+                    arg2: connectortargetidlookup
+                },
+                success: function(rules) {
+                    lookupRule.empty();
+                    lookupRule.append('<option value="">' + translations.selectRule + '</option>');
+                    rules.forEach(rule => {
+                        lookupRule.append(`<option value="${rule.id}">${rule.name}</option>`);
+                    });
+                    lookupRule.prop('disabled', false);
+                }
+            });
+        } else {
+            lookupOptions.hide();
+            $('#function-parameter-input').show(); // Show parameter input for other functions
+        }
+    });
+
+    // Handle parameter insertion
+    insertFunctionBtn.on('click', function() {
+        if (!selectedFunction) return; // Do nothing if no function is selected
+        
+        // Get the function category from the selected option
+        const functionCategory = $('#function-select option:selected').data('type');
+
+        if (selectedFunction === 'round') {
+          const parameterValue = functionParameter.val().trim();
+          const precisionInput = $('#round-precision');
+          const precision = parseInt(precisionInput.val());
+          
+          // Validate precision
+          if (isNaN(precision) || precision < 1 || precision > 100) {
+              precisionInput.addClass('is-invalid');
+              return;
+          }
+          
+          precisionInput.removeClass('is-invalid');
+          
+          const areaInsert = $('#area_insert');
+          const position = areaInsert.getCursorPosition();
+          const content = areaInsert.val();
+          
+          // Construct round function call with precision
+          const functionCall = `round(${parameterValue}, ${precision})`;
+          
+          const newContent = 
+              content.substr(0, position) +
+              functionCall +
+              content.substr(position);
+              
+          areaInsert.val(newContent);
+          
+          // Clear inputs
+          functionParameter.val('');
+          precisionInput.val('');
+        
+        // Special handling for MDW functions
+        } else if (selectedFunction.startsWith('mdw_')) {
+            const areaInsert = $('#area_insert');
+            const position = areaInsert.getCursorPosition();
+            const content = areaInsert.val();
+
+
+            
+            // For MDW functions, just insert the function name as a string
+            const functionCall = `"${selectedFunction}"`;
+            
+            const newContent = 
+                content.substr(0, position) +
+                functionCall +
+                content.substr(position);
+                
+            areaInsert.val(newContent);
+        } else {
+            // Normal function handling
+            const parameterValue = functionParameter.val().trim();
+            const areaInsert = $('#area_insert');
+            const position = areaInsert.getCursorPosition();
+            const content = areaInsert.val();
+            
+            // Create the function call based on category
+            let functionCall = '';
+            if (parameterValue) {
+                switch(functionCategory) {
+                    case 1: // mathematical
+                        functionCall = `${selectedFunction}(${parameterValue})`; // No quotes for numbers
+                        break;
+                    case 2: // text
+                    case 3: // date
+                        functionCall = `${selectedFunction}("${parameterValue}")`; // Add quotes for text and dates
+                        break;
+                    case 4: // constant
+                        functionCall = `${selectedFunction}()`; // Constants don't need parameters
+                        break;
+                    default:
+                        functionCall = `${selectedFunction}("${parameterValue}")`; // Default to quoted parameter
+                }
+            } else {
+                functionCall = `${selectedFunction}()`;
+            }
+            
+            const newContent = 
+                content.substr(0, position) +
+                functionCall +
+                content.substr(position);
+                
+            areaInsert.val(newContent);
+        }
+        
+        // Clear the parameter input
+        functionParameter.val('');
+        
+        // Update syntax highlighting
+        colorationSyntax();
+        theme(style_template);
+    });
+
+    // When a rule is selected
+    lookupRule.on('change', function() {
+        const selectedRule = $(this).val();
+        
+        if (selectedRule) {
+            lookupField.empty();
+            lookupField.append('<option value="">' + translations.selectField + '</option>');
+            
+            // Get fields from the existing select element
+            $('#champs_insert option').each(function() {
+                const fieldName = $(this).val();
+                lookupField.append(`<option value="${fieldName}">${fieldName}</option>`);
+            });
+            
+            lookupField.prop('disabled', false);
+        } else {
+            lookupField.prop('disabled', true);
+        }
+    });
+
+    // Remove the lookupField.on('change') handler since we don't want automatic insertion
+    lookupField.off('change');
+
+    // Add handler for submit lookup button
+    $('#submit-lookup').on('click', function() {
+        const selectedField = lookupField.find('option:selected');
+        if (selectedField.val()) {
+            const fieldName = selectedField.text().split(' (')[0];
+            let errorEmpty = $('#lookup-error-empty').is(':checked');
+            let errorNotFound = $('#lookup-error-not-found').is(':checked');
+
+            // Convert boolean to 1/0
+            errorEmpty = errorEmpty ? 1 : 0;
+            errorNotFound = errorNotFound ? 1 : 0;
+            
+            // Construct the complete lookup formula
+            const lookupFormula = `lookup({${fieldName}}, "${lookupRule.val()}", ${errorEmpty}, ${errorNotFound})`;
+            
+            const areaInsert = $('#area_insert');
+            const position = areaInsert.getCursorPosition();
+            const content = areaInsert.val();
+            
+            const newContent = 
+                content.substr(0, position) +
+                lookupFormula +
+                content.substr(position);
+                
+            areaInsert.val(newContent);
+            colorationSyntax();
+            theme(style_template);
+        }
+    });
+
+    $('#round-precision').on('input', function() {
+      const value = this.value;
+      
+      // Remove any non-digit characters
+      const sanitizedValue = value.replace(/[^0-9]/g, '');
+      
+      if (sanitizedValue !== value) {
+          this.value = sanitizedValue;
+      }
+      
+      const precision = parseInt(sanitizedValue);
+      
+      if (isNaN(precision) || precision < 1 || precision > 100) {
+          $(this).addClass('is-invalid');
+      } else {
+          $(this).removeClass('is-invalid');
+      }
+  });
+
+// wait for the press of the close button which is #area_quit
+$('#area_quit').on('click', function() {
+    resetFunctionWizard();
+});
+
+// function to reset the function wizard
+function resetFunctionWizard() {
+    $('#function-select').val('').trigger('change');
+    $('#lookup-rule').val('').trigger('change');
+    $('#lookup-field').val('').prop('disabled', true);
+}
+
 });

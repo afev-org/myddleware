@@ -31,6 +31,9 @@
 # Premium directory
 /src/Premium/
 
+# Premium directory
+/src/Premium/
+
 # Managed by Composer
 /app/bootstrap.php.cache
 /var/bootstrap.php.cache

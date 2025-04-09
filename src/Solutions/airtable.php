@@ -483,7 +483,7 @@ class airtable extends solution
                     $response = $client->request('POST', $this->airtableURL.$baseID.'/'.$module, $options);
                 }
                 $statusCode = $response->getStatusCode();
-				// If error 422, we return directly the error
+                // If error 422, we return directly the error
 				if ($statusCode === 422) {
 					throw new Exception('422 error : '.$response->getContent(false));
 				}

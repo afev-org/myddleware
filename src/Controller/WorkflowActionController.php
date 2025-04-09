@@ -198,27 +198,36 @@ class WorkflowActionController extends AbstractController
     public function WorkflowActionActiveAction(string $id, Request $request)
     {
         if (!$this->tools->isPremium()) {
-            return $this->redirectToRoute('premium_list');
+            return new JsonResponse(['error' => 'Premium required'], 403);
         }
 
         try {
             $em = $this->getDoctrine()->getManager();
             $workflowResult = $em->getRepository(WorkflowAction::class)->findBy(['id' => $id, 'deleted' => 0]);
-            $workflow = $workflowResult[0];
-
-
-            if ($workflow) {
+            
+            if (!empty($workflowResult)) {
+                $workflow = $workflowResult[0];
                 $workflow->setActive($workflow->getActive() == 1 ? 0 : 1);
                 $em->persist($workflow);
                 $em->flush();
-                $this->addFlash('success', 'Workflow Action updated successfully');
-            } else {
-                $this->addFlash('error', 'Workflow Action not found');
-            }
-
-            return $this->redirectToRoute('workflow_list');
+                
+                return new JsonResponse([
+                    'success' => true,
+                    'message' => 'Workflow Action updated successfully',
+                    'active' => $workflow->getActive()
+                ]);
+            } 
+            
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Workflow Action not found'
+            ], 404);
+            
         } catch (Exception $e) {
-            throw $this->createNotFoundException('Error : ' . $e);
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -387,7 +396,7 @@ class WorkflowActionController extends AbstractController
                         'choice_label' => 'name',
                         'choice_value' => 'id',
                         'required' => false,
-                        'label' => 'Rule',
+                        'label' => 'Generating Rule',
                         'data' => $formData['ruleId'] ? $em->getRepository(Rule::class)->find($formData['ruleId']) : null,
                     ])
                     ->add('status', ChoiceType::class, [
@@ -399,12 +408,12 @@ class WorkflowActionController extends AbstractController
                     ->add('subject', TextType::class, ['label' => 'Subject', 'mapped' => false, 'required' => false])
                     ->add('message', TextareaType::class, ['required' => false])
                     ->add('searchField', ChoiceType::class, [
-                        'label' => 'searchField',
+                        'label' => 'Matching Field from Generating Rule',
                         'choices' => $sourceSearchValue,
                         'required' => false
                     ])
                     ->add('searchValue', ChoiceType::class, [
-                        'label' => 'searchValue',
+                        'label' => 'Matching Field from Current Rule',
                         'choices' => $sourceFields,
                         'required' => false
                     ])
@@ -937,11 +946,14 @@ class WorkflowActionController extends AbstractController
 
                 $targetFieldsData = [];
                 if (!empty($arguments) && count($arguments) > 0) {
-                    foreach ($arguments as $field => $value) {
-                        $targetFieldsData[] = [
-                            'field' => $field,
-                            'value' => $value,
-                        ];
+                    // Handle fields property specifically
+                    if (isset($arguments['fields']) && is_array($arguments['fields'])) {
+                        foreach ($arguments['fields'] as $field => $value) {
+                            $targetFieldsData[] = [
+                                'field' => $field,
+                                'value' => $value,
+                            ];
+                        }
                     }
                 }
                 return $this->render(

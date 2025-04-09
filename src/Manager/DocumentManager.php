@@ -71,6 +71,7 @@ class DocumentManager
     protected bool $jobActive = true;
     protected $attempt;
     protected $jobLock;
+    protected $noLock;
     protected $workflowError = false;
     protected $userId;
     protected $status;
@@ -110,6 +111,7 @@ class DocumentManager
         'Error_transformed' => 'Error',
         'Error_checking' => 'Error',
         'Error_sending' => 'Error',
+        'Error_expected' => 'Error',
         'Not_found' => 'Error',
     ];
     private array $notSentFields = [];
@@ -182,6 +184,10 @@ class DocumentManager
 	public function setId($id) {
 		$this->id = $id;
 	}
+	
+	public function setNoLock($noLock) {
+		$this->noLock = $noLock;
+	}
 
 	public function setDocumentType($documentType) {
 		$this->documentType = $documentType;
@@ -224,14 +230,17 @@ class DocumentManager
                 $this->jobLock = $this->document_data['job_lock'];
                 $this->workflowError = $this->document_data['workflow_error'];
 				// A document can be loaded only if there is no lock or if the lock is on the current job.
-                if (
-						!empty($this->jobLock)
-					AND $this->jobLock != $this->jobId
-				) {
-					throw new \Exception('This document is locked by the task '.$this->jobLock.'. ');
-				// No setlock if $this->jobLock == $this->jobId
-				} elseif (!empty($this->jobLock)) {
-					$this->setLock();
+				// Don't do this action if the attribut $noLock is true
+                if (!$this->noLock) {
+					if (
+							!empty($this->jobLock)
+						AND $this->jobLock != $this->jobId
+					) {
+							throw new \Exception('This document is locked by the task '.$this->jobLock.'. ');
+					// No setlock if $this->jobLock == $this->jobId
+					} elseif (!empty($this->jobLock)) {
+						$this->setLock();
+					}
 				}
 				
                 // Get source data and create data attribut
@@ -490,6 +499,11 @@ class DocumentManager
         $this->typeError = $typeError;
     }
 
+    public function getTypeError()
+    {
+        return $this->typeError;
+    }
+
     public function setRuleId($ruleId)
     {
         $this->ruleId = $ruleId;
@@ -584,6 +598,7 @@ class DocumentManager
 				}
 				return true;
 			} else {
+				// Only throw exception if jobId exists
 				throw new \Exception('This document is locked by the task '.$documentData['job_lock'].' and cannot be unclocked by the task '.$this->jobId.'. ');
 			}
         } catch (\Exception $e) {
@@ -870,7 +885,7 @@ class DocumentManager
             return true;
         } catch (\Exception $e) {
             // Reference document id is used to show which document is blocking the current document in Myddleware
-            $this->docIdRefError = ((is_array($result) and !empty($result['id'])) ? $result['id'] : '');
+            $this->docIdRefError = ((!empty($result) and is_array($result) and !empty($result['id'])) ? $result['id'] : '');
             $this->message .= 'Failed to check document predecessor : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
             $this->typeError = 'E';
             $this->updateStatus('Predecessor_KO');
@@ -2257,6 +2272,7 @@ class DocumentManager
     public function updateStatus($new_status, $workflow = false)
     {
         try {
+			$this->connection->beginTransaction(); // -- BEGIN TRANSACTION
             // On ajoute un contôle dans le cas on voudrait changer le statut
             $new_status = $this->beforeStatusChange($new_status);
             $now = gmdate('Y-m-d H:i:s');
@@ -2316,8 +2332,10 @@ class DocumentManager
 					throw new \Exception('Status has been changed but document has not been unlocked. ');
 				}
 			}
+			$this->connection->commit(); // -- COMMIT TRANSACTION
 			return true;
         } catch (\Exception $e) {
+			$this->connection->rollBack(); // -- ROLLBACK TRANSACTION
             $this->message .= 'Error status update : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
             $this->typeError = 'E';
             $this->logger->error($this->id.' - '.$this->message);
@@ -2458,11 +2476,40 @@ class DocumentManager
             $this->typeError = 'E';
             $this->logger->error($this->id.' - '.$this->message);
             $this->createDocLog();
-
             return false;
         }
     }
 
+    /**
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function updateWorkflowError($workflowError)
+    {
+        try {
+            $now = gmdate('Y-m-d H:i:s');
+            $query = '	UPDATE document 
+								SET 
+									date_modified = :now,
+									workflow_error = :workflowError
+								WHERE
+									id = :id
+								';
+            // Suppression de la dernière virgule
+            $stmt = $this->connection->prepare($query);
+            $stmt->bindValue(':now', $now);
+            $stmt->bindValue(':workflowError', $workflowError);
+            $stmt->bindValue(':id', $this->id);
+            $result = $stmt->executeQuery();
+            $this->message .= 'Workflow error set to '.$workflowError;
+            $this->createDocLog();
+        } catch (\Exception $e) {
+            $this->message .= 'Error type   : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
+            $this->typeError = 'E';
+            $this->logger->error($this->id.' - '.$this->message);
+            $this->createDocLog();
+        }
+    }
+	
     // Function to manually edit the data inside a Myddleware Document
     public function updateDocumentData(string $docId, array $newValues, string $dataType, bool $refreshData = false)
     {
@@ -2721,6 +2768,7 @@ class DocumentManager
 	
 	// Premium method
 	public function runWorkflow($rerun=false) {
+		return true;
 	}	
 	
 	// Check the document before an action is executed

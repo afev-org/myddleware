@@ -23,16 +23,13 @@
  along with Myddleware.  If not, see <http://www.gnu.org/licenses/>.
 *********************************************************************************/
 
-namespace App\Repository;
-
-use App\Entity\RuleGroup;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
-
-class RuleGroupRepository extends ServiceEntityRepository
-{
-    public function __construct(ManagerRegistry $registry)
-    {
-        parent::__construct($registry, Rulegroup::class);
-    }
-}
+$moduleFields = [
+    'list' => [
+		'id' => ['label' => 'Id', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0],
+		'name' => ['label' => 'Name', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0],
+    ],
+	'list_contact' => [
+		'listid' => ['label' => 'List ID', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0],
+		'body' => ['label' => 'Body', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0],
+    ],
+];

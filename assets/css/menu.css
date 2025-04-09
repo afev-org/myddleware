@@ -65,6 +65,14 @@ menu li li, #myd_top li li {
 	padding-left: 10px;
 }
 
+.history-element-home{
+    height: 50px !important;	
+}
+
+.history-element-home-short{
+	height: 30px !important;
+}
+
 /* Dropdown menu */
 
 .dropdown-menu{

@@ -33,6 +33,13 @@ function displayHistory() {
         history.forEach(page => {
             const listItem = document.createElement('li');
             listItem.textContent = page.title;
+            var wordcount = page.title.split(' ').length;
+            var charactercount = page.title.length;
+            if (wordcount > 1 && charactercount > 19) {
+                listItem.classList.add('history-element-home');
+            } else {
+                listItem.classList.add('history-element-home-short');
+            }
             listItem.onclick = () => window.location.href = page.url;
             historyDropdown.appendChild(listItem);
         });

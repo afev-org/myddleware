@@ -4,10 +4,19 @@ $(document).ready(function () {
   let isEditModeValue = false; 
 
   $('fieldset:has(#form_targetFieldValues)').hide();
+  var selectedAction = $("#form_action").val();
   
-  if (isEditMode && typeof targetFieldsData !== 'undefined' && targetFieldsData && targetFieldsData.length > 0) {
+  if (isEditMode && typeof targetFieldsData !== 'undefined' && targetFieldsData && targetFieldsData.length > 0 && selectedAction === "changeData") {
+    // Clear any existing fields
+    dynamicFieldsContainer.innerHTML = '';
+    
+    // Show the container
+    dynamicFieldsContainer.style.display = "block";
+    addFieldButton.style.display = "block";
+    
+    // Add each field
     targetFieldsData.forEach(function (fieldData) {
-      addNewTargetFieldWithValue(fieldData.field, fieldData.value);
+        addNewTargetFieldWithValue(fieldData.field, fieldData.value);
     });
   }
 
@@ -102,31 +111,6 @@ $(document).ready(function () {
 
   });
 
-  function fetchFilteredData() {
-    var workflowName = $("#workflow_name").val();
-    var ruleName = $("#rule_name").val();
-
-    $.ajax({
-      url: workflowListUrl,
-      type: "GET",
-      data: {
-        workflow_name: workflowName,
-        rule_name: ruleName,
-      },
-      success: function (response) {
-        $("#workflowTableContainer").html(response);
-
-        // $('#workflowTableContainer').html($(response).find('#workflowTableContainer').html());
-      },
-      error: function (xhr, status, error) {
-        console.error("Erreur lors de la recherche :", status, error);
-      },
-    });
-  }
-
-  $("#workflow_name, #rule_name").on("keyup", function () {
-    fetchFilteredData();
-  });
 
 });
 
@@ -209,16 +193,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const actionValue = formAction.value;
 
     if (actionValue === "changeData") {
-      addFieldButton.style.display = "none";
-      dynamicFieldsContainer.style.display = "none";
-      targetFieldContainer.style.display = "none";
-      targetFieldValueContainer.style.display = "none";
+        // Show the add button and container for changeData action
+        addFieldButton.style.display = "block";
+        dynamicFieldsContainer.style.display = "block";
     } else {
-      targetFieldContainer.style.display = "none";
-      targetFieldValueContainer.style.display = "none";
-      addFieldButton.style.display = "none";
-      dynamicFieldsContainer.style.display = "none";
-      dynamicFieldsContainer.innerHTML = '';
+        // Hide for other actions
+        targetFieldContainer.style.display = "none";
+        targetFieldValueContainer.style.display = "none";
+        addFieldButton.style.display = "none";
+        dynamicFieldsContainer.style.display = "none";
+        dynamicFieldsContainer.innerHTML = '';
     }
   }
 
