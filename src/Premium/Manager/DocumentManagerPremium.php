@@ -11,7 +11,30 @@ use App\Entity\Document;
 use App\Entity\Job;
 
 class DocumentManagerPremium extends DocumentManager
-{	
+{
+	protected array $statusLevel = [
+        'Create_KO' 		=> 0,
+        'New' 				=> 10,
+        'Filter_KO' 		=> 20,
+        'Filter' 			=> 30,
+        'Filter_OK' 		=> 40,
+        'Predecessor_KO' 	=> 50,
+        'Predecessor_OK' 	=> 60,
+        'Relate_KO' 		=> 70,
+        'Relate_OK' 		=> 80,
+        'Error_transformed' => 90,
+        'Transformed' 		=> 100,
+        'Not_found' 		=> 110,
+        'Found'				=> 120,
+        'Error_checking' 	=> 130,
+        'Ready_to_send' 	=> 140,
+        'No_send' 			=> 150,
+        'Error_sending' 	=> 160,
+        'Send' 				=> 170,
+        'Cancel' 			=> 180,
+        'Error_expected' 	=> 190,
+    ];
+	
 	public function setParam($param, $clear = false, $clearRule = true)
     {
 		if ($clearRule) {
@@ -41,6 +64,13 @@ class DocumentManagerPremium extends DocumentManager
 				if (!empty($this->sourceData)) {
 					foreach($this->sourceData as $key => $value) {
 						$fieldName = 'source_'.$key;
+						$$fieldName = $value;
+					}
+				}
+				// Add all document data in variables
+				if (!empty($this->document_data)) {
+					foreach($this->document_data as $key => $value) {
+						$fieldName = 'document_'.$key;
 						$$fieldName = $value;
 					}
 				}
@@ -85,13 +115,21 @@ class DocumentManagerPremium extends DocumentManager
 						}
 					}
 					
-					// Check the condition 
-					$this->formulaManager->init($ruleWorkflow['condition']); // mise en place de la règle dans la classe
-					$this->formulaManager->generateFormule(); // Genère la nouvelle formule à la forme PhP
-					$f = $this->formulaManager->execFormule();
-					eval('$condition = ('.$f.'?1:0);');
+					try {
+						// Check the condition 
+						$this->formulaManager->init($ruleWorkflow['condition']); // mise en place de la règle dans la classe
+						$this->formulaManager->generateFormule(); // Genère la nouvelle formule à la forme PhP
+						$f = $this->formulaManager->execFormule();
+						eval('$condition = ('.$f.'?1:0);');
+					} catch (\Throwable $e) {
+                        throw new \Exception('Failed to execute the formula in the worflow '.$ruleWorkflow['name'].' "'.$f.'" : '.$e->getMessage());
+                    }
 					// Execute the action if the condition is met
 					if ($condition == 1) {
+						// Check premium isn't expired
+						if (!$this->tools->isPremium()) {
+							throw new \Exception('Premium version is expired. Please contact Myddleware team to update the licence.');
+						}
 						try {
 							// Execute all actions 
 							if (!empty($ruleWorkflow['actions'])) {
@@ -101,7 +139,8 @@ class DocumentManagerPremium extends DocumentManager
 									// Only if attempt > 0, if it is the first attempt then the action has never been executed
 									if (
 											$this->attempt > 0
-										 OR $rerun
+										AND !$rerun
+										AND !$action['multipleRuns']
 									) {
 										// Search action for the current document
 										$workflowLogEntity = $this->entityManager->getRepository(WorkflowLog::class)
@@ -131,7 +170,8 @@ class DocumentManagerPremium extends DocumentManager
 											// Set default value if empty
 											$searchField = (!empty($arguments['searchField']) ? $arguments['searchField'] : 'id');
 											$searchValue = ((!empty($arguments['searchValue']) AND !empty($this->sourceData[$arguments['searchValue']])) ? $this->sourceData[$arguments['searchValue']] : '');
-											$this->generateDocument($arguments['ruleId'],$searchValue, $searchField ,$arguments['rerun'], $action);
+											$rerun = (!empty($arguments['rerun']) ? true : false);
+											$this->generateDocument($arguments['ruleId'],$searchValue, $searchField ,$rerun, $action);
 											break;
 										case 'sendNotification':
                                             $workflowStatus = 'Success';
@@ -146,6 +186,33 @@ class DocumentManagerPremium extends DocumentManager
                                             $this->typeError = 'W';
                                             $this->message = 'Status change using workflow. ';
                                             $this->updateStatus($arguments['status'], true);
+											// Check if we have to remove document data depending on the status selected
+											if (!empty($this->statusLevel[$arguments['status']])) {
+												$removeHisto  = false;
+												$removeTarget = false;
+												// Check if history data has to be removed
+												if ($this->statusLevel[$arguments['status']] < 140) {
+													if (!empty($this->getDocumentData('H'))) {
+														$removeHisto = true;
+													}
+												}
+												// Check if target data has to be removed
+												if ($this->statusLevel[$arguments['status']] < 100) {
+													if (!empty($this->getDocumentData('T'))) {
+														$removeTarget = true;
+													}
+												}
+												// Remove the document data
+												if ($removeHisto OR $removeTarget) {
+													$rule = new RuleManager($this->logger, $this->connection, $this->entityManager, $this->parameterBagInterface, $this->formulaManager, $this->solutionManager, clone $this);
+													if ($removeTarget) {
+														$rule->deleteDocumentData($this->id, 'T');
+													}
+													if ($removeHisto) {
+														$rule->deleteDocumentData($this->id, 'H');
+													}
+												}
+											}
 											$this->createWorkflowLog($action, $workflowStatus, $error);
 											break;
                                         case 'changeData':
@@ -190,16 +257,16 @@ class DocumentManagerPremium extends DocumentManager
 								}
 							}
 						} catch (\Exception $e) {
-							$this->logger->error($this->id.' - Failed to run the workflow '.$ruleWorkflow['name'].' : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )');
-							$this->generateDocLog('E','Failed to run the workflow '.$ruleWorkflow['name'].' : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )');
-							$this->setWorkflowError(true);
+							throw new \Exception($this->id.' - Failed to run the workflow '.$ruleWorkflow['name'].' : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )');
 						}
 					}
 				}
 			}
 		} catch (\Exception $e) {
-            $this->logger->error($this->id.' - Failed to run all workflows : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )');
-			$this->generateDocLog('E','Failed to run all workflows : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )');
+			$this->setWorkflowError(true);
+            $this->logger->error($this->id.' - Failed to run all workflows : '.$e->getMessage());
+			$this->generateDocLog('E','Failed to run all workflows : '.$e->getMessage());
+			throw new \Exception($e->getMessage());
         }
 	}
 	
@@ -235,7 +302,7 @@ class DocumentManagerPremium extends DocumentManager
 			}
 
 			// Generate the documents depending on the search parameter
-			$documents = $rule->generateDocuments($searchValue, true, '', $searchField);
+			$documents = $rule->generateDocuments($searchValue, true, ['parent_id' => $this->id], $searchField, $this->id);
 			if (!empty($documents->error)) {
 				throw new \Exception($documents->error);
 			}
