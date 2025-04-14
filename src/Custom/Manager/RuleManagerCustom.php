@@ -7,7 +7,7 @@ use App\Manager\RuleManager;
 class RuleManagerCustom extends RuleManager
 {
 
-	public function checkParentDocuments($documents = null): array
+	/* public function checkParentDocuments($documents = null): array
 	{
 		$responses = parent::checkParentDocuments($documents);
 
@@ -30,7 +30,7 @@ class RuleManagerCustom extends RuleManager
 		}
 
 		return $responses;
-	}
+	} */
 
 	protected function sendTarget($type, $documentId = null): array
 	{
@@ -229,7 +229,7 @@ class RuleManagerCustom extends RuleManager
 					// We cancel this doc because the modification to COMET will generate another document without invalid phone number
 					$this->changeStatus($docId, 'Cancel', 'Telephone invalide. Myddleware va notifier la COMET et effacer ce numéro invalide. ');
 				}			
-				// If there is an "Unprocessable Entity" errro when we try to create/update a binome for the first time
+				/* // If there is an "Unprocessable Entity" errro when we try to create/update a binome for the first time
 				// Then we try to send again both contacts and referent
 				if (
 						$this->ruleId == '61a930273441b' 	// 	Aiko binome
@@ -255,7 +255,7 @@ class RuleManagerCustom extends RuleManager
 					if ($deleteTargetData) {
 						$this->changeStatus($docId, 'Predecessor_OK', 'Les données liees ont ete relancees car l\'une d\'entre elle doit être supprimee dans Airtable. ');
 					}
-				}
+				} */
 				// If there is an "Unprocessable Entity" errro when we try to create/update a binome for the first time
 				// Then we try to send again both contacts and referent
 				if (
