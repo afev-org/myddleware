@@ -7,31 +7,6 @@ use App\Manager\RuleManager;
 class RuleManagerCustom extends RuleManager
 {
 
-	/* public function checkParentDocuments($documents = null): array
-	{
-		$responses = parent::checkParentDocuments($documents);
-
-		// Specific code 
-		// If relate_ko and rule binôme status is annule then we try to generate the missing contacts
-		// It happends when a binôme isn't filtered anymore while the contacts has been previously filtered too. We have to force the contact generation
-		if ($this->ruleId == '61a930273441b') {	//	Aiko binome
-			foreach ($responses as $docId => $value) {
-				// Empty if relate KO
-				if (empty($value)) {
-					$documentData = $this->getDocumentData($docId, 'S');
-					if (!empty($documentData['MydCustRelSugarcrmc_binome_contactscontacts_ida'])) {
-						$this->generatePoleRelationship('61a920fae25c5', $documentData['MydCustRelSugarcrmc_binome_contactscontacts_ida'], 'id'); // 	Aiko - engagé
-					}
-					if (!empty($documentData['MydCustRelSugarcrmc_binome_crmc_mentorecrmc_mentore_ida'])) {
-						$this->generatePoleRelationship('665787f17fd25', $documentData['MydCustRelSugarcrmc_binome_crmc_mentorecrmc_mentore_ida'], 'id'); // Aiko - mentoré
-					}
-				}
-			}
-		}
-
-		return $responses;
-	} */
-
 	protected function sendTarget($type, $documentId = null): array
 	{
 		// Call standard function
@@ -229,33 +204,6 @@ class RuleManagerCustom extends RuleManager
 					// We cancel this doc because the modification to COMET will generate another document without invalid phone number
 					$this->changeStatus($docId, 'Cancel', 'Telephone invalide. Myddleware va notifier la COMET et effacer ce numéro invalide. ');
 				}			
-				/* // If there is an "Unprocessable Entity" errro when we try to create/update a binome for the first time
-				// Then we try to send again both contacts and referent
-				if (
-						$this->ruleId == '61a930273441b' 	// 	Aiko binome
-					AND	(
-							$documentData['attempt'] == 1 		// Only the first try
-						 OR !empty($this->manual)				// Or manual run
-					) 
-					AND	strpos($response['error'], '422 error') !== false
-				) {	
-					$sourceData = $this->getDocumentData($docId, 'S');
-					if (!empty($sourceData['MydCustRelSugarcrmc_binome_crmc_mentorecrmc_mentore_ida'])) { // Mentoré
-						$this->generatePoleRelationship('665787f17fd25', $sourceData['MydCustRelSugarcrmc_binome_crmc_mentorecrmc_mentore_ida'], 'id', true);  // Aiko contact
-					}
-					if (!empty($sourceData['MydCustRelSugarcrmc_binome_contactscontacts_ida'])) { // Mentor
-						$this->generatePoleRelationship('61a920fae25c5', $sourceData['MydCustRelSugarcrmc_binome_contactscontacts_ida'], 'id', true);  // Aiko contact
-					}
-					if (!empty($sourceData['assigned_user_id'])) { // Referent
-						$this->generatePoleRelationship('61a9190e40965', $sourceData['assigned_user_id'], 'id', true);  // Aiko Référent
-					}
-					
-					// Set back the status to predecessor OK and remove target data to allow Myddleware to recalcultae thetarget data with the new records sent
-					$deleteTargetData = $this->deleteDocumentData($docId, 'T');
-					if ($deleteTargetData) {
-						$this->changeStatus($docId, 'Predecessor_OK', 'Les données liees ont ete relancees car l\'une d\'entre elle doit être supprimee dans Airtable. ');
-					}
-				} */
 				// If there is an "Unprocessable Entity" errro when we try to create/update a binome for the first time
 				// Then we try to send again both contacts and referent
 				if (

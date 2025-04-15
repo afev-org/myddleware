@@ -215,6 +215,12 @@ class DocumentManagerPremium extends DocumentManager
 											}
 											$this->createWorkflowLog($action, $workflowStatus, $error);
 											break;
+										case 'updateType':
+                                            $workflowStatus = 'Success';
+                                            $error = '';
+                                            $this->updateType($arguments['type']);
+											$this->createWorkflowLog($action, $workflowStatus, $error);
+											break;
                                         case 'changeData':
                                             $workflowStatus = 'Success';
                                             $error = '';

@@ -483,7 +483,7 @@ class DocumentManagerCustom extends DocumentManagerPremium
 			$this->message = 'Change status from No_send to Ready_to_send to force the call to Make.';
 		}
 
-		// Manage 403 error with Airtable
+/* 		// Manage 403 error with Airtable
 		// It means that the record doesn't exist anymore in Airtable. We can't update it so we create it again.
 		if (
 				!empty($this->document_data)
@@ -495,7 +495,7 @@ class DocumentManagerCustom extends DocumentManagerPremium
 			$this->typeError = 'W';
 			$this->message = 'The record doesn\'t exist in AIrtable anymore. Not possible to update it. We create the record again in Airtable. ';
 			$this->updateType('C');
-		}
+		} */
 		
 		// If relate_ko on rule Aiko contact - pole then we cancel the data transfer
 		if (
