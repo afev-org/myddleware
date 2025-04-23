@@ -40,6 +40,27 @@ class DocumentManagerCustom extends DocumentManagerPremium
 		return parent::searchRelateDocumentByStatus($ruleRelationship, $record_id, $status);
 	}
 	
+	// Prepare the search fields
+	protected function prepareSearchFields($duplicateFields, $target) {
+		// Redefine search for Brevo search rules, keeping the email or the SMS even if one of them is empty
+		if (
+				!empty($this->document_data['rule_id'])
+			and	in_array($this->document_data['rule_id'], array('620d3e768e678', '620e5520c62d6', '66165525cb72d', '66579644bba6f')) // Rules contact to Brevo
+		) {
+			$searchFields = array();
+			if (!empty($duplicateFields)) {
+				foreach ($duplicateFields as $duplicateField) {
+					// Do not search duplicates on an empty field
+					if (empty($target[$duplicateField])) {
+						continue;
+					}
+					$searchFields[$duplicateField] = $target[$duplicateField];
+				}
+			}
+			return $searchFields;
+		}
+		return parent::prepareSearchFields($duplicateFields, $target);
+	}
 
 	protected function beforeStatusChange($new_status) {	
 		// On annule la relation pôle - contact (user) si le contact (user) a été filtré
