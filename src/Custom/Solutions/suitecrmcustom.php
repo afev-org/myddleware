@@ -14,6 +14,7 @@ class suitecrmcustom extends suitecrm
 	protected int $limitCall = 100;
 	public $anneeScolaire = '2024_2025';
 	public $anneeScolaire2 = '2024'; // used to select 2 years
+	public $anneeScolaire3 = '2025'; // used to select 2 years, the current one and the next one
 	protected $moduleWithAnnee = array('FP_events', 'CRMC_suivi', 'Leads', 'CRMC_coupon_mentore');
 	protected $moduleWithAnnee2 = array('Contacts', 'CRMC_binome', 'CRMC_mentore');
 	protected string $urlSuffix = '/custom/service/v4_1_custom/rest.php';
@@ -626,6 +627,7 @@ class suitecrmcustom extends suitecrm
 							'2022_2023' => '2022-2023',
 							'2023_2024' => '2023-2024',
 							'2024_2025' => '2024-2025',
+							'2025_2026' => '2025-2026',
 						)
 					);
 				}
@@ -673,7 +675,12 @@ class suitecrmcustom extends suitecrm
 			in_array($param['module'], $this->moduleWithAnnee)
 			and $param['call_type'] != 'history'
 		) {
-			$query .= ' AND '.strtolower($param['module'])."_cstm.annee_scolaire_c LIKE '%".(!empty($param['ruleParams']['anneeScolaire']) ? $param['ruleParams']['anneeScolaire'] : $this->anneeScolaire)."%' ";
+			// Read the current year and the next one for rule Sendinblue - coupon
+			if ($param['rule']['id'] == '620e5520c62d6') {	
+				$query .= ' AND '.strtolower($param['module'])."_cstm.annee_scolaire_c LIKE '%".(!empty($param['ruleParams']['anneeScolaire']) ? $param['ruleParams']['anneeScolaire'] : $this->anneeScolaire3)."%' ";
+			} else {
+				$query .= ' AND '.strtolower($param['module'])."_cstm.annee_scolaire_c LIKE '%".(!empty($param['ruleParams']['anneeScolaire']) ? $param['ruleParams']['anneeScolaire'] : $this->anneeScolaire)."%' ";
+			}
 		}
 		// The rule parameter anneeScolaire2 override the genera parameter if exists
 		if (
