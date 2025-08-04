@@ -12,9 +12,9 @@ class suitecrmcustom extends suitecrm
 {
 
 	protected int $limitCall = 100;
-	public $anneeScolaire = '2024_2025';
-	public $anneeScolaire2 = '2024'; // used to select 2 years
-	public $anneeScolaire3 = '2025'; // used to select 2 years, the current one and the next one
+	public $anneeScolaire = '2025_2026';
+	public $anneeScolaire2 = '2025'; // used to select 2 years
+	public $anneeScolaire3 = '2026'; // used to select 2 years, the current one and the next one
 	protected $moduleWithAnnee = array('FP_events', 'CRMC_suivi', 'Leads', 'CRMC_coupon_mentore');
 	protected $moduleWithAnnee2 = array('Contacts', 'CRMC_binome', 'CRMC_mentore');
 	protected string $urlSuffix = '/custom/service/v4_1_custom/rest.php';
