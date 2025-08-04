@@ -167,7 +167,11 @@ class FormulaFunctionManager
 					 OR $ruleRef['module_target'] == $ruleLink['module_target']
 				)
 			) 
-			OR (!empty($direction)) // Manage simulation
+			OR ($currentRule === 0) // Manage simulation
+			OR (
+					!empty($direction)
+				AND $direction == '1'
+			)
 		){
 			$sqlParams = "	SELECT 
 									target_id record_id,
@@ -191,16 +195,22 @@ class FormulaFunctionManager
 			$direction = 1;
 		} elseif (
 			(
-					$ruleRef['conn_id_source'] == $ruleLink['conn_id_target']
+					empty($direction)
+				AND	$ruleRef['conn_id_source'] == $ruleLink['conn_id_target']
 				AND	$ruleRef['conn_id_target'] == $ruleLink['conn_id_source']
 			)
 			// In case of the linked rule has the target connector = source connector, we use module to get the direction of the relationship 
 			OR (
-					$ruleLink['conn_id_target'] == $ruleLink['conn_id_source']
+					empty($direction)
+				AND $ruleLink['conn_id_target'] == $ruleLink['conn_id_source']
 				AND	(
 						$ruleRef['module_source'] == $ruleLink['module_target']
 					 OR $ruleRef['module_target'] == $ruleLink['module_source']
 				)
+			)
+			OR (
+					!empty($direction)
+				AND $direction == '-1'
 			)
 		){
 			$sqlParams = "	SELECT 
