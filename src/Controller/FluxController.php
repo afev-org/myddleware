@@ -114,15 +114,19 @@ class FluxController extends AbstractController
      */
     public function fluxErrorByRule($id): RedirectResponse
     {
-        $em = $this->getDoctrine()->getManager();
+        $em = $this->entityManager;
 
         if ($this->getUser()->isAdmin()) {
             $list_fields_sql =
-                ['id' => $id];
+                [
+					'id' => $id,
+					'deleted' => 0,
+				];
         } else {
             $list_fields_sql =
                 [
                     'id' => $id,
+					'deleted' => 0,
                     'createdBy' => $this->getUser()->getId(),
                 ];
         }
@@ -134,7 +138,7 @@ class FluxController extends AbstractController
         if ($rule) {
             $this->sessionService->setFluxFilterRuleName($rule[0]->getName());
             $this->sessionService->setFluxFilterGlobalStatus('Error');
-            $this->sessionService->setFluxFilterWhere(['rule' => $rule[0]->getName(), 'gblstatus' => ['Error', 'Open']]);
+            $this->sessionService->setFluxFilterWhere(['rule' => $rule[0]->getName(), 'gblstatus' => ['Error']]);
         } else {
             $this->sessionService->removeFluxFilter();
         }
@@ -173,11 +177,10 @@ class FluxController extends AbstractController
         }
         //---
 
-        $em = $this->getDoctrine()->getManager();
+        $em = $this->entityManager;
 
         if ($this->getUser()->isAdmin()) {
-            $rule = $this->getDoctrine()
-                ->getManager()
+            $rule = $this->entityManager
                 ->getRepository(Rule::class)
                 ->findBy(['deleted' => 0]);
         } else {
@@ -291,7 +294,7 @@ class FluxController extends AbstractController
         }
 
         // Get the limit parameter
-        $configRepository = $this->getDoctrine()->getManager()->getRepository(Config::class);
+        $configRepository = $this->entityManager->getRepository(Config::class);
         $searchLimit = $configRepository->findOneBy(['name' => 'search_limit']);
         if (!empty($searchLimit)) {
             $limit = $searchLimit->getValue();
@@ -526,7 +529,7 @@ class FluxController extends AbstractController
                     .$where.
             " ORDER BY document.date_modified DESC"
             ." LIMIT ". $limit;
-        $stmt = $this->getDoctrine()->getManager()->getConnection()->prepare($query);
+        $stmt = $this->entityManager->getConnection()->prepare($query);
         // Add parameters to the query
         // Source content
         if (!empty($data['source_content'])) {
@@ -607,7 +610,7 @@ public function fluxInfo(Request $request, $id, $page, $logPage)
             $logPage = $request->attributes->get('logPage', 1);
 
             $session = $request->getSession();
-            $em = $this->getDoctrine()->getManager();
+            $em = $this->entityManager;
 
             $list_fields_sql = ['id' => $id];
 
@@ -670,14 +673,20 @@ public function fluxInfo(Request $request, $id, $page, $logPage)
             $parentDocuments = [];
             $parentDocumentsRule = [];
             foreach ($parentRelationships as $parentRelationship) {
-                $parentDocuments[$i] = $em->getRepository(Document::class)->find($parentRelationship->getDocRelId());
-                $parentDocuments[$i]->sourceField = $parentRelationship->getSourceField();
-                // Get the rule name of every relate doc
+				$parentDocument = $em->getRepository(Document::class)->find($parentRelationship->getDocRelId());	
+				if (!empty($parentDocument)) {
+					$parentDocuments[$i] = $parentDocument;
+					$parentDocuments[$i]->sourceField = $parentRelationship->getSourceField();
+					++$i;
+				}
+            }
+
+			// Get the rule name of every relate doc
+			if (!empty($parentDocuments)) {
                 foreach ($parentDocuments as $parentDocument) {
                     $parentDocumentsRule[$parentDocument->getId()] = $em->getRepository(Rule::class)->find($parentDocument->getRule())->getName();
                 }
-                ++$i;
-            }
+			}
 
             // CHILD RELATE DOCUMENT
             // Document link to other document, the child ones
@@ -902,7 +911,7 @@ $result = [];
         // we will use the rule to find the source module
         foreach ($mappedData as $item) {
             // get the rule of the item
-            $rule = $this->getDoctrine()->getRepository(Rule::class)->find($item['rule']);
+            $rule = $this->entityManager->getRepository(Rule::class)->find($item['rule']);
             $module = strtolower($rule->getModuleSource());
             $link = $extractedDirectLink . "#/" .$module.'/record/'. $sourceData[$item['field']];
             $result[$item['field']] = $link;
@@ -987,7 +996,7 @@ $result = [];
 
             if (isset($value)) {
                 // get the EntityManager
-                $em = $this->getDoctrine()->getManager();
+                $em = $this->entityManager;
                 // Get target data for the document
                 $documentDataEntity = $em->getRepository(DocumentData::class)
                     ->findOneBy(
@@ -1062,7 +1071,7 @@ $result = [];
         try {
             if (!empty($id)) {
                 // Get the rule id and the source_id from the document id
-                $em = $this->getDoctrine()->getManager();
+                $em = $this->entityManager;
                 $doc = $em->getRepository(Document::class)->find($id);
                 if (!empty($doc)) {
                     if (!empty($doc->getSource())) {
@@ -1250,7 +1259,7 @@ $result = [];
     {
         try {
             // Get document data
-            $documentDataEntity = $this->getDoctrine()->getManager()->getRepository(DocumentData::class)
+            $documentDataEntity = $this->entityManager->getRepository(DocumentData::class)
                 ->findOneBy(
                     [
                         'doc_id' => $id,

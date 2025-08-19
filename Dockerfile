@@ -24,23 +24,25 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     npm install -g npm yarn && \
     apt-get clean && rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/*
 
-# Verify Node.js version
-RUN node --version
-
+# Copy application files first
 COPY --chown=www-data:www-data . .
 
-# Build packages with yarn
-RUN yarn install
-RUN yarn run build
+# Create necessary directories with proper permissions
+RUN mkdir -p /var/www/html/var/cache /var/www/html/var/log /var/www/html/var/sessions && \
+    chown -R www-data:www-data /var/www/html && \
+    chmod -R 755 /var/www/html
 
-## Setup Cronjob
-# RUN echo "cron.* /var/log/cron.log" >> /etc/rsyslog.conf && rm -fr /etc/cron.* && mkdir /etc/cron.d
-# COPY docker/etc/crontab /etc/
-# RUN chmod 600 /etc/crontab
+# Switch to www-data user for dependency installation
+USER www-data
 
-## Entrypoint and scripts
-COPY ./docker/script/myddleware-foreground.sh /usr/local/bin/myddleware-foreground.sh
-COPY ./docker/script/myddleware-cron.sh /usr/local/bin/myddleware-cron.sh
+# Install PHP dependencies
+RUN composer install --no-interaction --optimize-autoloader --no-dev
+
+# Install Node.js dependencies only (build will happen at startup)
+RUN yarn install --frozen-lockfile
+
+# Switch back to root to copy scripts and set permissions
+USER root
 
 RUN chmod +x /usr/local/bin/myddleware-*.sh
 CMD ["myddleware-foreground.sh"]
