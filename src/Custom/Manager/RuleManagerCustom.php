@@ -141,7 +141,7 @@ class RuleManagerCustom extends RuleManager
 					$this->ruleId == '61a920fae25c5' // Aiko - engagé
 				) {		
 					$this->generatePoleRelationship('61a9329e6d6f2', $document['source_id'], 'record_id', true);  // Aiko - Engagé - pole
-				} */
+				} 
 				if (
 					$this->ruleId == '665787f17fd25' // Aiko - mentoré 
 				) {		
@@ -160,7 +160,7 @@ class RuleManagerCustom extends RuleManager
 					$this->ruleId == '61a9190e40965' // Aiko Referent
 				) {			
 					$this->generatePoleRelationship('61b7662e60774', $document['source_id'], 'user_id', true);  // Aiko Referent(user) - pole
-				}
+				} */
 				
 				// If the coupon is re invited then we set the statuts RDV pris in COMET	
 				if (
