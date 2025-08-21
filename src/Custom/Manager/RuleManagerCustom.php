@@ -75,8 +75,7 @@ class RuleManagerCustom extends RuleManager
 					// On force donc la relance de la relation composante - Engagé à chaque fois qu'un engagé est modifié	
 					$this->generatePoleRelationship('5f8486295b5a7', $document['source_id'], 'contact_id', true); // Composante - Engagé
 				} */
-				
-				/* // Workflows 20250820 
+
 				// Si un contact partenaire est envoyé dans REEC, on recherche également son pôle
 				// En effet un contact partenaire dont on  ajoute un mail ne sera plus filtré donc sera envoyé dans REEC,
 				// Cependant, dans ce cas, on n'enverra pas son pôle et sa composante qui est une données qui a été créée dans le passé 
@@ -124,7 +123,7 @@ class RuleManagerCustom extends RuleManager
 					$this->ruleId == '6273905a05cb2' // Esp Rep - Contacts repérants
 				) {
 					$this->generatePoleRelationship('62743060350ed', $document['source_id'], 'record_id', true);  // Esp Rep - Contact repérant - Pôle
-				} */
+				}
 			
 				/* // If a users has been sent to REEC, we send the custom data too
 				if (
@@ -137,11 +136,11 @@ class RuleManagerCustom extends RuleManager
 				/************** AirTable Aiko ****************/
 				/****************************************/
 				// Si un contact est envoyé dans REEC, on recherche également son pôle (seulement pour la migration)
-				/* if (
+				if (
 					$this->ruleId == '61a920fae25c5' // Aiko - engagé
 				) {		
 					$this->generatePoleRelationship('61a9329e6d6f2', $document['source_id'], 'record_id', true);  // Aiko - Engagé - pole
-				} 
+				}
 				if (
 					$this->ruleId == '665787f17fd25' // Aiko - mentoré 
 				) {		
@@ -160,7 +159,7 @@ class RuleManagerCustom extends RuleManager
 					$this->ruleId == '61a9190e40965' // Aiko Referent
 				) {			
 					$this->generatePoleRelationship('61b7662e60774', $document['source_id'], 'user_id', true);  // Aiko Referent(user) - pole
-				} */
+				}
 				
 				// If the coupon is re invited then we set the statuts RDV pris in COMET	
 				if (
@@ -168,7 +167,7 @@ class RuleManagerCustom extends RuleManager
 				) {			
 					$targetData = $this->getDocumentData($docId, 'T');
 					$this->generatePoleRelationship('633ef1ecf11db', $document['source_id'], 'id', true, array('values' => array('id' => $targetData['fp_events_leads_1leads_idb'], 'date_modified' => gmdate('Y-m-d H:i:s'))));  // Mobilisation - relance rdv pris -> comet
-				} 
+				}
 			// In case of UPDATE
 			} elseif (
 					!empty($response['id']) 
@@ -189,7 +188,7 @@ class RuleManagerCustom extends RuleManager
 					!empty($response['id']) 
 				AND	$response['id'] == '-1'
 				AND !empty($document['source_id'])
-			) { /*
+			) {
 				if (
 						in_array($this->ruleId, array('620e5520c62d6','620d3e768e678')) // Sendinblue - coupon / contact
 					AND	$type != 'D' // No document generated after a deletion
@@ -203,7 +202,7 @@ class RuleManagerCustom extends RuleManager
 					}
 					// We cancel this doc because the modification to COMET will generate another document without invalid phone number
 					$this->changeStatus($docId, 'Cancel', 'Telephone invalide. Myddleware va notifier la COMET et effacer ce numéro invalide. ');
-				*/ }			
+				}			
 				// If there is an "Unprocessable Entity" errro when we try to create/update a binome for the first time
 				// Then we try to send again both contacts and referent
 				if (
