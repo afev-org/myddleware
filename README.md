@@ -43,7 +43,7 @@ You can download Myddleware in 2 different ways :
 
 #### **Git clone**
 
-If you are  familiar with Git, Github & command lines, you can clone our [Github repository](https://github.com/Myddleware/myddleware)
+If you are familiar with Git, Github & command lines, you can clone our [Github repository](https://github.com/Myddleware/myddleware)
 
 #### Setting up the project
 
