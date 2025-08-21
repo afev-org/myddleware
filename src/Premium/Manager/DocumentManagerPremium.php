@@ -185,6 +185,9 @@ class DocumentManagerPremium extends DocumentManager
                                             $error = '';
                                             $this->typeError = 'W';
                                             $this->message = 'Status change using workflow. ';
+											if (!empty($arguments['message'])) {
+												$this->message = $arguments['message'];
+											}
                                             $this->updateStatus($arguments['status'], true);
 											// Check if we have to remove document data depending on the status selected
 											if (!empty($this->statusLevel[$arguments['status']])) {
