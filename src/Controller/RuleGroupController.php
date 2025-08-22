@@ -82,6 +82,7 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 
 /**
  * @Route("/rulegroup")
@@ -256,7 +257,8 @@ class RuleGroupController extends AbstractController
 
     // public function to delet the rulegroup by id (set deleted to 1)
     /**
-     * @Route("/delete/{id}", name="rulegroup_delete")
+     * @Route("/delete/{id}", name="rulegroup_delete", methods={"POST", "DELETE"})
+     * @IsGranted("ROLE_ADMIN")
      */
     public function RulegroupDeleteAction(string $id, Request $request, TranslatorInterface $translator)
     {
@@ -266,7 +268,7 @@ class RuleGroupController extends AbstractController
                 return $this->redirectToRoute('premium_list');
             }
 
-            $em = $this->getDoctrine()->getManager();
+            $em = $this->entityManager;
             $rulegroupSearchResult = $em->getRepository(Rulegroup::class)->findBy(['id' => $id, 'deleted' => 0]);
             $rulegroup = $rulegroupSearchResult[0];
 
@@ -292,7 +294,7 @@ class RuleGroupController extends AbstractController
 
         
 
-    //     $em = $this->getDoctrine()->getManager();
+    //     $em = $this->entityManager;
     //     $rulegroupArray = $em->getRepository(Rulegroup::class)->findBy(['id' => $rulegroupId, 'deleted' => 0]);
     //     $rulegroup = $rulegroupArray[0];
 
@@ -349,7 +351,7 @@ class RuleGroupController extends AbstractController
     //     try {
 
             
-    //         $em = $this->getDoctrine()->getManager();
+    //         $em = $this->entityManager;
     //         $rulegroupResult = $em->getRepository(Rulegroup::class)->findBy(['id' => $id, 'deleted' => 0]);
     //         $rulegroup = $rulegroupResult[0];
 
@@ -377,7 +379,7 @@ class RuleGroupController extends AbstractController
     //     try {
 
             
-    //         $em = $this->getDoctrine()->getManager();
+    //         $em = $this->entityManager;
     //         $rulegroupResult = $em->getRepository(Rulegroup::class)->findBy(['id' => $id, 'deleted' => 0]);
     //         $rulegroup = $rulegroupResult[0];
 
@@ -435,7 +437,7 @@ class RuleGroupController extends AbstractController
 
             $rules = RuleRepository::findActiveRulesNames($this->entityManager);
 
-            $em = $this->getDoctrine()->getManager();
+            $em = $this->entityManager;
             $rulegroup = new Rulegroup();
             $rulegroup->setId(uniqid());
             $form = $this->createForm(RuleGroupType::class, $rulegroup, [
@@ -480,7 +482,7 @@ class RuleGroupController extends AbstractController
                 return $this->redirectToRoute('premium_list');
             }
 
-            $em = $this->getDoctrine()->getManager();
+            $em = $this->entityManager;
             $rulegroup = $em->getRepository(Rulegroup::class)->findBy(['id' => $id, 'deleted' => 0]);
 
 
@@ -514,7 +516,7 @@ class RuleGroupController extends AbstractController
                 return $this->redirectToRoute('premium_list');
             }
 
-            $em = $this->getDoctrine()->getManager();
+            $em = $this->entityManager;
             $rulegroupArray = $em->getRepository(Rulegroup::class)->findBy(['id' => $id, 'deleted' => 0]);
             $rulegroup = $rulegroupArray[0];
 
@@ -552,7 +554,8 @@ class RuleGroupController extends AbstractController
     }
 
     /**
-     * @Route("/rulegroup/{groupId}/remove-rule/{ruleId}", name="rulegroup_remove_rule")
+     * @Route("/rulegroup/{groupId}/remove-rule/{ruleId}", name="rulegroup_remove_rule", methods={"POST", "DELETE"})
+     * @IsGranted("ROLE_ADMIN")
      */
     public function removeRule(
         Request $request, 
@@ -640,10 +643,16 @@ class RuleGroupController extends AbstractController
                 'choices' => $availableRules,
                 'choice_label' => 'name',
                 'required' => true,
-                'label' => 'rulegroup.select_rule'
+                'label' => 'rulegroup.select_rule',
+                'attr' => [ 
+                    'class' => 'form-control',
+                ],
             ])
             ->add('confirm', SubmitType::class, [
-                'label' => $request->query->get('confirm') ? 'rulegroup.confirm_transfer_final' : 'rulegroup.add_rule'
+                'label' => $request->query->get('confirm') ? 'rulegroup.confirm_transfer_final' : 'rulegroup.add_rule',
+                'attr' => [
+                    'class' => 'btn btn-primary',
+                ],
             ])
             ->getForm();
 

@@ -49,7 +49,7 @@ Encore
      */
     .cleanupOutputBeforeBuild()
     .enableBuildNotifications()
-    .enableSourceMaps(!Encore.isProduction())
+    .enableSourceMaps(true)
     // enables hashed filenames (e.g. app.abc123.css)
     .enableVersioning(Encore.isProduction())
 
@@ -65,7 +65,11 @@ Encore
     })
 
     // enables Sass/SCSS support
-    .enableSassLoader()
+    .enableSassLoader(options => {
+        options.sourceMap = true;
+    }, {
+        resolveUrlLoader: true
+    })
     .copyFiles({
         from: './assets/images',
         to: 'images/[path][name].[ext]',

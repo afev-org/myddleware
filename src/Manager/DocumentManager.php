@@ -714,13 +714,15 @@ class DocumentManager
 								document.id,							
 								document.rule_id,
 								document.status,
-								document.global_status											
+								document.global_status,										
+								document.job_lock											
 							FROM document								
 							WHERE 
 									document.rule_id = :rule_id 
 								AND document.source_id = :source_id 
 								AND document.date_created < :date_created  
 								AND document.deleted = 0 
+								AND document.type <> 'D' 
 								AND document.global_status IN ('Error','Open')
 							LIMIT 1	
 							";
@@ -733,6 +735,9 @@ class DocumentManager
 
             // if id found, we stop to send an error, we cancel the predecessor and try again
             if (!empty($result['id'])) {
+				if (!empty($result['job_lock'])) {
+					throw new \Exception('The successor document '.$result['id'].' is locked. Failed to cancel it. The current document is stopped. ');
+				}
 				// Load the document that locks the current document
 				$paramCancel['id_doc_myddleware'] = $result['id'];
 				$paramCancel['jobId'] = $this->jobId;
@@ -1357,7 +1362,7 @@ class DocumentManager
 					// If one of the field isn't set then we return false
 					if (
 							!array_key_exists($field['target_field_name'], $history)
-						 OR	!array_key_exists($field['target_field_name'], $target) 
+						 OR !array_key_exists($field['target_field_name'], $target)
 					){
 						return false;
 					}
@@ -1730,7 +1735,7 @@ class DocumentManager
 								$ruleField['formula'] = str_replace($listFields, $fieldNameDyn, $ruleField['formula']);
 							}
                             if (array_key_exists($listFields, $source)) {
-                                $$fieldNameDyn = (!empty($source[$listFields]) ? $source[$listFields] : ''); // Dynamic variable (e.g $name = name)
+                                $$fieldNameDyn = (array_key_exists($listFields,$source) ? $source[$listFields] : ''); // Dynamic variable (e.g $name = name)
                             } else {
                                 // Erreur
                                 throw new \Exception('The field '.$listFields.' is unknow in the formula '.$ruleField['formula'].'. ');
@@ -1765,6 +1770,7 @@ class DocumentManager
 						$currentRule = $this->ruleId;
 						$connection = $this->connection;
 						$entityManager = $this->entityManager;
+						$solutionManager = $this->solutionManager;
 						$myddlewareUserId = $this->userId;
 						$sourceFieldName = $ruleField['source_field_name'];
 						$docId = $this->id;
@@ -1774,11 +1780,19 @@ class DocumentManager
 					if (strpos($f, 'lookup') !== false ) {
 						$f = str_replace('lookup(', 'lookup($entityManager, $connection, $currentRule, $docId, $myddlewareUserId, $sourceFieldName, ', $f);
 					}
+					// Manage getRecord formula by adding parameters
+					if (strpos($f, 'getRecord') !== false ) {
+						$f = str_replace('getRecord(', 'getRecord($entityManager, $connection, $solutionManager, ', $f);
+					}
                     try {
                         // Trigger to redefine formula
                         $f = $this->changeFormula($f);
 						eval('$rFormula = '.$f.';'); // exec
 						if (isset($rFormula)) {
+							return $rFormula;	
+						}
+						// Second check in case isset returns false, we check the variable doesn't exist at all
+						if (array_key_exists('rFormula', get_defined_vars())) {
 							// Return result
 							return $rFormula;
 						} else {
@@ -1849,7 +1863,10 @@ class DocumentManager
 
 	// Function to check if a formula require variables
 	protected function isVariableRequested($formula) {
-		if (strpos($formula, 'lookup') !== false ) {
+		if (
+				strpos($formula, 'lookup') !== false
+			 or strpos($formula, 'getRecord') !== false
+		) {
 			return true;
 		}
 		return false;
@@ -2333,8 +2350,9 @@ class DocumentManager
 			// Exception : status New because there is no lock on document for this status, the lock in on the rule
 			// Exception : status No_send because the document has already been unlock by the status ready_to_send
 			// Exception : Update status call by a workflow, the lock will be removed only by the main call
+            // Exception : Status Cancel, we should be able to unlock the document
 			if (
-					!in_array($new_status, array('New','No_send'))
+					!in_array($new_status, array('New','No_send', "Cancel"))
 				AND !$workflow
 			) {
 				if ($this->unsetLock() == false) {
