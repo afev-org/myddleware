@@ -79,51 +79,51 @@ class RuleManagerCustom extends RuleManager
 				// Si un contact partenaire est envoyé dans REEC, on recherche également son pôle
 				// En effet un contact partenaire dont on  ajoute un mail ne sera plus filtré donc sera envoyé dans REEC,
 				// Cependant, dans ce cas, on n'enverra pas son pôle et sa composante qui est une données qui a été créée dans le passé 
-				// if (
-					// $this->ruleId == '5d01a630c217c'	//Contact partenaire
-				// ) { 
-					// $this->generatePoleRelationship('5d163d3c1d837', $document['source_id'], 'record_id', true);  // contact composante - pole
-					// $this->generatePoleRelationship('5f20b113356e1', $document['source_id'], 'contact_id', true); // REEC - Composante - Contact partenaire
-				// }
+				if (
+					$this->ruleId == '5d01a630c217c'	//Contact partenaire
+				) { 
+					$this->generatePoleRelationship('5d163d3c1d837', $document['source_id'], 'record_id', true);  // contact composante - pole
+					$this->generatePoleRelationship('5f20b113356e1', $document['source_id'], 'contact_id', true); // REEC - Composante - Contact partenaire
+				}
 
 				// Si une composante est envoyée dans REEC, on recherche également son pôle 
 				// Utilisé quand un établissement (filtre de le règle) est ajouté à une composante
-				// if (
-						// $this->ruleId == '5ce362b962b63'	// composante
-				// ) { 
-					// $this->generatePoleRelationship('5cfaca925116f', $document['source_id'], 'record_id', true);  // composante - pole
-					// $this->generatePoleRelationship('5f20b113356e1', $document['source_id'], 'account_id', true); // REEC - Composante - Contact partenaire
-				// }
+				if (
+						$this->ruleId == '5ce362b962b63'	// composante
+				) { 
+					$this->generatePoleRelationship('5cfaca925116f', $document['source_id'], 'record_id', true);  // composante - pole
+					$this->generatePoleRelationship('5f20b113356e1', $document['source_id'], 'account_id', true); // REEC - Composante - Contact partenaire
+				}
 
 				// Si un établissement est envoyée dans REEC, on recherche également son pôle
-				// if (
-					// $this->ruleId == '5f847b2242138' // Etablissement sup 
-				// ) {
-					// $this->generatePoleRelationship('5f847d9927a10', $document['source_id'], 'record_id', true);  // Etablissement sup - pole
-				// }
+				if (
+					$this->ruleId == '5f847b2242138' // Etablissement sup 
+				) {
+					$this->generatePoleRelationship('5f847d9927a10', $document['source_id'], 'record_id', true);  // Etablissement sup - pole
+				}
 
 				// Si une session de formation est envoyée dans REEC, on recherche également son pôle
 				// Utilisé quand une formation change de type (filtre de le règle)
-				// if (
-					// $this->ruleId == '5ce454613bb17' // Formation
-				// ) {
-					// $this->generatePoleRelationship('5d08e425e49ea', $document['source_id'], 'record_id', true);  // Formation - pôle
-				// }
+				if (
+					$this->ruleId == '5ce454613bb17' // Formation
+				) {
+					$this->generatePoleRelationship('5d08e425e49ea', $document['source_id'], 'record_id', true);  // Formation - pôle
+				}
 				
 				// If a coupon is created to Airtable, we send the pole relationship too
 				// It fix a bug when the coupon has been removed from Airtable and créated again by Myddleware, the pole wasn't sent again
-				// if (
-					// $this->ruleId == '625fcd2ed442f' // Mobilisation - Coupons
-				// ) {
-					// $this->generatePoleRelationship('626931ebbff78', $document['source_id'], 'record_id', true);  // Mobilisation - Relations pôles Coupons
-				// }
+				if (
+					$this->ruleId == '625fcd2ed442f' // Mobilisation - Coupons
+				) {
+					$this->generatePoleRelationship('626931ebbff78', $document['source_id'], 'record_id', true);  // Mobilisation - Relations pôles Coupons
+				}
 				
 				// If a contact reperant is created to the espace reperant, we send the pole relationship too
-				// if (
-					// $this->ruleId == '6273905a05cb2' // Esp Rep - Contacts repérants
-				// ) {
-					// $this->generatePoleRelationship('62743060350ed', $document['source_id'], 'record_id', true);  // Esp Rep - Contact repérant - Pôle
-				// }
+				if (
+					$this->ruleId == '6273905a05cb2' // Esp Rep - Contacts repérants
+				) {
+					$this->generatePoleRelationship('62743060350ed', $document['source_id'], 'record_id', true);  // Esp Rep - Contact repérant - Pôle
+				}
 			
 				/* // If a users has been sent to REEC, we send the custom data too
 				if (
@@ -136,30 +136,30 @@ class RuleManagerCustom extends RuleManager
 				/************** AirTable Aiko ****************/
 				/****************************************/
 				// Si un contact est envoyé dans REEC, on recherche également son pôle (seulement pour la migration)
-				// if (
-					// $this->ruleId == '61a920fae25c5' // Aiko - engagé
-				// ) {		
-					// $this->generatePoleRelationship('61a9329e6d6f2', $document['source_id'], 'record_id', true);  // Aiko - Engagé - pole
-				// }
-				// if (
-					// $this->ruleId == '665787f17fd25' // Aiko - mentoré 
-				// ) {		
-					// $this->generatePoleRelationship('665788349e1bd', $document['source_id'], 'record_id', true);  // Aiko - Mentoré - pole
-				// }
+				if (
+					$this->ruleId == '61a920fae25c5' // Aiko - engagé
+				) {		
+					$this->generatePoleRelationship('61a9329e6d6f2', $document['source_id'], 'record_id', true);  // Aiko - Engagé - pole
+				}
+				if (
+					$this->ruleId == '665787f17fd25' // Aiko - mentoré 
+				) {		
+					$this->generatePoleRelationship('665788349e1bd', $document['source_id'], 'record_id', true);  // Aiko - Mentoré - pole
+				}
 
 				// Si un binome est envoyé dans REEC, on recherche également son pôle (seulement pour la migration)
-				// if (
-					// $this->ruleId == '61a930273441b' // Aiko Binomes 
-				// ) {		
-					// $this->generatePoleRelationship('61a93469599ae', $document['source_id'], 'record_id', true);  // Aiko Binome - pole
-				// }
+				if (
+					$this->ruleId == '61a930273441b' // Aiko Binomes 
+				) {		
+					$this->generatePoleRelationship('61a93469599ae', $document['source_id'], 'record_id', true);  // Aiko Binome - pole
+				}
 
 				// Si un référent est envoyé dans REEC, on recherche également son pôle (seulement pour la migration)	
-				// if (
-					// $this->ruleId == '61a9190e40965' // Aiko Referent
-				// ) {			
-					// $this->generatePoleRelationship('61b7662e60774', $document['source_id'], 'user_id', true);  // Aiko Referent(user) - pole
-				// }
+				if (
+					$this->ruleId == '61a9190e40965' // Aiko Referent
+				) {			
+					$this->generatePoleRelationship('61b7662e60774', $document['source_id'], 'user_id', true);  // Aiko Referent(user) - pole
+				}
 				
 				// If the coupon is re invited then we set the statuts RDV pris in COMET	
 				if (
@@ -195,13 +195,13 @@ class RuleManagerCustom extends RuleManager
 					AND	strpos($response['error'], 'Invalid phone number') !== false
 				) {		
 					// Use function generatePoleRelationship to generate a document that send the info invalide phone number to COMET
-					// if ($this->ruleId == '620e5520c62d6') { // Sendinblue - coupon
-						// $this->generatePoleRelationship('630684804e98c', $document['source_id'], 'id', true);  // Sendinblue - coupon invalid phone
-					// } else {	// Sendinblue - contact
-						// $this->generatePoleRelationship('63075042095e8', $document['source_id'], 'id', true);  // Sendinblue - contact invalid phone
-					// }
+					if ($this->ruleId == '620e5520c62d6') { // Sendinblue - coupon
+						$this->generatePoleRelationship('630684804e98c', $document['source_id'], 'id', true);  // Sendinblue - coupon invalid phone
+					} else {	// Sendinblue - contact
+						$this->generatePoleRelationship('63075042095e8', $document['source_id'], 'id', true);  // Sendinblue - contact invalid phone
+					}
 					// We cancel this doc because the modification to COMET will generate another document without invalid phone number
-					// $this->changeStatus($docId, 'Cancel', 'Telephone invalide. Myddleware va notifier la COMET et effacer ce numéro invalide. ');
+					$this->changeStatus($docId, 'Cancel', 'Telephone invalide. Myddleware va notifier la COMET et effacer ce numéro invalide. ');
 				}			
 				// If there is an "Unprocessable Entity" errro when we try to create/update a binome for the first time
 				// Then we try to send again both contacts and referent
