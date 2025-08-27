@@ -230,7 +230,7 @@ $(document).ready(function () {
 
     const path = paths[0];
     $.ajax({
-      url: window.location.origin + path,
+      url: (window.location.origin + path).replace("http://", "https://"),
       dataType: 'json',
       success: function(data) {
 // console.log('Successfully loaded workflow action fields configuration from:', path);
@@ -449,7 +449,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Envoyer la requête AJAX pour récupérer les champs liés à la règle sélectionnée
         const updatedUrl = workflowTargetFieldUrl.replace("ruleFields", ruleId);
         $.ajax({
-          url: updatedUrl,
+          url: updatedUrl.replace("http://", "https://"),
           type: "GET",
           success: function (data) {
             dynamicFieldsContainer.innerHTML = '';
@@ -529,7 +529,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const ruleId = ruleIdField.value;
 
     $.ajax({
-      url: workflowTargetFieldUrl.replace("ruleFields", ruleId),
+      url: (workflowTargetFieldUrl.replace("ruleFields", ruleId).replace("http://", "https://")),
       type: "GET",
       success: function (data) {
         addNewTargetField(data.fields);
