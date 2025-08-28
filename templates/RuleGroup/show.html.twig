@@ -121,12 +121,14 @@
 															<a href="{{ path('regle_open', {'id': rule.id}) }}" class="btn btn-sm btn-outline-primary">
 																<i class="fa fa-eye"></i>
 															</a>
-															<a href="{{ path('rulegroup_remove_rule', {'groupId': rulegroup.id, 'ruleId': rule.id}) }}" 
+															<form method="post" action="{{ path('rulegroup_remove_rule', {'groupId': rulegroup.id, 'ruleId': rule.id}) }}" style="display: inline;">
+                                                <button type="submit" 
 															   class="btn btn-sm btn-outline-danger unlink_rule_from_group" 
 															   onclick="return confirm('{{ 'rulegroup.rule.confirm_remove_rule'|trans }}')"
 															   title="{{ 'rulegroup.remove_rule'|trans }}">
 																<i class="fa fa-unlink"></i>
-															</a>
+															</button>
+                                            </form>
 														</td>
 													</tr>
 												{% endfor %}
