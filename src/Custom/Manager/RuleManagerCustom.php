@@ -195,13 +195,13 @@ class RuleManagerCustom extends RuleManager
 					AND	strpos($response['error'], 'Invalid phone number') !== false
 				) {		
 					// Use function generatePoleRelationship to generate a document that send the info invalide phone number to COMET
-					// if ($this->ruleId == '620e5520c62d6') { // Sendinblue - coupon
-						// $this->generatePoleRelationship('630684804e98c', $document['source_id'], 'id', true);  // Sendinblue - coupon invalid phone
-					// } else {	// Sendinblue - contact
-						// $this->generatePoleRelationship('63075042095e8', $document['source_id'], 'id', true);  // Sendinblue - contact invalid phone
-					// }
+					if ($this->ruleId == '620e5520c62d6') { // Sendinblue - coupon
+						$this->generatePoleRelationship('630684804e98c', $document['source_id'], 'id', true);  // Sendinblue - coupon invalid phone
+					} else {	// Sendinblue - contact
+						$this->generatePoleRelationship('63075042095e8', $document['source_id'], 'id', true);  // Sendinblue - contact invalid phone
+					}
 					// We cancel this doc because the modification to COMET will generate another document without invalid phone number
-					// $this->changeStatus($docId, 'Cancel', 'Telephone invalide. Myddleware va notifier la COMET et effacer ce numéro invalide. ');
+					$this->changeStatus($docId, 'Cancel', 'Telephone invalide. Myddleware va notifier la COMET et effacer ce numéro invalide. ');
 				}			
 				// If there is an "Unprocessable Entity" errro when we try to create/update a binome for the first time
 				// Then we try to send again both contacts and referent
