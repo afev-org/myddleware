@@ -36,6 +36,7 @@ class moodle extends solution
     protected array $required_fields = [
         'default' => ['id'],
         'get_users_statistics_by_date' => ['id', 'timemodified'],
+        'get_course_completion_percentage' => ['id', 'timecompleted', 'timemodified'],
         'get_users_completion' => ['id', 'timemodified'],
         'get_users_last_access' => ['id', 'lastaccess'],
         'get_course_completion_by_date' => ['id', 'timecompleted'],
@@ -121,6 +122,7 @@ class moodle extends solution
                     'get_users_completion' => 'Get course activity completion',
                     'get_users_last_access' => 'Get users last access',
                     'get_users_statistics_by_date' => 'Get users statistics',
+                    'get_course_completion_percentage' => 'Get course completion percentage',
                     'get_enrolments_by_date' => 'Get enrolments',
                     'get_course_completion_by_date' => 'Get course completion',
                     'get_user_compentencies_by_date' => 'Get user compentency',
@@ -302,23 +304,21 @@ class moodle extends solution
                 $dataSugar = [];
                 $obj = new \stdClass();
                 foreach ($data as $key => $value) {
-                    if (!empty($value)) {
-                        // if $value belongs to $this->paramConnexion[user_custom_fields] then we add it to $obj->customfields
-                        if (in_array($key, $customFieldList)) {
-                            $customField = new \stdClass();
-                            // Param names are differents depending on the module
-                            if($param['module'] == 'users') {
-                                $customField->type = $key;
-                            } elseif($param['module'] == 'courses') {
-                                $customField->shortname = $key; 
-                            }
-                            $customField->value = $value;
-                            $obj->customfields[] = $customField;
-                            
-                        } else {
-                            $obj->$key = $value;
-                        }
-                    }
+					// if $value belongs to $this->paramConnexion[user_custom_fields] then we add it to $obj->customfields
+					if (in_array($key, $customFieldList)) {
+						$customField = new \stdClass();
+						// Param names are differents depending on the module
+						if($param['module'] == 'users') {
+							$customField->type = $key;
+						} elseif($param['module'] == 'courses') {
+							$customField->shortname = $key; 
+						}
+						$customField->value = $value;
+						$obj->customfields[] = $customField;
+						
+					} else {
+						$obj->$key = $value;
+					}
                 }
                 switch ($param['module']) {
                     case 'users':
@@ -349,7 +349,7 @@ class moodle extends solution
                     case 'manual_unenrol_users':
 						$enrolments = [$obj];
                         $params = ['enrolments' => $enrolments];
-                        $functionname = 'manual_unenrol_users';
+                        $functionname = 'enrol_manual_unenrol_users';
                         break;
                     case 'notes':
                         $notes = [$obj];
@@ -391,7 +391,7 @@ class moodle extends solution
                 // Réponse standard pour les modules avec retours
                 if (
                         !empty($xml->MULTIPLE->SINGLE->KEY->VALUE)
-                    && !in_array($param['module'], ['manual_enrol_users', 'group_members'])
+                    && !in_array($param['module'], ['manual_enrol_users', 'manual_unenrol_users', 'group_members'])
                 ) {
                     $result[$idDoc] = [
                         'id' => $xml->MULTIPLE->SINGLE->KEY->VALUE,
@@ -418,7 +418,7 @@ class moodle extends solution
                     throw new \Exception($xml->ERRORCODE.' : '.$xml->MESSAGE);
                 }
                 // Si pas d'erreur et module sans retour alors on génère l'id
-                elseif (in_array($param['module'], ['manual_enrol_users'])) {
+                elseif (in_array($param['module'], ['manual_enrol_users', 'manual_unenrol_users'])) {
                     $result[$idDoc] = [
                         'id' => $obj->courseid.'_'.$obj->userid.'_'.$obj->roleid,
                         'error' => false,
@@ -467,22 +467,20 @@ class moodle extends solution
                     if ('target_id' == $key) {
                         continue;
                     } 
-                    if (!empty($value)) {
-                        // if $value belongs to $this->paramConnexion[user_custom_fields] then we add it to $obj->customfields
-                        if (in_array($key, $customFieldList)) {
-                            $customField = new \stdClass();
-                            // Param names are differents depending on the module
-                            if($param['module'] == 'users') {
-                                $customField->type = $key;
-                            } elseif($param['module'] == 'courses') {
-                                $customField->shortname = $key;
-                            }
-                            $customField->value = $value;
-                            $obj->customfields[] = $customField;
-                        } else {
-                            $obj->$key = $value;
-                        }
-                    }
+					// if $value belongs to $this->paramConnexion[user_custom_fields] then we add it to $obj->customfields
+					if (in_array($key, $customFieldList)) {
+						$customField = new \stdClass();
+						// Param names are differents depending on the module
+						if($param['module'] == 'users') {
+							$customField->type = $key;
+						} elseif($param['module'] == 'courses') {
+							$customField->shortname = $key;
+						}
+						$customField->value = $value;
+						$obj->customfields[] = $customField;
+					} else {
+						$obj->$key = $value;
+					}
                 }
 
                 // Fonctions et paramètres différents en fonction des appels webservice
@@ -771,7 +769,7 @@ class moodle extends solution
             AND !empty($this->paramConnexion['course_custom_fields'])
         ) {
             return explode(',',$this->paramConnexion['course_custom_fields']);
-        } 
+        }
         return array();
     }
 

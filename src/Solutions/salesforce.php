@@ -124,6 +124,14 @@ class salesforce extends solution {
 					 'sf_instance_url' => $this->instance_url);
 	}
 
+	protected function setAccessToken($access_token) {
+		$this->access_token = $access_token;
+	}
+
+	protected function getAccessToken() {
+		return $this->access_token;
+	}
+
 	// Liste des paramètres de connexion
 	public function getFieldsLogin(): array
     {
@@ -800,11 +808,16 @@ class salesforce extends solution {
 		if (!empty($param['query'])) {
 			$queryWhere = "+WHERE+";
 			foreach ($param['query'] as $key => $value) {
+				// Manage boolean search
+				if (in_array($value, array('TRUE', 'FALSE'))) {
+					$queryWhere .= $key."+=+".$value;
+				} else {
 					$queryWhere .= $key."+=+'".str_replace(' ', '+', addslashes($value))."'";
-					// Add the AND if not the last entry of the array
-					if ($key !== array_key_last($param['query'])) {
-							$queryWhere .= "+AND+";
-					}
+				}
+				// Add the AND if not the last entry of the array
+				if ($key !== array_key_last($param['query'])) {
+						$queryWhere .= "+AND+";
+				}
 			}
 		} else {
 			// On va chercher le nom du champ pour la date de référence: Création ou Modification
