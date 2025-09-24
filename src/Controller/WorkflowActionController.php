@@ -408,7 +408,7 @@ class WorkflowActionController extends AbstractController
                     ])
                     ->add('to', TextType::class, ['label' => 'To', 'mapped' => false, 'required' => false])
                     ->add('subject', TextType::class, ['label' => 'Subject', 'mapped' => false, 'required' => false])
-                    ->add('message', TextareaType::class, ['required' => false])
+                    ->add('message', TextareaType::class, ['label' => 'Message', 'required' => false])
                     ->add('searchField', ChoiceType::class, [
                         'label' => 'Matching Field from Generating Rule',
                         'choices' => $sourceSearchValue,
