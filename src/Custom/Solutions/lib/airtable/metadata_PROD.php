@@ -4,6 +4,7 @@
 $moduleFields['appdKFUpk2X2Ok8Dc'] = array (
     'CONTACTS' => array(
         'fldXhleTPZRv0zBbd'=> array( 'label' => 'ID Comet', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 1, 'relate' => false),
+	    'fldVfFJsTitpW8XbO'=> array( 'label' => 'Last Modified', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
         'fldfY1mW365RxVObR' => array( 'label' => 'Status', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 1, 'relate' => false),
         'fldbiNB4Q9goe9LDI' => array( 'label' => 'Nom', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
         'fldzLeK74vQqQSX3s' => array( 'label' => 'Prénom', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
