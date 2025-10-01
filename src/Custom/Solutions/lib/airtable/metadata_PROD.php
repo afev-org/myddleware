@@ -4,7 +4,6 @@
 $moduleFields['appdKFUpk2X2Ok8Dc'] = array (
     'CONTACTS' => array(
         'fldXhleTPZRv0zBbd'=> array( 'label' => 'ID Comet', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 1, 'relate' => false),
-	    'fldL6DBjuvqYSJbu4'=> array( 'label' => 'Last Modified', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
         'fldfY1mW365RxVObR' => array( 'label' => 'Status', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 1, 'relate' => false),
         'fldbiNB4Q9goe9LDI' => array( 'label' => 'Nom', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
         'fldzLeK74vQqQSX3s' => array( 'label' => 'Prénom', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
@@ -148,6 +147,7 @@ $moduleFields['appX0PhUGIkBTcWBE'] = array (
 $moduleFields['app5ustIjI5taRXJS'] = array (
 	'CONTACTS' => array(
 		'fldpSrPxUtj0apDA6'=> array( 'label' => 'ID :', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldxevbu0TSrKNfxi'=> array( 'label' => 'Last Modified', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldCo6lKk68gpD9Cc'=> array( 'label' => 'Nom :', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldQ5ji7kwT7cAT0o'=> array( 'label' => 'Date de création', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldpvuEpv94J7NVh8'=> array( 'label' => 'Date de modification :', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
