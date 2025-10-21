@@ -1357,8 +1357,11 @@ class DocumentManager
 					if ($field['target_field_name'] == 'Myddleware_element_id') {
                             continue;
 					}
-					// If the field isn't set in the history then we return false because we don't know its value in the target application
-					if (!array_key_exists($field['target_field_name'], $history)){
+					// If one of the field isn't set then we return false
+					if (
+							!array_key_exists($field['target_field_name'], $history)
+						 OR !array_key_exists($field['target_field_name'], $target)
+					){
 						return false;
 					}
                     if (stripslashes(trim($history[$field['target_field_name']])) != stripslashes(trim($target[$field['target_field_name']]))) {
