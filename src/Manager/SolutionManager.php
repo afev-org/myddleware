@@ -53,7 +53,6 @@ use App\Solutions\sapcrm;
 use App\Solutions\sendinblue;
 use App\Solutions\sugarcrm;
 use App\Solutions\suitecrm;
-use App\Solutions\suitecrm8;
 use App\Solutions\vtigercrm;
 use App\Solutions\woocommerce;
 use App\Solutions\wooeventmanager;
