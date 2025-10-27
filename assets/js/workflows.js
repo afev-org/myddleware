@@ -17,7 +17,7 @@ $(document).ready(function () {
     addFieldButton.style.display = "block";
     
     targetFieldsData.forEach(function (fieldData) {
-        addNewTargetFieldWithValue(fieldData.field, fieldData.value);
+      addNewTargetFieldWithValue(fieldData.field, fieldData.value);
     });
   }
   
@@ -34,7 +34,8 @@ $(document).ready(function () {
     'Multiple run',
     'Active',
     'Target Field',
-    'New Value'
+    'New Value',
+    'documentType'
   ];
 
   // Function to get field configuration for an action
@@ -48,7 +49,7 @@ $(document).ready(function () {
         SearchField: 'No',
         SearchValue: 'No',
         Subject: 'No',
-        Message: 'No',
+        Message: 'Yes',
         To: 'No',
         'Target Field': 'No',
         'New Value': 'No',
@@ -119,7 +120,7 @@ $(document).ready(function () {
       changeData: {
         Action: 'changeData',
         Status: 'No',
-        Rule: 'Yes',
+        Rule: 'No',
         SearchField: 'No',
         SearchValue: 'No',
         Subject: 'No',
@@ -130,6 +131,22 @@ $(document).ready(function () {
         Rerun: 'No',
         'Multiple run': 'Yes',
         Active: 'Yes'
+      },
+      updateType: {
+        Action: 'updateType',
+        Status: 'No',
+        Rule: 'No',
+        SearchField: 'No',
+        SearchValue: 'No',
+        Subject: 'No',
+        Message: 'No',
+        To: 'No',
+        'Target Field': 'No',
+        'New Value': 'No',
+        Rerun: 'No',
+        'Multiple run': 'Yes',
+        Active: 'Yes',
+        documentType: 'Yes'
       }
     };
 
@@ -156,6 +173,7 @@ $(document).ready(function () {
       case 'Active': return '#active-container';
       case 'Target Field': return '#targetFieldContainer';
       case 'New Value': return '#targetFieldValueContainer';
+      case 'documentType': return '#document-type-container';
       default: return null;
     }
   }
@@ -217,8 +235,8 @@ $(document).ready(function () {
 
   // Try multiple possible paths for the JSON file
   const possiblePaths = [
-    '/build/workflow-action-fields.json',
     '/assets/js/workflow-action-fields.json',
+    '/build/workflow-action-fields.json',
     '/workflow-action-fields.json'
   ];
 
@@ -317,27 +335,39 @@ $(document).ready(function () {
   }
   
   // Handle action change
-  $("#form_action").on("change", function () {
-    const actionValue = $(this).val();
-// console.log('\n=== ACTION CHANGED ===');
-// console.log('New Action:', actionValue);
-    const config = getFieldConfig(actionValue);
-    toggleFieldVisibility(config);
-    
-    if (!isEditMode || isEditModeValue) {
-      $("#form_ruleId").val('');
-    }
-    isEditModeValue = true;
-  });
+$("#form_action").on("change", function () {
+  const actionValue = $(this).val();
+  const config = getFieldConfig(actionValue);
+  toggleFieldVisibility(config);
 
+  if ((!isEditMode || isEditModeValue) && actionValue !== 'changeData') {
+    $("#form_ruleId").val('').trigger('change');
+  }
+  isEditModeValue = true;
+
+  if (actionValue === 'changeData' && window.workflowRuleMap) {
+    const wfId = $('#form_Workflow').val();
+    const ruleId = wfId ? (window.workflowRuleMap[wfId] || '') : '';
+    if (ruleId) {
+      setRuleFieldValue(ruleId);
+    }
+  }
+
+  if (actionValue === 'changeData' && window.workflowRuleMap) {
+    const wfId = $('#form_Workflow').val();
+    const ruleId = wfId ? (window.workflowRuleMap[wfId] || '') : '';
+    if (ruleId) {
+      setRuleFieldValue(ruleId);
+    }
+  }
+});
 });
 
 document.addEventListener("DOMContentLoaded", function () {
   function toggleIcon(button, content) {
-    if (!button || !content) {
+        if (!button || !content) {
       return;
     }
-
     if (content.classList.contains("show")) {
       button.innerHTML = '<i class="fa fa-minus"></i>';
     } else {
@@ -397,12 +427,18 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // WORKFLOWACTION TARGETFIELD
-  const ruleIdField = document.getElementById("form_ruleId");
+  const ruleIdField = document.getElementById("form_ruleChangeData");
   const targetFieldContainer = document.getElementById("targetFieldContainer");
   const targetFieldValueContainer = document.getElementById("targetFieldValueContainer");
   const addFieldButton = document.getElementById('addFieldButton');
   const dynamicFieldsContainer = document.getElementById("dynamicFieldsContainer");
   const formAction = document.getElementById("form_action");
+
+  // Check if required elements exist before proceeding
+  if (!formAction) {
+    console.log("form_action element not found, skipping workflow action field initialization");
+    return;
+  }
 
   // Cacher les champs et le bouton au démarrage
   if (targetFieldContainer) targetFieldContainer.style.display = "none";
@@ -410,22 +446,28 @@ document.addEventListener("DOMContentLoaded", function () {
   if (addFieldButton) addFieldButton.style.display = "none";
   if (dynamicFieldsContainer) dynamicFieldsContainer.style.display = "none";
 
-
   // Fonction pour afficher/masquer les champs et le bouton en fonction de la valeur de form_action
   function toggleTargetFields() {
+    if (!formAction) {
+      console.log("formAction element is null, cannot toggle target fields");
+      return;
+    }
+    
     const actionValue = formAction.value;
 
     if (actionValue === "changeData") {
         // Show the add button and container for changeData action
-        addFieldButton.style.display = "block";
-        dynamicFieldsContainer.style.display = "block";
+        if (addFieldButton) addFieldButton.style.display = "block";
+        if (dynamicFieldsContainer) dynamicFieldsContainer.style.display = "block";
     } else {
         // Hide for other actions
-        targetFieldContainer.style.display = "none";
-        targetFieldValueContainer.style.display = "none";
-        addFieldButton.style.display = "none";
-        dynamicFieldsContainer.style.display = "none";
-        dynamicFieldsContainer.innerHTML = '';
+        if (targetFieldContainer) targetFieldContainer.style.display = "none";
+        if (targetFieldValueContainer) targetFieldValueContainer.style.display = "none";
+        if (addFieldButton) addFieldButton.style.display = "none";
+        if (dynamicFieldsContainer) {
+          dynamicFieldsContainer.style.display = "none";
+          dynamicFieldsContainer.innerHTML = '';
+        }
     }
   }
 
@@ -437,14 +479,15 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // Ecouter le changement de la règle
-  ruleIdField.addEventListener("change", function () {
-    const ruleId = ruleIdField.value;
+  if (ruleIdField) {
+    ruleIdField.addEventListener("change", function () {
+      const ruleId = ruleIdField.value;
 
-    // Vérifier à nouveau si l'action est bien "changeData" avant d'afficher les champs
-    if (formAction.value === "changeData") {
+      // Vérifier à nouveau si l'action est bien "changeData" avant d'afficher les champs
+      if (formAction && formAction.value === "changeData") {
       if (ruleId !== "") {
-        addFieldButton.style.display = "block";
-        dynamicFieldsContainer.style.display = "block";
+        if (addFieldButton) addFieldButton.style.display = "block";
+        if (dynamicFieldsContainer) dynamicFieldsContainer.style.display = "block";
 
         // Envoyer la requête AJAX pour récupérer les champs liés à la règle sélectionnée
         const updatedUrl = workflowTargetFieldUrl.replace("ruleFields", ruleId);
@@ -452,24 +495,33 @@ document.addEventListener("DOMContentLoaded", function () {
           url: updatedUrl.replace("http://", "https://"),
           type: "GET",
           success: function (data) {
-            dynamicFieldsContainer.innerHTML = '';
-            addNewTargetField(data.fields); 
+            if (dynamicFieldsContainer) {
+              dynamicFieldsContainer.innerHTML = '';
+              addNewTargetField(data.fields);
+            }
           },
           error: function (xhr, status, error) {
             console.error("Erreur lors de la récupération des champs:", status, error);
           },
         });
       } else {
-        addFieldButton.style.display = "none";
+        if (addFieldButton) addFieldButton.style.display = "none";
+        if (dynamicFieldsContainer) {
+          dynamicFieldsContainer.style.display = "none";
+          dynamicFieldsContainer.innerHTML = '';
+        }
+      }
+    } else {
+      if (addFieldButton) addFieldButton.style.display = "none";
+      if (dynamicFieldsContainer) {
         dynamicFieldsContainer.style.display = "none";
         dynamicFieldsContainer.innerHTML = '';
       }
-    } else {
-      addFieldButton.style.display = "none";
-      dynamicFieldsContainer.style.display = "none";
-      dynamicFieldsContainer.innerHTML = '';
     }
-  });
+    });
+  } else {
+    console.log("form_ruleId element not found, skipping rule change listener");
+  }
 
   // Fonction pour ajouter un champ targetField (select) et targetFieldValue (input)
   function addNewTargetField(fields) {
@@ -521,12 +573,15 @@ document.addEventListener("DOMContentLoaded", function () {
     newFieldRow.appendChild(targetFieldDiv);
     newFieldRow.appendChild(targetFieldValueDiv);
     newFieldRow.appendChild(removeButtonDiv);
-    dynamicFieldsContainer.appendChild(newFieldRow);
+    if (dynamicFieldsContainer) {
+      dynamicFieldsContainer.appendChild(newFieldRow);
+    }
   }
 
   // Ecouter le clic sur le bouton "Add Field"
-  addFieldButton.addEventListener('click', function () {
-    const ruleId = ruleIdField.value;
+  if (addFieldButton && ruleIdField) {
+    addFieldButton.addEventListener('click', function () {
+      const ruleId = ruleIdField.value;
 
     $.ajax({
       url: (workflowTargetFieldUrl.replace("ruleFields", ruleId).replace("http://", "https://")),
@@ -538,5 +593,42 @@ document.addEventListener("DOMContentLoaded", function () {
         console.error("Erreur lors de la récupération des champs :", status, error);
       },
     });
-  });
+    });
+  } else {
+    console.log("addFieldButton or form_ruleChangeData element not found, skipping add field listener");
+  }
+});
+
+function setRuleFieldValue(ruleId) {
+  const $rule = $('#form_ruleChangeData');
+  if (!$rule.length) {
+    return;
+  }
+  if (ruleId && !$rule.find('option[value="' + ruleId + '"]').length) {
+    $rule.append($('<option>', { value: ruleId, text: '(auto) ' + ruleId }));
+  }
+
+  $rule.val(ruleId || '');
+
+  if ($rule.data('select2')) $rule.trigger('change.select2');  
+  else $rule.trigger('change');
+}
+
+$('#form_Workflow').on('change', function () {
+  const wfId = $(this).val();
+
+  if (!window.workflowRuleMap) {
+   return;
+  }
+
+  const ruleId = window.workflowRuleMap[wfId] || '';
+
+  setRuleFieldValue(ruleId);
+
+  setTimeout(() => {
+    const cur = $('#form_ruleId').val();
+    if (cur !== (ruleId || '')) {
+      setRuleFieldValue(ruleId);
+    }
+  }, 50);
 });
