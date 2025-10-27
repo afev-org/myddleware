@@ -453,32 +453,6 @@ class DocumentManagerCustom extends DocumentManagerPremium
 			$new_status = 'Error_expected';
 			$this->message .= utf8_decode('La COMET ne peut pas créer de contact dans USC. Ce transfert de données est annulé. ');
 		}
-
-		// Call make when a relation pôle contact is created in Airtable (Mobilisation)
-		// If no_send status, we force the status to Ready_to_send to execute the function and do the make call
-		if (
-				!empty($this->document_data)
-			AND	$this->document_data['rule_id'] == '64f5e0543cb6c'	// Mobilisation - Contact vers USC
-			AND $new_status == 'No_send'
-		) {
-			$new_status = 'Ready_to_send';
-			$this->typeError = 'W';
-			$this->message = 'Change status from No_send to Ready_to_send to force the call to Make.';
-		}
-
-/* 		// Manage 403 error with Airtable
-		// It means that the record doesn't exist anymore in Airtable. We can't update it so we create it again.
-		if (
-				!empty($this->document_data)
-			AND $new_status == 'Error_checking'
-			AND	$this->documentType == 'U'
-			AND strpos($this->message, 'HTTP/2 403') !== false
-		) {
-			$new_status = 'Transformed';
-			$this->typeError = 'W';
-			$this->message = 'The record doesn\'t exist in AIrtable anymore. Not possible to update it. We create the record again in Airtable. ';
-			$this->updateType('C');
-		} */
 		
 		// If relate_ko on rule Aiko contact - pole then we cancel the data transfer
 		if (
