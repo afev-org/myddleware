@@ -357,7 +357,7 @@ $moduleFields = [
 		'grade' => ['label' => 'Grade', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0],
 		'cmid' => ['label' => 'Course module ID', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0],
     ],
-	
+
 	'core_user_set_user_preferences' => [
         'id' => ['label' => 'ID', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0],
         'userid' => ['label' => 'User ID', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'required_relationship' => 1, 'relate' => true],

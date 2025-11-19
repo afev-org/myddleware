@@ -151,15 +151,15 @@
 									{% endif %}
 								</td>
 								<td>
-									<a href="{{ path('flux_info_page', {'id' : flux.id, 'page' : 1, 'logPage' : 1}) }}">{{ flux.id }}</a>
+									<a href="{{ path('flux_modern', {'id' : flux.id }) }}">{{ flux.id }}</a>
 								</td>
 								<td>
 									<a href="{{ path('regle_open',{'id' : flux.rule_id }) }}" title="">{{ flux.rule_name }}</a>
 								</td>
 								<td>{{ flux.source_id }}</td>
 								<td>{{ flux.target_id }}</td>
-								<td>{{ flux.source_date_modified|date("d/m/Y H:i:s") }}</td>
-								<td>{{ flux.date_modified|date("d/m/Y H:i:s", timezone) }}</td>
+								<td>{{ flux.source_date_modified|date(app.user.dateFormat ~ " H:i:s", app.user.timezone) }}</td>
+								<td>{{ flux.date_modified|date(app.user.dateFormat ~ " H:i:s", app.user.timezone) }}</td>
 								<td class="ctr">
 									<div class="gblstatus_{{ flux.global_status|lower }}">{{ flux.status }}
 										{% if flux.global_status|lower == 'close' %}
