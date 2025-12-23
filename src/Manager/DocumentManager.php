@@ -168,6 +168,8 @@ class DocumentManager
             'Error_transformed' => 'flux.status.error_transformed',
             'Error_checking' => 'flux.status.error_checking',
             'Error_sending' => 'flux.status.error_sending',
+            'Found' => 'flux.status.found',
+            'Not_found' => 'flux.status.not_found',
         ];
     }
 
@@ -714,15 +716,14 @@ class DocumentManager
 								document.id,							
 								document.rule_id,
 								document.status,
-								document.global_status,										
-								document.job_lock											
+								document.global_status											
 							FROM document								
 							WHERE 
 									document.rule_id = :rule_id 
 								AND document.source_id = :source_id 
 								AND document.date_created < :date_created  
-								AND document.deleted = 0 
-								AND document.type <> 'D' 
+								AND document.deleted = 0
+                                AND document.type <> 'D'
 								AND document.global_status IN ('Error','Open')
 							LIMIT 1	
 							";
@@ -735,15 +736,15 @@ class DocumentManager
 
             // if id found, we stop to send an error, we cancel the predecessor and try again
             if (!empty($result['id'])) {
-				if (!empty($result['job_lock'])) {
-					throw new \Exception('The successor document '.$result['id'].' is locked. Failed to cancel it. The current document is stopped. ');
-				}
 				// Load the document that locks the current document
 				$paramCancel['id_doc_myddleware'] = $result['id'];
 				$paramCancel['jobId'] = $this->jobId;
 				$docCancel = clone $this;
 				// Cancel the documents that locks the current document
-				$docCancel->setParam($paramCancel, true);
+				if ($docCancel->setParam($paramCancel, true) === false) {
+					// Stop the process of the current document if the other document couldn't be cancelled
+					throw new \Exception('The document '.$result['id'].' is locked and cannot be cancelled. This document is queued. ');
+				}
 				$docCancel->docIdRefError = $this->id;
 				$docCancel->setMessage('This document is cancelled because a predecessor document has been generated (same source_id for the same rule). ');
 				// Set status predecessor_ko if the ref document couldn't be cancelled. 
@@ -1051,16 +1052,16 @@ class DocumentManager
 				if (array_search('mdw_error_transformed',$transformed, true) !== false) {
 					 throw new \Exception('The code mdw_error_transformed found in document'); 
 				}
-                // If the field Myddleware_element_id isn't empty, it means that the target ID is mapped in the rule field
+                // If the type of this document is Create and if the field Myddleware_element_id isn't empty,
+                // it means that the target ID is mapped in the rule field
                 // In this case, we force the document's type to Update because Myddleware will update the record into the target application
                 // using Myddleware_element_id as the target ID
-				$target = $this->getDocumentData('T');
-				if (!empty($target['Myddleware_element_id'])) {
-					// If target IDs are different (the one from predecessor calculation and the one from field mapping) 
-					if ($this->targetId != $target['Myddleware_element_id']) {
-						$this->targetId = $target['Myddleware_element_id'];
-						if ($this->updateTargetId($this->targetId)) {
-							$this->updateType('U');
+                if ('C' == $this->documentType) {
+                    $target = $this->getDocumentData('T');
+                    if (!empty($target['Myddleware_element_id'])) {
+                        $this->targetId = $target['Myddleware_element_id'];
+                        if ($this->updateTargetId($this->targetId)) {
+                            $this->updateType('U');
 							// Check compatibility between rule mode et document type
 							// A rule in create mode can't update data except for a child rule
 							if (
@@ -1075,11 +1076,11 @@ class DocumentManager
 									return false;
 								}
 							}
-						} else {
-							throw new \Exception('The type of this document is Update. Failed to update the target id '.$this->targetId.' on this document. This document is queued. ');
-						}
-					}
-				}
+                        } else {
+                            throw new \Exception('The type of this document is Update. Failed to update the target id '.$this->targetId.' on this document. This document is queued. ');
+                        }
+                    }
+                }
                 // If the type of this document is Update and the id of the target is missing, we try to get this ID
                 // Except if the rule is a child (no target id is required, it will be send with the parent rule)
                 if (
@@ -1354,16 +1355,13 @@ class DocumentManager
             // If one is different we stop the function
             if (!empty($this->ruleFields)) {
                 foreach ($this->ruleFields as $field) {
-					// We don't compare field Myddleware_element_id as it can't exist in the history data (always empty if it exists)
+                    // We don't compare field Myddleware_element_id as it can't exist in the history data (always empty if it exists)
 					// This field can only exist in target data as it is created by Myddleware
 					if ($field['target_field_name'] == 'Myddleware_element_id') {
                             continue;
 					}
-					// If one of the field isn't set then we return false
-					if (
-							!array_key_exists($field['target_field_name'], $history)
-						 OR !array_key_exists($field['target_field_name'], $target)
-					){
+					// If the field isn't set in the history then we return false because we don't know its value in the target application
+					if (!array_key_exists($field['target_field_name'], $history)){
 						return false;
 					}
                     if (stripslashes(trim($history[$field['target_field_name']])) != stripslashes(trim($target[$field['target_field_name']]))) {
@@ -1781,7 +1779,9 @@ class DocumentManager
 						$f = str_replace('lookup(', 'lookup($entityManager, $connection, $currentRule, $docId, $myddlewareUserId, $sourceFieldName, ', $f);
 					}
 					// Manage getRecord formula by adding parameters
-					if (strpos($f, 'getRecord') !== false ) {
+					if (strpos($f, 'getRecords') !== false ) {
+						$f = str_replace('getRecords(', 'getRecords($entityManager, $connection, $solutionManager, ', $f);
+					} elseif (strpos($f, 'getRecord') !== false ) {
 						$f = str_replace('getRecord(', 'getRecord($entityManager, $connection, $solutionManager, ', $f);
 					}
                     try {
@@ -1866,6 +1866,7 @@ class DocumentManager
 		if (
 				strpos($formula, 'lookup') !== false
 			 or strpos($formula, 'getRecord') !== false
+			 or strpos($formula, 'getRecords') !== false
 		) {
 			return true;
 		}
@@ -2527,7 +2528,10 @@ class DocumentManager
             $stmt->bindValue(':workflowError', $workflowError);
             $stmt->bindValue(':id', $this->id);
             $result = $stmt->executeQuery();
-            $this->message .= 'Workflow error set to '.$workflowError;
+            if ((int)$workflowError !== 0) {
+                $this->message .= 'Workflow error set to '.$workflowError;
+                $this->createDocLog();
+            }
             $this->createDocLog();
         } catch (\Exception $e) {
             $this->message .= 'Error type   : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';

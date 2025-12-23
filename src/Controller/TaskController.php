@@ -87,8 +87,14 @@ class TaskController extends AbstractController
      */
     public function tasksList($page): Response
     {
-        // List of task limited to 1000 and rder by status (start first) and date begin
-        $jobs = $this->jobRepository->findBy([], ['status' => 'DESC', 'begin' => 'DESC'], 1000);
+        // Get the search limit from requesting the database for config 'search_limit'
+        $searchLimit = $this->params['search_limit'] ?? 1000;
+
+        // Execute query with limit to prevent timeouts on large job tables
+        $jobs = $this->jobRepository->findJobsForPagination($searchLimit)
+            ->getQuery()
+            ->getResult();
+
         $compact = $this->nav_pagination([
             'adapter_em_repository' => $jobs,
             'maxPerPage' => $this->params['pager'] ?? 25,
@@ -204,8 +210,8 @@ class TaskController extends AbstractController
         }
 
         // Add a flash message of success to say that all the tasks have been stopped
-        $this->addFlash('success', 'All the tasks have been stopped');
-        
+        $this->addFlash('task.stopAll.success', 'All the tasks have been stopped');
+
         return $this->redirect($this->generateUrl('task_list'));
 
     }

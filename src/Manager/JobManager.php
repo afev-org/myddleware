@@ -88,7 +88,7 @@ class JobManager
 
     private UpgradeManager $upgrade;
 
-    private EntityManagerInterface $entityManager;
+    protected EntityManagerInterface $entityManager;
 
     private JobRepository $jobRepository;
 
@@ -455,7 +455,16 @@ class JobManager
             // Get the request from RequestStack
             $session = $this->requestStack->getSession();
         }
+
+        $isCancelHistory = false;
+        if ($_POST && isset($_POST['action']) && $_POST['action'] === 'cancel-history') {
+            $isCancelHistory = true;
+        }
+
+        if ($isCancelHistory == false) {
             $session->set('info', ['<a href="'.$this->router->generate('task_view', ['id' => $idJob]).'" target="_blank">'.$this->toolsManager->getTranslation(['session', 'task', 'msglink']).'</a>. '.$this->toolsManager->getTranslation(['session', 'task', 'msginfo'])]);
+        }
+
 
             return $idJob;
         } catch (Exception $e) {
@@ -1564,8 +1573,6 @@ class JobManager
 				$jobClosed = true;
             }
 
-			// If a job has been closed, we check every running instance value
-			if ($jobClosed) {
 				// Get all the open job, group and count them
 				$jobs = $this->entityManager->getRepository(Job::class)
 							->createQueryBuilder('j')
@@ -1615,6 +1622,22 @@ class JobManager
 						$this->setMessage('Running instance : set value  '.$newRunningInstances.' to cronjon '.$cronJob->getId().' ('.$cronJob->getCommand().') ');
 					}
 				}
+        } catch (Exception $e) {
+            $this->logger->error('Error : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )');
+			$this->setMessage('Error : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )');
+            return false;
+        }
+        return true;
+    }
+	
+	
+	// Export data to monitoring tool
+    public function monitoring()
+    {
+        try {
+			//Check if the parameter is a rule group 
+			if (!$this->toolsManager->isPremium()) {
+				throw new Exception('The monitoring is a premium feature. Please contact us to get the premium package.');
 			}
         } catch (Exception $e) {
             $this->logger->error('Error : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )');

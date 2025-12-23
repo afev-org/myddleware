@@ -14,14 +14,7 @@ global.Routing = Routing;
 global.lang = $('html').attr('lang');
 global.path_img = 'build/images/';
 
-require('jquery-ui')
-require('jquery-ui/ui/widgets/tabs')
-require('jquery-ui/ui/widgets/accordion')
-require('jquery-ui/ui/widgets/draggable')
-require('jquery-ui/ui/widgets/droppable')
-require('jquery-ui/ui/widgets/sortable')
-require('jquery-ui/ui/widgets/dialog')
-require('jquery-ui/ui/tabbable')
+// jQuery UI imports moved to individual files that need them
 require('bootstrap')
 require('@fortawesome/fontawesome-free/js/all')
 require('./vendors/dtsel/dtsel')
@@ -30,7 +23,7 @@ require('./js/lib/jquery_fancybox/jquery.fancybox.pack.js')
 require('./js/lib/jquery_scrollbox/jquery.scrollbox.min.js')
 require('./js/lib/jquery_qtip/jquery.qtip.min.js')
 require('./js/lib/jquery_myddleware/function.js')
-require('./js/account.js')
+
 require('./js/lib/d3.v2.js')
 require('./js/jcarousel.ajax.js')
 require('./js/animation.js')
@@ -39,8 +32,12 @@ require('./js/connector.js')
 require('./js/rule_relation_filter.js')
 require('./js/regle.js')
 require('./js/historique.js')
-require('./js/mappingRule.js')
+require('./js/rule-group.js')
+require('./js/notifications.js')
 
+if (window.location.href.includes('rule/create/step3') || window.location.href.includes('rule/view')) {
+require('./js/mappingRule.js')
+}
 
 if (window.location.href.includes('rule/document/list')) {
     require('./js/filter.js');
@@ -66,8 +63,23 @@ if (window.location.href.includes('workflow/list')) {
     require('./js/workflowsearchworkflowname.js')
 }
 
+// require('./js/variable.js')
+if (window.location.href.includes('variables')) {
+    require('./js/variable.js')
+}
+
 if (window.location.href.includes('rule/view')) {
+    require('./js/rule-detail.js')
     require('./js/workflow-toggle-list.js')
+}
+
+// if windows loction includes rule/account
+if (window.location.href.includes('rule/account')) {
+    require('./js/account.js')
+}
+
+if (window.location.href.includes('rule/jobscheduler/crontab_list')) {
+    require('./js/crontab-list-toggle.js')
 }
 
 
@@ -90,7 +102,6 @@ if (window.location.href.match(/rule\/connector\/(\d+\/detail|view\/\d+)/)) {
 
 if (window.location.href.includes('workflowAction/new') || window.location.href.includes('workflowAction/editWorkflowAction')) {
     require('./js/workflowActionSearchFields.js')
-    require('./js/workflow-action-label-rule-change.js')
 }
 
 
@@ -107,8 +118,14 @@ if (window.location.href.includes('rule/flux')) {
     require('./js/lookup-filter.js')
 }
 
+if (window.location.href.includes('rule/user_manager')) {
+    require('./js/user-manager.js')
+}
+if (window.location.href.includes('flux/modern')) {
+    require('./js/document-detail/document-detail.js')
+}
+
 // start the Stimulus application
-import './bootstrap';
 import 'select2/dist/css/select2.css';
 import 'select2';
 

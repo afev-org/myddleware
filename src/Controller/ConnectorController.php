@@ -25,31 +25,33 @@
 
 namespace App\Controller;
 
-use Exception;
-use App\Entity\Rule;
 use App\Entity\Config;
-use App\Entity\Solution;
 use App\Entity\Connector;
-use Pagerfanta\Pagerfanta;
+use App\Entity\Rule;
+use App\Entity\Solution;
 use App\Form\ConnectorType;
 use App\Manager\permission;
-use Psr\Log\LoggerInterface;
-use App\Manager\ToolsManager;
-use App\Service\SessionService;
 use App\Manager\SolutionManager;
-use Symfony\Component\Yaml\Yaml;
+use App\Manager\ToolsManager;
 use App\Repository\RuleRepository;
-use Pagerfanta\Adapter\ArrayAdapter;
+use App\Service\SessionService;
 use Doctrine\ORM\EntityManagerInterface;
-use Pagerfanta\Doctrine\ORM\QueryAdapter;
 use Doctrine\ORM\NonUniqueResultException;
+use Exception;
+use Pagerfanta\Adapter\ArrayAdapter;
+use Pagerfanta\Doctrine\ORM\QueryAdapter;
+use Pagerfanta\Exception\NotValidCurrentPageException;
+use Pagerfanta\Pagerfanta;
+use Psr\Log\LoggerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Pagerfanta\Exception\NotValidCurrentPageException;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Contracts\Translation\TranslatorInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Yaml\Yaml;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
+use Illuminate\Encryption\Encrypter;
 
 /**
  * @Route("/rule")
@@ -311,11 +313,14 @@ class ConnectorController extends AbstractController
      */
     public function create(): Response
     {
-        $solution = $this->entityManager->getRepository(Solution::class)->solutionActive();
+        $solutions = $this->entityManager->getRepository(Solution::class)->solutionActive();
         $lstArray = [];
-        if ($solution) {
-            foreach ($solution as $s) {
-                $lstArray[$s->getName()] = ucfirst($s->getName());
+        if (!empty($solutions)) {
+            foreach ($solutions as $s) {
+                $name = (string) $s->getName();
+                if ($name !== '') {
+                    $lstArray[$name] = ucfirst($name);
+                }
             }
         }
 
@@ -323,11 +328,11 @@ class ConnectorController extends AbstractController
         $this->sessionService->setConnectorAnimation(false);
         $this->sessionService->setConnectorAddMessage('list');
 
-            // use yaml file which is assets/controller-config.yaml
-            $nonRequiredFields = $this->getNonRequiredFields();
+        // use yaml file which is assets/controller-config.yaml
+        $nonRequiredFields = $this->getNonRequiredFields();
 
         return $this->render('Connector/index.html.twig', [
-            'solutions' => $lst_solution,
+            'solutions'         => $lst_solution,
             'nonRequiredFields' => $nonRequiredFields,
         ]);
     }
@@ -393,6 +398,12 @@ class ConnectorController extends AbstractController
                         }
                     }
 
+                    $name = trim((string) $connector->getName());
+                    if ($this->entityManager->getRepository(Connector::class)->existsActiveName($name)) {
+                        $this->addFlash('connector.create.danger', $this->translator->trans('create_connector.duplicate_name'));
+                        return $this->redirect($this->generateUrl('regle_connector_list'));
+                    }
+
                     $connectorParams = $connector->getConnectorParams();
                     $connector->setConnectorParams(null);
                     $connector->setNameSlug($connector->getName());
@@ -442,9 +453,6 @@ class ConnectorController extends AbstractController
                 $this->logger->error('Error : '.$e->getMessage().' File :  '.$e->getFile().' Line : '.$e->getLine());
                 throw $this->createNotFoundException('Error : '.$e->getMessage().' File :  '.$e->getFile().' Line : '.$e->getLine());
             }
-        } else {
-            $this->logger->error('Error : '.$e->getMessage().' File :  '.$e->getFile().' Line : '.$e->getLine());
-            throw $this->createNotFoundException('Error');
         }
     }
 
@@ -493,7 +501,8 @@ class ConnectorController extends AbstractController
     /**
      * SUPPRESSION DU CONNECTEUR.
      *
-     * @Route("/connector/delete/{id}", name="connector_delete")
+     * @Route("/connector/delete/{id}", name="connector_delete", methods={"DELETE","POST"})
+     * @IsGranted("ROLE_ADMIN")
      */
     public function connectorDelete(Request $request, $id): RedirectResponse
     {
@@ -539,6 +548,9 @@ class ConnectorController extends AbstractController
                     $connector->setDeleted(1);
                     $this->entityManager->persist($connector);
                     $this->entityManager->flush();
+
+                    $this->addFlash('connector.delete.success', $this->translator->trans('delete_connector.success'));
+
                 }
             } catch (\Doctrine\DBAL\DBALException $e) {
                 $session->set('error', [$e->getPrevious()->getMessage()]);
@@ -577,64 +589,59 @@ class ConnectorController extends AbstractController
             throw $this->createNotFoundException("This connector doesn't exist");
         }
 
-        // Get fields for the form
+        // Create connector form
+        // $form = $this->createForm(new ConnectorType($this->container), $connector, ['action' => $this->generateUrl('connector_open', ['id' => $id])]);
+
         if (null != $connector->getSolution()) {
             $fieldsLogin = $this->solutionManager->get($connector->getSolution()->getName())->getFieldsLogin();
         } else {
             $fieldsLogin = [];
         }
 
-        // Create form
         $form = $this->createForm(ConnectorType::class, $connector, [
             'action' => $this->generateUrl('connector_open', ['id' => $id]),
             'method' => 'POST',
             'attr' => ['fieldsLogin' => $fieldsLogin, 'secret' => $this->getParameter('secret')],
         ]);
 
-        // Handle form submission
+        // If the connector has been changed
         if ('POST' == $request->getMethod()) {
             try {
                 $form->handleRequest($request);
-                
                 if ($form->isSubmitted() && $form->isValid()) {
-                    // Validate connector name is not empty
-                    if (empty(trim($connector->getName()))) {
+                    if (empty($connector->getName())) {
                         $request->getSession()->getFlashBag()->add('error', 'Connector name cannot be empty');
-                        
                         return $this->render('Connector/edit/fiche.html.twig', [
                             'connector' => $connector,
                             'form' => $form->createView(),
                             'connector_name' => $connector->getName() ?: 'Unnamed',
                         ]);
                     }
-
-                    // Begin transaction to ensure data consistency
-                    $this->entityManager->beginTransaction();
                     
                     try {
-                        // Update connector metadata
-                        $connector->setNameSlug($connector->getName());
+                        $this->entityManager->beginTransaction();
+                        
+                        $params = $connector->getConnectorParams();
                         $connector->setDateModified(new \DateTime());
                         $connector->setModifiedBy($this->getUser()->getId());
-                        
-                        // Persist the connector
-                        $this->entityManager->persist($connector);
-                        
-                        // Handle connector parameters
-                        $connectorParams = $connector->getConnectorParams();
-                        if ($connectorParams) {
-                            foreach ($connectorParams as $param) {
-                                $param->setConnector($connector);
-                                $this->entityManager->persist($param);
-                            }
+                        $name = trim((string) $connector->getName());
+
+                        if ($this->entityManager->getRepository(Connector::class)->existsActiveName($name, $connector->getId())) {
+                                $this->addFlash('connector.create.danger', $this->translator->trans('create_connector.duplicate_name'));
+                                return $this->render('Connector/edit/fiche.html.twig', [
+                                'connector' => $connector,
+                                'form' => $form->createView(),
+                                'connector_name' => $connector->getName() ?: 'Unnamed',
+                            ]);
                         }
                         
-                        // Flush all changes
+                        $this->entityManager->persist($connector);
                         $this->entityManager->flush();
+                        
                         $this->entityManager->commit();
                         
                         // Add success message
-                        $request->getSession()->getFlashBag()->add('success', 'Connector saved successfully');
+                        $this->addFlash('connector.edit.success', $this->translator->trans('edit_connector.saved_successfully'));
                         
                         // Redirect to detail view after successful edit
                         return $this->redirect($this->generateUrl('connector_detail', ['id' => $id]));
@@ -665,6 +672,63 @@ class ConnectorController extends AbstractController
             'form' => $form->createView(),
             'connector_name' => $connector->getName(),
         ]);
+    }
+
+    /**
+     * Get connector data from database as JSON.
+     * Used to populate form fields from database values.
+     *
+     * @Route("/api/connector/get-data/{id}", name="connector_get_data", methods={"POST"})
+     * @IsGranted("ROLE_ADMIN")
+     */
+    public function getConnectorData($id): Response
+    {
+        try {
+            // Load connector with proper permissions check
+            $qb = $this->entityManager->getRepository(Connector::class)->createQueryBuilder('c');
+            $qb->select('c', 'cp')->leftjoin('c.connectorParams', 'cp');
+
+            if ($this->getUser()->isAdmin()) {
+                $qb->where('c.id = :id AND c.deleted = 0')->setParameter('id', $id);
+            } else {
+                return $this->json(['success' => false, 'message' => 'User not admin'], 500);
+            }
+
+            $connector = $qb->getQuery()->getOneOrNullResult();
+
+            if (!$connector) {
+                return $this->json(['success' => false, 'message' => 'Connector not found'], 500);
+            }
+
+            // Initialize encrypter for decryption
+            $encrypter = new Encrypter(substr($this->getParameter('secret'), -16));
+
+            // Build response data
+            $data = [
+                'success' => true,
+                'name' => $connector->getName(),
+                'params' => []
+            ];
+
+            // Add connector parameters (decrypted)
+            foreach ($connector->getConnectorParams() as $param) {
+                $value = $param->getValue();
+                // Try to decrypt the value
+                if (!empty($value)) {
+                    try {
+                        $value = $encrypter->decrypt($value);
+                    } catch (Exception $e) {
+                       return $this->json(['success' => false, 'message' => 'Error with the Decryption'], 500);
+                    }
+                }
+                $data['params'][$param->getName()] = $value;
+            }
+
+            return $this->json($data);
+        } catch (Exception $e) {
+            $this->logger->error('Error fetching connector data: ' . $e->getMessage());
+            return $this->json(['success' => false, 'message' => 'Error fetching connector data'], 500);
+        }
     }
 
     /* ******************************************************
@@ -794,40 +858,40 @@ class ConnectorController extends AbstractController
         return false;
     }
 
-/**
- * @Route("/connector/{id}/detail", name="connector_detail")
- */
-public function detailAction(int $id)
-{
-    $sensitiveFields = !empty($_ENV['SENSITIVE_FIELDS']) ? explode(',', $_ENV['SENSITIVE_FIELDS']) : [];
+    /**
+     * @Route("/connector/{id}/detail", name="connector_detail")
+     */
+    public function detailAction(int $id)
+    {
+        $sensitiveFields = !empty($_ENV['SENSITIVE_FIELDS']) ? explode(',', $_ENV['SENSITIVE_FIELDS']) : [];
+        
+        $connector = $this->entityManager->getRepository(Connector::class)->find($id);
+
+        if (!$connector) {
+            throw $this->createNotFoundException('The connector does not exist');
+        }
+
+        $paramConnexion = [];
     
-    $connector = $this->entityManager->getRepository(Connector::class)->find($id);
-
-    if (!$connector) {
-        throw $this->createNotFoundException('The connector does not exist');
-    }
-
-    $paramConnexion = [];
-   
-    foreach ($connector->getConnectorParams() as $param) {
-        $paramConnexion[$param->getName()] = $param->getValue();
-    }
-    $encrypter = new \Illuminate\Encryption\Encrypter(substr($this->getParameter('secret'), -16));
-    foreach ($paramConnexion as $key => $value) {
-        if (is_string($value)) {
-            try {
-                $paramConnexion[$key] = $encrypter->decrypt($value);
-            } catch (\Exception $e) {
-              
+        foreach ($connector->getConnectorParams() as $param) {
+            $paramConnexion[$param->getName()] = $param->getValue();
+        }
+        $encrypter = new \Illuminate\Encryption\Encrypter(substr($this->getParameter('secret'), -16));
+        foreach ($paramConnexion as $key => $value) {
+            if (is_string($value)) {
+                try {
+                    $paramConnexion[$key] = $encrypter->decrypt($value);
+                } catch (\Exception $e) {
+                
+                }
             }
         }
-    }
 
-    // Passez les paramètres décryptés à la vue
-    return $this->render('Connector/detail/detail.html.twig', [
-        'connector' => $connector,
-        'paramConnexion' => $paramConnexion, 
-        'sensitiveFields' => $sensitiveFields,
-    ]);
-}
+        // Passez les paramètres décryptés à la vue
+        return $this->render('Connector/detail/detail.html.twig', [
+            'connector' => $connector,
+            'paramConnexion' => $paramConnexion, 
+            'sensitiveFields' => $sensitiveFields,
+        ]);
+    }
 }

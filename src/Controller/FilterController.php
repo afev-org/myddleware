@@ -162,6 +162,7 @@ public function emptySearchAction(Request $request): Response
         'timezone' => $timezone,
         'csvdocumentids' => '',
         'nbDocuments' => 0,
+        'clearStorageScript' => null,
     ]);
 }
 
@@ -189,8 +190,13 @@ public function removeFilter(Request $request): JsonResponse
      */
     public function documentFilterAction(Request $request, int $page = 1, int $search = 1): Response
     {
+        $clearStorageScript = null;
 
         if ($request->query->has('source_id')) {
+            // remove all the filters first
+            $this->sessionService->removeAllFluxFilters();
+            // get the script to clear localStorage and pass it to the template
+            $clearStorageScript = $this->sessionService->getClearStoredFluxFiltersScript();
             // set the session service source_id
             $this->sessionService->setFluxFilterSourceId($request->query->get('source_id'));
         }
@@ -230,7 +236,7 @@ public function removeFilter(Request $request): JsonResponse
         // set the timezone
         $timezone = !empty($timezone) ? $this->getUser()->getTimezone() : 'UTC';
 
-        if ($request->isMethod('POST') || $page !== 1 || ($request->isMethod('GET') && $this->verifyIfEmptyFilters() === false)) {
+        if (($request->isMethod('POST') || $page !== 1 || ($request->isMethod('GET') && $this->verifyIfEmptyFilters() === false)) || $page == 1) {
            
             $form->handleRequest($request);
             $data = [];
@@ -307,12 +313,6 @@ public function removeFilter(Request $request): JsonResponse
             } else { // if form is not valid
                     $data = $this->getFluxFilterData();
 
-                if (
-                    count(array_filter($data)) === 0
-                    and $page == 1
-                ) {
-                    $doNotSearch = true;
-                }
             }
 
             // Return an empty array if the form is not valid so that there will be no documents to display
@@ -345,8 +345,8 @@ public function removeFilter(Request $request): JsonResponse
             } catch (\Throwable $th) {
                 // redirect to the list page
                 // add a flash errore message that says there are not enough results for pagination
-                $this->addFlash('error', 'Pagination error, return to page 1');
-                return $this->redirectToRoute('document_list');
+                $this->addFlash('filter.document.danger', 'Pagination error, return to page 1');
+                return $this->redirectToRoute('document_empty_search');
             }
             
             // If everything is ok with the pagination
@@ -390,6 +390,7 @@ public function removeFilter(Request $request): JsonResponse
             'timezone' => $timezone,
             'csvdocumentids' => $csvdocumentids,
             'nbDocuments' => $nbDocuments,
+            'clearStorageScript' => $clearStorageScript,
         ]);
     }
 
@@ -584,6 +585,8 @@ public function removeFilter(Request $request): JsonResponse
             'flux.status.error_transformed' => 'Error_transformed',
             'flux.status.error_checking' => 'Error_checking',
             'flux.status.error_sending' => 'Error_sending',
+            'flux.status.found' => 'Found',
+            'flux.status.not_found' => 'Not_found',
         ];
         
         return $statuses[$statusIndex];
@@ -961,6 +964,16 @@ public function removeFilter(Request $request): JsonResponse
      */
     public function exportDocumentsToCsv(): Response
     {
+
+        $timezone = !empty($timezone) ? $this->getUser()->getTimezone() : 'UTC';
+        $myUser = $this->getUser();
+        $mySeparator = $myUser->getCsvSeparator() ?? ',';
+
+        // Convert string '\t' to actual tab character
+        if ($mySeparator === '\t' || $mySeparator === '\\t') {
+            $mySeparator = "\t";
+        }
+
         if (!(isset($_POST['csvdocumentids']))) {
             throw $this->createNotFoundException('No document selected');
         }
@@ -1042,7 +1055,7 @@ public function removeFilter(Request $request): JsonResponse
         ];
 
         // writes the header in the csv file
-        fputcsv($fp, $header);
+        fputcsv($fp, $header, $mySeparator);
 
         // the results are serialized, so we need to unserialize them
         foreach ($results as $key => $row) {
@@ -1081,7 +1094,7 @@ public function removeFilter(Request $request): JsonResponse
                 $row['target_data'] ?? '',
                 $row['history_data'] ?? ''
             ];
-            fputcsv($fp, $csvRow);
+            fputcsv($fp, $csvRow, $mySeparator);
         }
 
         rewind($fp);

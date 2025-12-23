@@ -49,12 +49,13 @@ panel:
     list_job:
         title: Last jobs details
         duration: second(s)
-        nb : Documents with error
+        nb : Rules with errors
     graph_histo:
         title: Documents history
     graph_job_histo:
         title: Jobs history
 create_rule:
+    error_name: A connector already has that name.
     tabs:
         one: Connection
         two: Modules selection
@@ -170,6 +171,10 @@ behavior_filters:
     error_empty: Error if empty
 
 view_rule:
+    execute_id:
+        title: Execute a rule by id
+        run: Run the rule with these ids
+    go_connector: Go to connector
     action:
         exec_all: Execute all active rules
         confirm_exec_all: Do you want to execute all active rules?
@@ -185,13 +190,13 @@ view_rule:
         displayflux: Display the documents
         new_rule: Create a new rule
     tabs:
-        info: Information
-        mapping: Mapping of the fields
+        info: Overview
+        mapping: Field Mapping
         relation: Relations
         params: Parameters 
         filter: Filters
     title:
-        rule: Rule
+        rule: Details
         connector: Connectors
         source: Source
         target: Target
@@ -212,6 +217,7 @@ view_rule:
         status: Status
         workflows: Workflows
         workflow_create: Create a new workflow
+        variables: Variables
     connector:
         title: Connector
         solution: Solution
@@ -220,8 +226,8 @@ view_rule:
         empty: No field
         formula_empty: No formula
         formula: Formula
-        module_target: Target module
-        module_source: Source Module
+        module_target: Target
+        module_source: Source
         comment: Comment
         add_comment: Save
         comment_title: Add/Edit comment
@@ -237,7 +243,7 @@ view_rule:
         simule: Simulate documents
         result: Estimated documents
         details: " Represents the number of documents that will be created for the next launch of this rule. This number can't be greater than the rule limit you have set up (default 100) and the API limit of your source application."
-
+        daterefence: Date of the data in the source application
 rule:
     source: Source
     target: Target  
@@ -249,55 +255,102 @@ rule:
     select_group: Select a group
     select_value: Select a value
 
-rulegroup:
-    list: Rule groups
-    title: Rule groups
-    create: Create a new rule group
-    back: Back to the list
-    title_one: Rule group
-    name: Name
-    description: Description
-    status: Status
-    create_by: Created by
-    modified_by: Modified by
-    delete: Delete
-    edit: Editing of a Rule Group
-    updated_successfully: Rule group updated successfully
-    rules: List of rules
-    rule_removed_successfully: Rule removed successfully
-    no_rules: No rules in this group
+rulegroup:  
+  create: "Create a rule group"
+  created_successfully: "Rule group created successfully."
+  updated_successfully: "Rule group updated successfully."
+  deleted_successfully: "Rule group deleted successfully."
+  not_found: "Rule group not found."
+  no_available_rules: "No available rules to add to this group."
+  rule_removed_successfully: "Rule removed from the group successfully."
+  rule_added_successfully: "Rule added to the group successfully."
+  confirm_transfer_title: "Confirm rule transfer"
+  confirm_transfer_text: "This rule already belongs to another group. Do you want to transfer it to this group?"
+  title_one: "Rule group"
+  back: "Back to list"
+  edit: "Edit a rule group"
+  delete: "Delete"
+  name: "Name"
+  create_by: "Created by"
+  description: "Description"
+  rules: "Rules"
+  no_rules: "No rules in this group"
+  add_rule: "Add a rule"
+  confirm_delete: "Are you sure you want to delete the rule group \"%name%\"?"
+  remove_rule: "Remove the rule from the group"
+  list: "Rule groups"
+  create_new: "Create a rule group"
+  rulegroup_name : Rule Group Name
+  name_cannot_be_empty: "The name of the Rule group cannot be empty"
+  table:
+    id: "ID"
+    name: "Name"
+    date_created: "Creation date"
+    date_modified: "Modification date"
+    created_by: "Created by"
+    modified_by: "Modified by"
+    description: "Description"
+    title: "Rule groups"
+    create: "Create a new rule group"
+    back: "Back to list"
+    title_one: "Rule group"
+    details: "Details"
+    status: "Status"
+    create_by: "Created by"
+    delete: "Delete"
+    edit: "Edit a rule group"
+    updated_successfully: "Rule group updated successfully"
+    rules: "Rules"
+    rule_removed_successfully: "Rule removed successfully"
+    no_rules: "No rules in this group"
+    options: "Options"
     rule:
-        name: Name
-        module_source: Source module
-        module_target: Target module
-        active: Active
-        confirm_remove_rule: Are you sure you want to remove this rule from the group?
-    add_rule: 'Add Rule'
-    select_rule: 'Select Rule'
-    rule_added_successfully: 'Rule added successfully'
-    confirm_transfer_title: 'Confirm Rule Transfer'
-    confirm_transfer_message: 'The rule "%rule%" is currently in group "%currentGroup%". Do you want to move it to "%newGroup%"?'
-    confirm_transfer: 'Yes, transfer rule'
-    confirm_transfer_final: 'Confirm and transfer rule'
-    cancel: 'Cancel'
-    no_available_rules: 'No available rules'
+      name: "Name"
+      module_source: "Source module"
+      module_target: "Target module"
+      active: "Active"
+      confirm_remove_rule: "Are you sure you want to remove this rule from the group?"
+    add_rule: "Add a rule"
+    select_rule: "Select a rule"
+    rule_added_successfully: "Rule added successfully"
+    confirm_transfer_title: "Confirm rule transfer"
+    confirm_transfer_message: "The rule \"%rule%\" is currently in the group \"%currentGroup%\". Do you want to transfer it to \"%newGroup%\"?"
+    confirm_transfer: "Yes, transfer the rule"
+    cancel: "Cancel"
+    no_available_rules: "No available rules"
+    confirm_transfer_final: "Confirm and transfer the rule"
 
 list_rule:
-    title: Rules
-    total: Number of rules
-    empty: You do not have any rules yet !
-    delete: Are you sure you want to delete this rule?
-    create_first_rule:  You can create your first rule
-    th: 
-        name: Name
-        version: Version
-        active: Activation
-        date_created: Creation date
-        option: Options
-    btn:
-        delete: Delete
-        edit: Edit
-        view: Refer to the form
+  title: "Rules"
+  total: "Number of rules"
+  empty: "You don't have any rules yet!"
+  delete: "Are you sure you want to delete this rule?"
+  save: "Save"
+  create_first_rule: "You can create your first rule"
+  th:
+    name: "Name"
+    version: "Version"
+    active: "Active"
+    date_created: "Creation date"
+    option: "Options"
+  btn:
+    delete: "Delete"
+    edit: "Edit"
+    view: "View"
+
+list_rulegroup:
+  empty: "You don't have any rule group yet!"
+  th:
+    name: "Name"
+    description: "Description"
+
+actions: "Actions"
+
+pagination:
+    previous: Previous
+    next: Next
+    go_to_page: Go to page
+    page_number: Page number
 
 animate:
     rulename: Name of your rule 
@@ -335,6 +388,7 @@ create_connector:
     upload_delete: Deleting file
     params_error: An error occurred while saving the settings
     form_error : Cannot get connector data (solution, fields & parent) 
+    duplicate_name: A connector already has that name.
 
 list_connector:
     empty: You do not have any connectors yet !
@@ -368,9 +422,16 @@ view_connector:
     help:
         link: https://myddleware.github.io/myddleware/#/connectors_credentials?id=
 
+edit_connector:
+    saved_successfully: Connector saved successfully
+
+delete_connector:
+        success: Connector deleted successfully
+
 list_flux:
     start: Start
     end: End
+    total: Number of documents
     total1: Number of
     total2: documents
     empty: No documents found
@@ -426,7 +487,7 @@ list_flux:
         type: Type
         source_field: Field linked
         reference: Reference
-
+        helppop: Date of data in the source application
 flux:
     gbl_status:
         open: Opened
@@ -453,7 +514,7 @@ flux:
         error_transformed: Transformation error
         error_checking: Checking error
         error_sending: Sending error
-        not_found: Not found
+        Not_found: Not found
         Error_workflow: Workflow error
     type:
         update: Update
@@ -521,6 +582,7 @@ view_flux:
 list_task:
     total: Total of tasks
     empty: No tasks
+    stop_all_tasks: Stop all the Tasks
     th:
         id: Id
         status: Status
@@ -562,7 +624,7 @@ list_workflow:
     searchName: Search by name
     th:
         id: Id
-        ruleName: Rule name
+        RuleName: Rule name
         name: Name
         description: Description
         condition: Condition
@@ -606,9 +668,11 @@ view_workflow:
     cancel_edit: Cancel edit
     save: Save
     cancel: Cancel
+    loading_logs: Loading logs...
 edit_workflow:
     name_already_exists: Workflow name already exists
 view_workflow_action:
+    no_actions: No workflow action
     title2: Workflow Action
     title: Workflow Action Details
     edit: Edit this Action
@@ -627,18 +691,55 @@ view_workflow_action:
     back: Back to the workflow
     save: Save
     cancel: Cancel
+    updated_successfully: Workflow action updated successfully
+    created_successfully: Workflow action created successfully
 view_account:
-    title: My account
-    user_info: My information
-    change_password : Change password
+    title: My information
+    user_info: My Information
+    change_password: Change password
     profile_edit: Edit my profile
     support:
-        enabled: Support enabled 
+        enabled: Support enabled
         disabled: Support disabled
     label:
         language: Language
     popup:
-        locale: Please wait, the change of your language is under process. You will be redirected to the login page.
+        locale: Language change in progress, please wait. You will be redirected to the authentication page.
+    tabs:
+        general: General
+        security: Security
+    sections:
+        personal_info: Details
+        language_preferences: Language Preferences
+        logs: Logs
+        password: Password
+        twofa: Two-Factor Authentication
+    fields:
+        language: Language
+        timezone: Time Zone
+        date_format: Date Format
+        export_separator: Export Separator
+        charset: Charset
+        auth_method: Authentication Method
+    placeholder:
+        disabled_option: Option currently disabled
+    button:
+        save: Save
+        download_logs: Download Latest Logs
+        empty_logs: Empty Log File
+        reset_password: Reset Password
+        update_password: Update Password
+        save_2fa: Save 2FA Settings
+    tooltip:
+        disabled_option: Option currently disabled
+        download_logs: Download the most recent log files
+        empty_logs: Delete the contents of the current log file
+        choose_language: Choose your language
+    info:
+        password_description: Change your password to enhance your account security.
+        twofa_description: When enabled, you'll be asked to enter a verification code sent to your email after logging in.
+    confirm:
+        empty_logs: Are you sure you want to empty the log file? This action cannot be undone.
 
 function:
     all: All
@@ -725,8 +826,13 @@ solution:
         applicationName: Application name
         hashkey: Hash key
         id_auth: Auth ID
+        authid: Auth ID
         user_custom_fields: User custom fields (shortname separated by coma)
         course_custom_fields: Course custom fields (shortname separated by coma)
+        tenant_id: Tenant ID
+        client_id: Client ID
+        client_secret: Client Secret
+        environment: Environment
     params: 
         dateref: Reference (data will be read from this parameter)
         limit: Limit (read limit for each call)
@@ -854,6 +960,7 @@ menu_user:
     crontab: Crontab
     management_smtp: SMTP config
     logout: Logout
+    user_manager: UserManager
 
 help:
     title: Help
@@ -1007,9 +1114,12 @@ management_smtp:
     submit :  Save SMTP config
     cancel: Cancel
     title : SMTP Management
-    description : 'Here, you can configure email parameters. More info here : <a href="https://symfony.com/doc/4.4/email.html" target=_blank>https://symfony.com/doc/4.4/email.html</a>'
+    description : 'Here, you can configure email parameters. More info here : <a href="https://symfony.com/doc/6.4/mailer.html" target=_blank>https://symfony.com/doc/6.4/mailer.html</a>'
     sendtestmail: Send test mail
-
+    success: SMTP config saved successfully
+    error: Failed to save SMTP config
+    api_key_already_in_env: This API key is already in the .env file.
+    api_key_too_short: The API key is too short. Are you sure it's an BREVO API key in the form ? Be careful about your browser autofilling.
 management_smtp_sendmail:
     subject: Myddleware - email configuration test
     textMail: This test message has been sent by Myddleware.
@@ -1103,6 +1213,7 @@ crontab:
     number: Number
     success: Your scheduled task has been created
     incorrect: An error occurred while creating your scheduled task
+    correct: Your crontabs have been disabled
     disableAllCrons: Your crontabs have been disabled
     enableAllCrons: Your crontabs have been enable
     create: Create crontab
@@ -1114,6 +1225,16 @@ crontab:
     enableCron: On
     disableCron: Off
     title_cronjobresult: Crontab results
+    column_id: ID
+    column_cronjob_id: Cronjob ID
+    column_run_at: Run At
+    column_run_time: Runtime
+    column_status_code: Status Code
+    column_output: Output
+    column_created_at: Created At
+    column_updated_at: Updated At
+    see_results: Show Crontab Results
+    hide_results: Hide Crontab Results
     period_help: This is the time interval corresponding to the frequency of execution of your task. But here, the syntax to use is precise, (*/5 * * * *, in the order of writing, minute, hour, day of the month, day of the week, example, */5 * * * * corresponds to 5 min)
     max_instance_help: A maximum instance limit for new tasks
     help:  > 
@@ -1129,6 +1250,9 @@ duplicate_rule:
     success_duplicate: Your rule has been well duplicated
 banner: Crontab is disabled
 variable:
+  created_successfully: "Variable created successfully."
+  updated_successfully: "Variable updated successfully."
+  deleted_successfully: "Variable deleted successfully."
   name_already_exists: The name of the variable already exists. Please choose another name.
   edit: Editing of a variable
   back_to_list: Back to the list
@@ -1141,11 +1265,13 @@ variable:
     view: View
   create_new: Create a new variable
   list_title: Variables
+  detail_title: Variable
   confirm_delete: Are you sure you want to delete this variable?
   no_variables: No variables found.
   table_headers:
     name: Name
-    value: Value
+    value: Value   
+    created_by: Created By
     actions: Actions
     description: Description
 premium:
@@ -1159,3 +1285,170 @@ premium:
             benefit1: "Benefit 1 description"
             benefit2: "Benefit 2 description"
             benefit3: "Benefit 3 description"
+user_manager:
+    list: Users
+    no_user: No user
+    table:
+        username: Username
+        email: Email
+        last_login: Last login
+        roles: Roles
+        timezone: Timezone
+        action: Action
+    create: Create user
+    edit: Edit user
+    password: Password
+    confirm_delete: Are you sure you want to delete this user?
+success_create_user: User created successfully.
+success_update_user: User updated successfully.
+success_deleted_user: User deleted successfully.
+failed_deleted_user: Failed to delete user
+not_found_user: User not found
+error_generic: An error occurred.
+document:
+  filters:
+    label: "Filters"
+    default: "- Select your filters -"
+    reference: "Reference"
+    date_modif_start: "Date of modification (start)"
+    date_modif_end: "Date of modification (end)"
+    module_source: "Source module"
+    module_target: "Target module"
+    target: "Target ID"
+    status: "Status"
+    type: "Type"
+    source_content: "Source content"
+    target_content: "Target content"
+    message: "Message"
+account:
+  profile:
+    updated_successfully: "Profile updated successfully."
+  twofa:
+    updated_successfully: "Two-factor authentication settings updated successfully."
+    smtp_required: "Two-factor authentication requires email configuration. Please configure either SMTP settings or Brevo API key first."
+  password:
+    success: "Password updated successfully."
+    danger: "An error occurred while updating the password."
+
+user_list_view:
+    edit: Edit
+    delete: Delete
+
+smtp_config:
+    "choose_transport": "- Choose transport -"
+    "choose_auth_mode": "- Choose auth mode -"
+    "choose_encryption": "- Choose encryption -"
+    "cram-md5": "Cram-md5"
+    "plain": "Plain"
+    "login": "Login"
+    "oauth": "OAuth"
+    "tls": "TLS"
+    "ssl": "SSL"
+    "transport": "Transport"
+    smtp: "SMTP"
+    gmail: "Gmail"
+    sendmail: "Sendmail"
+    sendinblue: "Sendinblue"
+    "host": "Host"
+    "api_key": "Api key"
+    "port": "Port"
+    "auth_mode": "Auth mode"
+    "encryption": "Encryption"
+    "user": "User"
+    "password": "Password"
+    "sender": "Sender"
+
+rule_list_view:
+    save: Save
+
+
+#rule detail
+rule_detail_view:
+    id: Id
+    edit: Edit
+rule_execute_by_id:
+    separate: separate the ids with comas, no space
+    id: id
+    edit: Edit
+
+new_workflow_view:
+    save: Save
+    created_successfully: Workflow created successfully.
+
+delete_workflow_view:
+    deleted_successfully: Workflow deleted successfully.
+
+#edit workflow
+view_edit_workflow:
+    create: Create workflow
+    workflow_name: Workflow name
+    Rule: Rule
+    Description: Description
+    Order: Order
+    Active: Active
+    Yes: Yes
+    No: No
+    Condition: Condition
+
+view_edit_workflow_action:
+    action_name: Action Name
+    workflow: Workflow
+    select_workflow: Select a workflow
+    description: Description
+    action: Action
+    select_action: Select an action
+    updateStatus: updateStatus
+    generateDocument: generateDocument
+    sendNotification: sendNotification
+    transformDocument: transformDocument
+    rerun: rerun
+    changeData: changeData
+    updateType: updateType
+    order: Order
+    multiple_runs: Multiple Runs
+    yes: Yes
+    no: No
+    status: Status
+    select_status: Select a status
+    new: New
+    predecessor_ok: Predecessor_OK
+    relate_ok: Relate_OK
+    transformed: Transformed
+    ready_to_send: Ready_to_send
+    filter_ok: Filter_OK
+    send: Send
+    filter: Filter
+    no_send: No_send
+    error_expected: Error_expected
+    cancel: Cancel
+    create_ko: Create_KO
+    filter_ko: Filter_KO
+    predecessor_ko: Predecessor_KO
+    relate_ko: Relate_KO
+    error_transformed: Error_transformed
+    error_checking: Error_checking
+    error_sending: Error_sending
+    found: Found
+    not_found: Not_found
+    active: Active
+    to: To
+    subject: Subject
+    message: Message
+    generating_rule: Generating Rule
+    select_rule: Select a rule
+    matching_field_from_generating_rule: Matching Field from Generating Rule
+    select_field: Select a field
+    my_value: my_value
+    name: Name
+    id: id
+    contacts_engages: contacts-engages
+    deleted: deleted
+    matching_field_from_current_rule: Matching Field from Current Rule
+    rerun_label: Rerun
+    document_type: Document Type
+    select_type: Select a type
+    type_c: C
+    type_u: U
+    type_d: D
+    type_s: S
+    target_field: Target Field
