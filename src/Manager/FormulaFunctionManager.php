@@ -158,7 +158,7 @@ class FormulaFunctionManager
 				AND empty($direction)
 				AND	$ruleRef['conn_id_source'] == $ruleLink['conn_id_source']
 				AND	$ruleRef['conn_id_target'] == $ruleLink['conn_id_target']
-			) 
+			)  
 			// In case of the linked rule has the target connector = source connector, we use module to get the direction of the relationship 
 			OR (
 					!empty($ruleRef)
@@ -320,12 +320,13 @@ class FormulaFunctionManager
                 return $result;
             }
         } catch (\Exception $e) {
-            throw new \Exception('Error searchRelateDocumentByStatus  : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )');
+            $this->message .= 'Error searchRelateDocumentByStatus  : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
+            $this->logger->error($this->id.' - '.$this->message);
         }
         return null;
     }
 	
-		public static function getRecord($entityManager, $connection, $solutionManager, $connectorId, $module, $fields, $searchValue, $searchField = 'id', $errorIgnore = false)
+	public static function getRecord($entityManager, $connection, $solutionManager, $connectorId, $module, $fields, $searchValue, $searchField = 'id', $errorIgnore = false)
 	{
 		try {
 			// Connect to the application using the connector
@@ -362,8 +363,9 @@ class FormulaFunctionManager
 			if (empty($data['values'])) {
 				throw new \Exception('getRecord : Failed to find the record with calue '.$searchValue.' in the module '.$module.'.');
 			}
-			return (object)(current($data['values']));
+			return json_encode(current($data['values']));
         } catch (\Exception $e) {
+            $this->logger->error('Error searchRelateDocumentByStatus  : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )');
 			if (!$errorIgnore) {
 				new \Exception('Error searchRelateDocumentByStatus  : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )');
 			}
@@ -412,6 +414,7 @@ class FormulaFunctionManager
 			return array('connexion_valide' => $c, 'solution' => $solution);	 
 		} catch (\Exception $e) {
 			$error = 'Error : '.$e->getMessage().' '.$e->getFile().' Line : ( '.$e->getLine().' )';
+			$this->logger->error($error);
 			throw new \Exception($error);
 		}	
 		return $connexion_valide;		
