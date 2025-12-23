@@ -59,6 +59,8 @@ use App\Solutions\wooeventmanager;
 use App\Solutions\wordpress;
 use App\Solutions\yousign;
 use App\Solutions\zuora;
+use App\Solutions\dynamicsbusiness;
+use App\Solutions\iomad;
 use Exception;
 
 /**
@@ -88,9 +90,12 @@ class SolutionManager
 							'airtable',
 							'sendinblue',
 							'internallist',
+							'suitecrm8',
 							'yousign',
 							'brevo',
-							'acton'
+							'acton',
+							'dynamicsbusiness',
+							'iomad'
 						];
 
     public function __construct(
@@ -114,8 +119,11 @@ class SolutionManager
         sendinblue $sendinblue,
         internallist $internallist,
         yousign $yousign,
+        suitecrm8 $suitecrm8,
         brevo $brevo,
-        acton $acton
+        acton $acton,
+        dynamicsbusiness $dynamicsbusiness,
+        iomad $iomad
     ) {
 		// Load the solution classes
 		if (!empty(self::$solutions)) {

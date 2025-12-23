@@ -40,6 +40,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use App\Manager\ToolsManager;
 use Exception;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 class VariableController extends AbstractController
 {
     protected ToolsManager $tools;
@@ -93,7 +94,13 @@ class VariableController extends AbstractController
             ->add('name', TextType::class, [
                 'label' => $translator->trans('variable.table_headers.name'),
                 'attr' => [
-                    'class' => 'form-control',
+                    'class' => 'form-control variable-name-input',
+                    'pattern' => '^[A-Za-z0-9_]+$',
+                    'title' => 'Only letters, numbers, and “_” are allowed (no spaces, periods, or commas)',
+                    'maxlength' => 128,
+                    'spellcheck' => 'false',
+                    'autocapitalize' => 'none',
+                    'autocomplete' => 'off',
                 ],
             ])
             ->add('description', TextareaType::class, [
@@ -126,12 +133,11 @@ class VariableController extends AbstractController
             $name = $variable->getName();
             $variableExists = $this->verifyIfVariableNameExists($em, $name);
             if ($variableExists) {
-                $this->addFlash('danger', $translator->trans('variable.name_already_exists'));
+                $this->addFlash('variable.create.danger', $translator->trans('variable.name_already_exists'));
                 return $this->redirectToRoute('variable_create');
             }
 
-            // replace the spaces in the name of the variable with underscores
-            $variable->setName(str_replace(' ', '_', $variable->getName()));
+            $this->addFlash('variable.create.success', $translator->trans('variable.created_successfully'));
 
             $em->persist($variable);
             $em->flush();
@@ -169,7 +175,13 @@ class VariableController extends AbstractController
             ->add('name', TextType::class, [
                 'label' => $translator->trans('variable.table_headers.name'),
                 'attr' => [
-                    'class' => 'form-control',
+                    'class' => 'form-control variable-name-input',
+                    'pattern' => '^[A-Za-z0-9_]+$',
+                    'title' => 'Only letters, numbers, and “_” are allowed (no spaces, periods, or commas)',
+                    'maxlength' => 128,
+                    'spellcheck' => 'false',
+                    'autocapitalize' => 'none',
+                    'autocomplete' => 'off',
                 ],
             ])
             ->add('description', TextareaType::class, [
@@ -203,12 +215,9 @@ class VariableController extends AbstractController
             $name = $variable->getName();
             $variableExists = $this->verifyIfVariableNameExists($em, $name, $variable->getId());
             if ($variableExists) {
-                $this->addFlash('danger', $translator->trans('variable.name_already_exists'));
+                $this->addFlash('variable.edit.danger', $translator->trans('variable.name_already_exists'));
                 return $this->redirectToRoute('variable_edit', ['id' => $variable->getId()]);
             }
-
-            // replace the spaces in the name of the variable with underscores
-            $variable->setName(str_replace(' ', '_', $variable->getName()));
             // Create an audit entry
             $audit = new VariableAudit();
             $audit->setVariableId($variable->getId());
@@ -217,6 +226,7 @@ class VariableController extends AbstractController
             $audit->setAfter($variable->getValue());
             $audit->setByUser($this->getUser()->getUsername());
 
+            $this->addFlash('variable.edit.success', $translator->trans('variable.updated_successfully'));
             $em->persist($audit);
             $em->flush();
 
@@ -253,9 +263,10 @@ class VariableController extends AbstractController
     }
 
     /**
-     * @Route("/variables/{id}/delete", name="variable_delete")
+     * @Route("/variables/{id}/delete", name="variable_delete", methods={"POST","DELETE"})
+     * @IsGranted("ROLE_ADMIN")
      */
-    public function delete(EntityManagerInterface $em, Variable $variable): Response
+    public function delete(EntityManagerInterface $em, Variable $variable, TranslatorInterface $translator): Response
     {
         if (!$this->tools->isPremium()) {
             return $this->redirectToRoute('premium_list');
@@ -270,9 +281,9 @@ class VariableController extends AbstractController
         $audit->setByUser($this->getUser()->getUsername());
 
         $em->persist($audit);
-
         $em->remove($variable);
         $em->flush();
+        $this->addFlash('variable.delete.success', $translator->trans('variable.deleted_successfully'));
 
         return $this->redirectToRoute('variable_list');
     }

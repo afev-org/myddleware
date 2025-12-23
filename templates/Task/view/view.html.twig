@@ -26,7 +26,7 @@
 {% block title %}{{parent()}} | {{'title.task.view'|trans}} {{ task.getId }}{% endblock %}
 {% block titlesm %}
 	<a href="{{ path('task_list') }}">{{'breadcrumb.task_list'|trans}}</a> 
-	<i class="fa-sharp fa-solid fa-arrow-right fa-flip"></i>
+	<i class="fa-solid fa-arrow-right fa-flip arrow-cut-animation fa-solid fa-arrow-right fa-flip"></i>
 {{'title.task.view'|trans}} {{ task.getId }}
 {% endblock titlesm %} 
 {% block body %}
@@ -78,14 +78,14 @@
 							{% if task.getBegin is null %}
 								-
 							{% else %}
-								{{ task.getBegin|date("d/m/Y H:i:s", timezone) }}
+								{{ task.getBegin|date(app.user.dateFormat ~ " H:i:s", app.user.timezone) }}
 							{% endif %}
 						</td>
 						<td class="ctr">
 							{% if task.getEnd is null %}
 								-
 							{% else %}
-								{{ task.getEnd|date("d/m/Y H:i:s", timezone) }}
+								{{ task.getEnd|date(app.user.dateFormat ~ " H:i:s", app.user.timezone) }}
 							{% endif %}
 						</td>
 						<td class="ctr">{{ task.getOpen }}</td>
@@ -139,7 +139,7 @@
 						</td>
 						<td>				     		
 							{% if log.getRef is not empty %}	
-									<a onclick="window.open(this.href); return false;" href="{{ path('flux_info_page', {'id': log.getRef, 'page' : 1, 'logPage' : 1}) }}">
+									<a onclick="window.open(this.href); return false;" href="{{ path('flux_modern', {'id': log.getRef }) }}">
 									    {{ log.getRef }}
 									</a>
 							{% else %}
@@ -148,10 +148,10 @@
 						</td>	
 						<td>
 							{% if log.getDocument is not empty %}
-								<a href="{{ path('flux_info_page', {'id': log.getDocument.id, 'page' : 1, 'logPage' : 1}) }}">{{ log.getDocument.id }}</a>
+								<a href="{{ path('flux_modern', {'id': log.getDocument.id }) }}">{{ log.getDocument.id }}</a>
 							{% endif %}
 						</td>					     					     			     			     	
-						<td>{{ log.getCreated|date("d/m/Y H:i:s", timezone) }}</td>
+						<td>{{ log.getCreated|date(app.user.dateFormat ~ " H:i:s", app.user.timezone) }}</td>
 						<td class="ctr">
 							<div class="log_{{ log.getType|lower }}">{{ log.getType }}
 							{% if log.getType|lower == 's' %}

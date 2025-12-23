@@ -224,9 +224,6 @@
             "./config/packages/lexik_jwt_authentication.yaml"
         ]
     },
-    "mautic/api-library": {
-        "version": "2.16.1"
-    },
     "monolog/monolog": {
         "version": "1.26.1"
     },
@@ -644,8 +641,6 @@
         "files": [
             "assets/app.js",
             "assets/bootstrap.js",
-            "assets/controllers.json",
-            "assets/controllers/hello_controller.js",
             "assets/styles/app.css",
             "config/packages/webpack_encore.yaml",
             "package.json",
