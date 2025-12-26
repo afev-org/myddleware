@@ -146,8 +146,9 @@ class suitecrmcustom extends suitecrm
 		$isRuleBilan = false;
 		$ruleactive = true;
 		
+		// Check if a fiche eval elready exist
 		if (
-				in_array($this->currentRule, array('65b11699a6edc','65708a7e59eae')) // 65708a7e59eae a supprimer après prochain refresh
+				in_array($this->currentRule, array('65b11699a6edc'))  // Aiko - Bilan vers Comet 
 			AND $method == 'get_entry_list'
 			AND !empty($parameters['module_name'])
 			AND $ruleactive
@@ -208,7 +209,7 @@ class suitecrmcustom extends suitecrm
 		// Call standard
 		$result = parent::call($method, $parameters);
 		
-		if (in_array($this->currentRule, array('65b11699a6edc','65708a7e59eae')) // 65708a7e59eae a supprimer après prochain refresh
+		if (in_array($this->currentRule, array('65b11699a6edc')) // Aiko - Bilan vers Comet 
 		 && $isRuleBilan
 		 && $ruleactive
 		 ) {

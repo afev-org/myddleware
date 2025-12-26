@@ -1718,8 +1718,10 @@ class DocumentManager
 			}
             // Manage formula
             if (!empty($ruleField['formula'])) {
-                // -- -- -- Formula management
-
+                // Add the myddleware_element_id value if requested
+				if (str_contains($ruleField['source_field_name'],'Myddleware_element_id')) {
+					$source['Myddleware_element_id'] = $source['id'];
+				}
                 // Build variables
                 $r = explode(';', $ruleField['source_field_name']);
                 if (count($r) > 1) {
@@ -2339,7 +2341,7 @@ class DocumentManager
 			$this->createDocLog(false);
 			// runWorkflow can't be executed if updateStatus is called from the solution class
 			if (
-                    $new_status!='Send'
+                    !in_array($new_status, array('Send', 'Error_sending'))
                 AND !$workflow          // Do not run wroklow if the change comes from a workflow
             ) {
 				$this->runWorkflow();
