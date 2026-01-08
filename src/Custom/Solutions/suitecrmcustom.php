@@ -135,6 +135,17 @@ class suitecrmcustom extends suitecrm
 			// Change a text field to a relate field
 			$this->moduleFields['poles_rattaches']['relate'] = true;
 		}
+		
+		// Add the field to store the id_historique_mentor
+		if ($module == 'CRMC_historique_engage') {
+			$this->moduleFields['id_historique_mentor'] = array(
+				'label' => 'Id historique mentor',
+				'type' => 'varchar(255)',
+				'type_bdd' => 'varchar(255)',
+				'required' => 0,
+				'relate' => true
+			);
+		}
 		return $this->moduleFields;
 	}
 
@@ -379,6 +390,40 @@ class suitecrmcustom extends suitecrm
 						$read2[$i]['poles_rattaches'] = $pole;
 						$read2[$i]['id'] = $record['id'].'_'.$pole;
 						$read2[$i]['id_historique_mentore'] = $record['id'];
+						$i++;
+					}
+				}
+			}
+			return $read2;
+		}
+		
+		
+		// Split the result of the read for the pole, so that if we have 1 document with 3 poles, 
+		// 1 document with 2 poles, and 1 document with 5 poles, we end up with 10 records in the result
+		if (
+				$param['module'] == 'CRMC_historique_engage'
+			AND $param['call_type'] == 'read'
+			AND in_array('id_historique_mentor', $param['fields']) // If field id_historique_mentor is requested
+		) {
+			$read2 = array();
+			$i = 0;
+			foreach ($read as $key => $record) {
+				$poles = array();
+				if (!empty($record['poles_c'])) {
+					// If we have several poles, we split the record
+					if (strpos($record['poles_c'], ',') !== false) {
+						// Transform poles list string to an array
+						$poles = explode(',', str_replace('^', '', $record['poles_c']));
+					// If we have only one pole, we create an array with one entry
+					} else {
+						$poles[] = trim($record['poles_c'], '^');
+					}
+					// Prepare the result
+					foreach ($poles as $pole) {
+						$read2[$i] = $record;
+						$read2[$i]['poles_c'] = $pole;
+						$read2[$i]['id'] = $record['id'].'_'.$pole;
+						$read2[$i]['id_historique_mentor'] = $record['id'];
 						$i++;
 					}
 				}
