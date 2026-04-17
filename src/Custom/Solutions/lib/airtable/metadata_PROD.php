@@ -1,5 +1,36 @@
 <?php
 
+// aiko
+$tableMapping["appdKFUpk2X2Ok8Dc"]["BINOMES"] = "tblXCsglHMyrAjq4N";
+$tableMapping["appdKFUpk2X2Ok8Dc"]["CONTACTS"] = "tblZXXwpAielXGJE5";
+$tableMapping["appdKFUpk2X2Ok8Dc"]["Reponse"] = "tblOHCFOklIqMiflT";
+$tableMapping["appdKFUpk2X2Ok8Dc"]["REFERENTS"] = "tblIyf40Kls8OHxpV";
+$tableMapping["appdKFUpk2X2Ok8Dc"]["POLE"] = "tblW8Bkub8UB6zHyR";
+$tableMapping["appdKFUpk2X2Ok8Dc"]["BILAN"] = "tblDB5b6WIk5yJuUu";
+$tableMapping["appdKFUpk2X2Ok8Dc"]["METADATA"] = "viwd2OmocYjPULj6J";
+$tableMapping["appdKFUpk2X2Ok8Dc"]["VUE METADATA"] = "tblSHNDSWtiyQuOAm";
+$tableMapping["appdKFUpk2X2Ok8Dc"]["tmp"] = "tblfxDLXwONemKTtY";
+
+// mobilisation
+$tableMapping["app5ustIjI5taRXJS"]["COUPONS"] = "tbl9mdPzLflpvbur1";
+$tableMapping["app5ustIjI5taRXJS"]["COMPOSANTES"] = "tbl3x3LNzyTVZeLuP";
+$tableMapping["app5ustIjI5taRXJS"]["ETABLISSEMENTS"] = "tblh6J3n0sn0ujXbj";
+$tableMapping["app5ustIjI5taRXJS"]["EVENEMENTS"] = "tbltK28hWtZhE7kfj";
+$tableMapping["app5ustIjI5taRXJS"]["PARTICIPATION_RI"] = "tblcBJRaDCyrDZNYy";
+$tableMapping["app5ustIjI5taRXJS"]["Relation_POLE"] = "tblWNzJBu14hZBUtz";
+$tableMapping["app5ustIjI5taRXJS"]["POLES"] = "tbl823z6nTXKu56dT";
+$tableMapping["app5ustIjI5taRXJS"]["CONTACTS"] = "tbly0c6t476m2T5Dg";
+$tableMapping["app5ustIjI5taRXJS"]["Reconduction"] = "tbljzLU2HVHEctLgx";
+$tableMapping["app5ustIjI5taRXJS"]["UTILISATEURS"] = "tblMGtDW80zma1GUs";
+$tableMapping["app5ustIjI5taRXJS"]["RENDEZ-VOUS"] = "tbla9JXEFzwialkFm";
+$tableMapping["app5ustIjI5taRXJS"]["METADATA"] = "tblodlItXQRettZoh";
+$tableMapping["app5ustIjI5taRXJS"]["VUES METADATAS"] = "tblbgzpXRGsoNVz6w";
+$tableMapping["app5ustIjI5taRXJS"]["DOSSIER RECRUTEMENT"] = "tbl9GpEK9UGld2bHI";
+
+// vsc
+$tableMapping["appALljzTMc2wjLV1"]["VSC"] = "tblHcxpxMbkP7p8JK";
+
+
 // Aiko
 $moduleFields['appdKFUpk2X2Ok8Dc'] = array (
     'CONTACTS' => array(
