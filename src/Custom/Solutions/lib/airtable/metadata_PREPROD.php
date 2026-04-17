@@ -988,6 +988,8 @@ $moduleFields['appuC7nsCbe7TxqwK'] = array (
 		'fld5Hi0toJFp1CLYI'=> array( 'label' => 'Nom de naissance', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldkLnubCfLFnhrLi'=> array( 'label' => 'Refus Elisa', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldrW5iIwwa4TfRKc'=> array( 'label' => 'DEV Suspendre Synchro', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldBwjmeDDshl739M'=> array( 'label' => 'PCS1 FAIT', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldFa06VavSe1yI5h'=> array( 'label' => 'Rupture par l’AFEV ou le VOLONTAIRE', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 	),
 );
 
