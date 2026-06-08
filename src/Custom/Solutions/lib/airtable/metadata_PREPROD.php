@@ -946,6 +946,7 @@ $moduleFields['appP31F11PgaT1f6H'] = array (
 		'fldzi5bUhAXMjIXz1' => array( 'label' => 'Record ID', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => true),
 		'fldBX7xb3naOvNwWv' => array( 'label' => 'Last Modified', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldm6jMn4naqO8Xcx' => array( 'label' => 'Autre Chose à Ajouter', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldS16ETv2ddHkjgh' => array( 'label' => 'Année scolaire', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 	),
 ); 
 

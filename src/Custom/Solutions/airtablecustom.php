@@ -273,12 +273,12 @@ class airtablecustom extends airtable {
 				// PREPROD
 				(
 						isset($data['fldohGMXZZOWhxN2o'])
-					AND	 in_array($data['fldohGMXZZOWhxN2o'], ['refus_non_eligible', 'inscription_attente', 'contrat_attente_validation'])
+					AND	 in_array($data['fldohGMXZZOWhxN2o'], ['refus_non_eligible', 'contrat_attente_validation'])
 				)
 				// PROD
 				OR (
 						isset($data['fldEI7AEhSDfynvFz'])
-					AND	 in_array($data['fldEI7AEhSDfynvFz'], ['refus_non_eligible', 'inscription_attente', 'contrat_attente_validation'])
+					AND	 in_array($data['fldEI7AEhSDfynvFz'], ['refus_non_eligible', 'contrat_attente_validation'])
 				)
 			) {
 				if (!isset($this->documentManager)) {

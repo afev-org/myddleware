@@ -975,6 +975,7 @@ $moduleFields['app5ustIjI5taRXJS'] = array (
 		'fldqZVd8dmxDGqBGx' => array( 'label' => 'Maj par', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldqOgBE004Uii46c' => array( 'label' => 'Record ID', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 		'fldUcPQe61HZgxi93' => array( 'label' => 'Autre Chose à Ajouter', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
+		'fldUOPRydto0IFdNz' => array( 'label' => 'Année scolaire', 'type' => 'varchar(255)', 'type_bdd' => 'varchar(255)', 'required' => 0, 'relate' => false),
 	)
 ); 
 
