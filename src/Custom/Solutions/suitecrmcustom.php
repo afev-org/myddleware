@@ -722,7 +722,7 @@ class suitecrmcustom extends suitecrm
 			and $param['call_type'] != 'history'
 		) {
 			// Read the current year and the next one 
-			if (in_array($param['rule']['id'], array('620e5520c62d6','625fcd2ed442f'))) {	// Sendinblue - coupon ; Mobilisation - Coupons engagé
+			if (in_array($param['rule']['id'], array('620e5520c62d6','625fcd2ed442f','6267e128b2c87'))) {	// Sendinblue - coupon ; Mobilisation - Coupons engagé ; Mobilisation - Evenement RI 
 				$query .= ' AND '.strtolower($param['module'])."_cstm.annee_scolaire_c LIKE '%".(!empty($param['ruleParams']['anneeScolaire']) ? $param['ruleParams']['anneeScolaire'] : $this->anneeScolaire3)."%' ";
 			} else {
 				$query .= ' AND '.strtolower($param['module'])."_cstm.annee_scolaire_c LIKE '%".(!empty($param['ruleParams']['anneeScolaire']) ? $param['ruleParams']['anneeScolaire'] : $this->anneeScolaire)."%' ";
