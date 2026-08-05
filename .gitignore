@@ -26,7 +26,10 @@
 /config/services_custom.yaml
 
 # Custom directory
-/src/Custom/*
+# /src/Custom/*
+
+# Premium directory
+/src/Premium/
 
 # Premium directory
 /src/Premium/

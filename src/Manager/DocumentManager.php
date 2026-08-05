@@ -111,7 +111,7 @@ class DocumentManager
         'Error_transformed' => 'Error',
         'Error_checking' => 'Error',
         'Error_sending' => 'Error',
-        'Error_expected' => 'Error',
+        'Error_expected' => 'Cancel',
         'Not_found' => 'Error',
     ];
     private array $notSentFields = [];
@@ -2465,7 +2465,7 @@ class DocumentManager
 			$this->createDocLog(false);
 			// runWorkflow can't be executed if updateStatus is called from the solution class
 			if (
-                    $new_status!='Send'
+                    !in_array($new_status, array('Send', 'Error_sending'))
                 AND !$workflow          // Do not run wroklow if the change comes from a workflow
             ) {
 				$this->runWorkflow();

@@ -119,7 +119,7 @@ make run
 
 #### Build the Myddleware image with docker-compose (developer's mode)
 
-##### Build the container locally
+##### Build the container  locally
 
 Run the following commands in your myddleware directory :
 
