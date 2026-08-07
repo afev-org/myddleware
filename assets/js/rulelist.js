@@ -1,35 +1,54 @@
 const $ = require('jquery');
 
 $(function(){
-    $(".form-check-input.toggle-switch-rule").on('change', function(e) {
+    $(document).on('change', '.form-check-input.toggle-switch-rule', function(e) {
         path_fiche_update = $(this).attr('title');
         $.ajax({
             type: "POST",
-            url: path_fiche_update,						
-                success: function(data){                 
-            }			
-        });	
+            url: path_fiche_update,
+                success: function(data){
+            }
+        });
     });
 });
 
   $("#rulenamesearchbar").on("submit", function (e) { e.preventDefault(); });
 
-  // save the initial table state somewhere accessible
+  // save the initial table state and pagination state
   var initialTableState = $("#tbody_rule_list").html();
+  var initialPaginationState = $("#pagination_container").html();
 
   var debounceTimer = null;
   var currentXhr = null;
 
+  // On page load, check if there's a rule_name parameter in the URL
+  var urlParams = new URLSearchParams(window.location.search);
+  var ruleNameParam = urlParams.get('rule_name');
+  if (ruleNameParam) {
+    $("#rule_name_searchbar").val(ruleNameParam);
+    $("#clear_rule_search").show();
+  }
+
   $("#rule_name_searchbar").on("input", function () {
     var q = $.trim($(this).val());
     var url = $(this).data("url");
+
+    if (q.length > 0) {
+      $("#clear_rule_search").show();
+    } else {
+      $("#clear_rule_search").hide();
+    }
 
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(function () {
 
       if (q.length === 0) {
         if (currentXhr) { currentXhr.abort(); currentXhr = null; }
-        $("#tbody_rule_list").html(initialTableState);
+        // Show loader before redirect
+        $("#tbody_rule_list").html('<tr><td colspan="100%" class="text-center py-3"><div class="spinner-border spinner-border-sm" role="status"></div> Loading…</td></tr>');
+        // Redirect to base URL to clear all params (rule_name, page, etc.)
+        var baseUrl = $("#rule_name_searchbar").data("url");
+        window.location.href = baseUrl;
         return;
       }
 
@@ -56,6 +75,12 @@ $(function(){
           } else {
             $("#tbody_rule_list").html(html);
           }
+
+          // Update pagination with filtered results
+          var $pagination = $resp.find("#pagination_container");
+          if ($pagination.length) {
+            $("#pagination_container").html($pagination.html());
+          }
         },
         error: function (xhr, status) {
           if (status !== "abort") {
@@ -69,20 +94,28 @@ $(function(){
     }, 200);
   });
 
+  $("#clear_rule_search").on("click", function () {
+    // Show loader before redirect
+    $("#tbody_rule_list").html('<tr><td colspan="100%" class="text-center py-3"><div class="spinner-border spinner-border-sm" role="status"></div> Loading…</td></tr>');
+    // Redirect to base rule list URL (removes all params including rule_name and page)
+    var baseUrl = $("#rule_name_searchbar").data("url");
+    window.location.href = baseUrl;
+  });
+
 // --For 'rule name' in the list view
-$('.edit-button-name-list').on('click', function () {        
-    var field = $(this).closest('td'); 
-    var editFormContainer = field.find('.edit-form-container'); 
+$(document).on('click', '.edit-button-name-list', function () {
+    var field = $(this).closest('td');
+    var editFormContainer = field.find('.edit-form-container');
     editFormContainer.show();
 });
 
 
-$('.close-button-name-list').on('click', function () {
+$(document).on('click', '.close-button-name-list', function () {
     var editFormContainer = $(this).closest('.edit-form-container');
     editFormContainer.css('display', 'none');
 });
 
-$('.edit-form-name-list').on('submit', function (event) {
+$(document).on('submit', '.edit-form-name-list', function (event) {
     event.preventDefault();
 
     var editForm = $(this);

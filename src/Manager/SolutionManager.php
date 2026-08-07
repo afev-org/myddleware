@@ -48,6 +48,7 @@ use App\Solutions\prestashop;
 use App\Solutions\ringcentral;
 use App\Solutions\sagecrm;
 use App\Solutions\salesforce;
+use App\Solutions\salesforce_v2;
 use App\Solutions\sap;
 use App\Solutions\sapcrm;
 use App\Solutions\sendinblue;
@@ -61,7 +62,9 @@ use App\Solutions\wordpress;
 use App\Solutions\yousign;
 use App\Solutions\zuora;
 use App\Solutions\dynamicsbusiness;
+use App\Solutions\dynamicscrm;
 use App\Solutions\iomad;
+use App\Service\DebugLogger;
 use Exception;
 
 /**
@@ -69,6 +72,7 @@ use Exception;
  */
 class SolutionManager
 {
+    private DebugLogger $debugLogger;
     private array $classes = [];
 	
 	public static array $solutions = [
@@ -88,6 +92,7 @@ class SolutionManager
 							'postgresql',
 							'sugarcrm',
 							'salesforce',
+							'salesforce_v2',
 							'airtable',
 							'sendinblue',
 							'internallist',
@@ -96,10 +101,12 @@ class SolutionManager
 							'brevo',
 							'acton',
 							'dynamicsbusiness',
+							'dynamicscrm',
 							'iomad'
 						];
 
     public function __construct(
+        DebugLogger $debugLogger,
         erpnext $erpnext,
         hubspot $hubspot,
         zuora $zuora,
@@ -116,6 +123,7 @@ class SolutionManager
         postgresql $postgresql,
         sugarcrm $sugarcrm,
         salesforce $salesforce,
+        salesforce_v2 $salesforce_v2,
         airtable $airtable,
         sendinblue $sendinblue,
         internallist $internallist,
@@ -124,8 +132,10 @@ class SolutionManager
         brevo $brevo,
         acton $acton,
         dynamicsbusiness $dynamicsbusiness,
+        dynamicscrm $dynamicscrm,
         iomad $iomad
     ) {
+		$this->debugLogger = $debugLogger;
 		// Load the solution classes
 		if (!empty(self::$solutions)) {
 			foreach(self::$solutions as $solution) {
@@ -136,10 +146,16 @@ class SolutionManager
 
     public function get(string $name)
     {
-        if (!isset($this->classes[$name])) {
-            throw new Exception('Solution ' . $name . ' not found. Please make sure that you have added this solution into Myddleware. ');
-        }
+        $this->debugLogger->logStart(__CLASS__, __FUNCTION__, ['name' => $name]);
+        $__debugReturn = null;
+        try {
+            if (!isset($this->classes[$name])) {
+                throw new Exception('Solution ' . $name . ' not found. Please make sure that you have added this solution into Myddleware. ');
+            }
 
-        return $this->classes[$name];
+            return $__debugReturn = $this->classes[$name];
+        } finally {
+            $this->debugLogger->logEnd(__CLASS__, __FUNCTION__, $__debugReturn);
+        }
     }
 }

@@ -54,8 +54,13 @@ panel:
         title: Documents history
     graph_job_histo:
         title: Jobs history
+    rule_deleted: This rule has been deleted. It cannot be used anymore
+edit_rule:
+    success: Your rule has been successfully edited.
 create_rule:
     error_name: A connector already has that name.
+    success: Your rule has been successfully created
+    loading: Loading rule...
     tabs:
         one: Connection
         two: Modules selection
@@ -94,6 +99,7 @@ create_rule:
         previous: Previous step
         next: Next step       
         syncdata:
+            title: Sync options
             label: Synchronization type
             create_modify: Create and update data
             create_only: Create data only
@@ -102,6 +108,7 @@ create_rule:
         deletion:
             label: Allow deletion from target application
             yes: Yes
+            no: No
         data_wait: Loading... Please wait
         title: Fields
         placeholder: Please drag your fields here
@@ -146,7 +153,28 @@ create_rule:
             yes: Yes
             no : No
             behavior: Behavior
-            
+    step4:
+        title: Filter
+        filters:
+            field: "Field"
+            choose_field: "Choose a field"
+            operator: "Operator"
+            choose_operator: "Choose an operator"
+            value: "Value"
+            current: "Current filters"
+            empty: "No filters have been defined yet."
+    step5:
+        back: Back to list
+        back_to_rule: Back to rule
+        simulation: Simulation
+        title: Mapping field    
+        formula:
+            title: Compose your formula
+            selected_field: Selected fields
+            fonctionw: Fonction Wizard
+            formula: Formule
+            close: Close
+            save: Save     
         params:
             duplicate: Fields to avoid duplicates
             sync: Bidirectional synchronization
@@ -189,6 +217,8 @@ view_rule:
         confirm_delete_rule: Do you want to delete this rule?
         displayflux: Display the documents
         new_rule: Create a new rule
+        simulation: Simulation
+        more: More...
     tabs:
         info: Overview
         mapping: Field Mapping
@@ -254,6 +284,8 @@ rule:
     help: What should I do ?
     select_group: Select a group
     select_value: Select a value
+    delete:
+        success: Rule deleted successfully
 
 rulegroup:  
   create: "Create a rule group"
@@ -265,7 +297,11 @@ rulegroup:
   rule_removed_successfully: "Rule removed from the group successfully."
   rule_added_successfully: "Rule added to the group successfully."
   confirm_transfer_title: "Confirm rule transfer"
+  confirm_transfer: "Confirm rule transfer"
+  cancel: "Cancel"
   confirm_transfer_text: "This rule already belongs to another group. Do you want to transfer it to this group?"
+  confirm_transfer_message: "This rule is already on another group. Are you sure you want to transfer it to this group?"
+  confirm_transfer_final: "Confirm and transfer the rule"
   title_one: "Rule group"
   back: "Back to list"
   edit: "Edit a rule group"
@@ -349,11 +385,19 @@ actions: "Actions"
 pagination:
     previous: Previous
     next: Next
-    go_to_page: Go to page
+    go_to_page: Go to
     page_number: Page number
 
 animate:
-    rulename: Name of your rule 
+    template:
+        title: Use a Template
+        success: Your template worked successfully
+        rule: rules
+        other_rule: other rule
+        use: Use this template
+    ruleconnection: Rule connection
+    rulename: Name of your rule
+    title: Rule Details
     wait: Please wait...
     solution:
         source: Source
@@ -368,11 +412,11 @@ animate:
         description: Description 
         empty: No template for these solutions, if you want a template, please contact us via <a href="mailto:contact@myddleware.com">contact@myddleware.com</a>
     tutoriel:
-        link: https://myddleware.github.io/myddleware/#/basic_usage
+        link: https://myddleware.github.io/myddleware-docs/#/basic_usage
         textlink: Do you need help ? Read our tutorial.
 
 create_connector:    
-    title: Creation of a connector
+    title: Creation connector
     save: Save the connection
     connexion: Name of the connection
     test: Test
@@ -408,7 +452,6 @@ list_connector:
 view_connector:
     btn:
         edit: Edit
-        back: Back to the list
         save: Save
         delete: Delete
         confirm_delete: Do you confirm that this connector should be deleted ?
@@ -420,7 +463,7 @@ view_connector:
         help: Assistance
         link_help: Click here to have more information on this connector
     help:
-        link: https://myddleware.github.io/myddleware/#/connectors_credentials?id=
+        link: https://myddleware.github.io/myddleware-docs/#/connectors_credentials?id=
 
 edit_connector:
     saved_successfully: Connector saved successfully
@@ -429,6 +472,7 @@ delete_connector:
         success: Connector deleted successfully
 
 list_flux:
+    more_filter: More filters
     start: Start
     end: End
     total: Number of documents
@@ -640,8 +684,10 @@ view_workflow:
     title2: Condition Field
     condition: The condition field is automatically generated with the string {status} == ", and the opening parenthesis as well as the ternary operator  ?"1":"0") will be added automatically.
     condition2: In short, all you need is to write the status name and we do the rest !
-    back: Back to the list
     delete: Delete the workflow
+    duplicate: Duplicate the workflow
+    duplicate_success: Workflow duplicated successfully
+    duplication_workflow_deactivated : The workflow has been duplicated but it is deactivated upon creation. Please activate it to use it.
     description: Description
     rule: Rule
     conditions: Conditions
@@ -681,7 +727,6 @@ view_workflow_action:
     workflow: Workflow
     action: Action
     order: Order
-    back_to_workflow: Back to the workflow
     create: Create a new action
     multiple_runs: Multiple Runs
     multiple_runs_yes: Yes
@@ -833,6 +878,7 @@ solution:
         client_id: Client ID
         client_secret: Client Secret
         environment: Environment
+        org_url: Organization URL
     params: 
         dateref: Reference (data will be read from this parameter)
         limit: Limit (read limit for each call)
@@ -873,6 +919,7 @@ error:
         target_module_load_list: Target modules loading error
         edit_document_error_open: Failed to edit the rule because there is at least one document open or in error in this rule. Close or cancel these documents to be able to edit this rule.
         edit_document_error_open_admin: There is at least one document open or in error in this rule. We advise you to manage these documents before editing this rule.
+        edit_connection_failed: "Failed to edit the rule because the connection to the connector failed:"
         edit_rule_deleted: Failed to edit the rule because this rule is deleted.
         delete_document: Failed to delete the rule because there is at least one document not deleted on this rule. Remove these documents to be able to delete this rule.
         delete_relationship_exists: "Failed to delete the rule because it is linked to another rule. Delete first the rule related or just the relationship with the current rule. Rule related:  "
@@ -896,13 +943,14 @@ title:
         btn: Start now !
     rule:
         create_name: Editing of the rule
-        create: Creation of a rule
-        edit: Editing the rule
+        create: Create rule
+        edit: Edit rule
         list: Rules
         view: Rule
+        success_edit_params:
     connector:
-        create: Creation of a connector
-        edit: Editing the connector
+        create: Create connector
+        edit: Edit connector
         list: Connectors
     flux: 
         list: Documents
@@ -961,6 +1009,7 @@ menu_user:
     management_smtp: SMTP config
     logout: Logout
     user_manager: UserManager
+    settings: Settings
 
 help:
     title: Help
@@ -971,9 +1020,9 @@ help:
                 To change more parameters in your rule, go to the tab "parameter" on this page.
         mapping: >
                 On this page you will find all the fields of your source and target applications used in your rule. You will also find the formulas for data transformation. 
-                If you need help to create your formulas, go to our blog  at the following address : <a href="https://myddleware.github.io/myddleware/#/advanced_usage?id=formulae" target="_blank">See the page on formulas</a>.
+                If you need help to create your formulas, go to our blog  at the following address : <a href="https://myddleware.github.io/myddleware-docs/#/advanced_usage?id=formulae" target="_blank">See the page on formulas</a>.
         relate: >
-                Here you will find all the relations to link data in your applications More information on relations at the following address: <a href="https://myddleware.github.io/myddleware/#/advanced_usage?id=relationships" target="_blank">see the page on relations</a>
+                Here you will find all the relations to link data in your applications More information on relations at the following address: <a href="https://myddleware.github.io/myddleware-docs/#/advanced_usage?id=relationships" target="_blank">see the page on relations</a>
         param: >
                 The reference date shows which data will be read in your source system. Only data that were created or modified after that date will be read and sent to the target system.
                 Therefore if you want to migrate your old data, you need to take a date in the past. If you only want to transfer the new data, then leave the day's date.
@@ -984,7 +1033,7 @@ help:
                 For example, you can choose to put the name of a Sugar contact in the name of a Salesforce account, 
                 for that, just drag the field "name" of your source module and drop it in the field "name" of your target solution. 
                 To delete a field that was already placed, just double click on it. 
-                You can also use formulas to transform your data. If you need assistance to create formulas, go to our blog at the following address: <a href="https://myddleware.github.io/myddleware/#/basic_usage?id=apply-formulae-to-transform-data-before-it-is-sent-to-the-target-app" target="_blank">See the page on formulas</a>.  
+                You can also use formulas to transform your data. If you need assistance to create formulas, go to our blog at the following address: <a href="https://myddleware.github.io/myddleware-docs/#/basic_usage?id=apply-formulae-to-transform-data-before-it-is-sent-to-the-target-app" target="_blank">See the page on formulas</a>.  
                 For more information or personalised assistance, feel free to contact us.
         simulate: >
                 Here you can simulate the result of the rules you have implemented in the previous stage. 
@@ -992,11 +1041,11 @@ help:
         relate: >
                 This tab allows you to define the relations you want to implement in your interface. That way you can link several rules together. 
                 For example, it is possible to transfer the relation between a contact and an account so that they will also be linked in the target solution.
-                More information on relations at the following address: <a href="https://myddleware.github.io/myddleware/#/advanced_usage?id=relationships" target="_blank">see the page on relations</a>
+                More information on relations at the following address: <a href="https://myddleware.github.io/myddleware-docs/#/advanced_usage?id=relationships" target="_blank">see the page on relations</a>
         filter: >
                 This tab allows you to filter the fields of your source application at play
                 For example, you can choose to take all the contacts whose country is "France".
-                More information on filters at the following address: <a href="https://myddleware.github.io/myddleware/#/advanced_usage?id=filters" target="_blank">see the page on filters</a>
+                More information on filters at the following address: <a href="https://myddleware.github.io/myddleware-docs/#/advanced_usage?id=filters" target="_blank">see the page on filters</a>
         validate: >
                 The last stage, if the target application of your rule allows it, you can choose a de-duplication key. To be used in de-duplication, a field must be selected in the tab "field"of the rule. 
                 For example, for a CRM application, you can de-duplicate all the contacts by their mail. Myddleware will check if the recording already exist in your target solution, before creating it. If it does not existe, Myddleware will create it.Otherwise it will just update it.
@@ -1105,7 +1154,7 @@ jobscheduler:
     view:
         show : View details
     description:
-        top : Schedule your Myddleware tasks by creating or modifying this table. <a href="https://myddleware.github.io/myddleware/#/cron_jobs" target=_blank>More information here.</a>
+        top : Schedule your Myddleware tasks by creating or modifying this table. <a href="https://myddleware.github.io/myddleware-docs/#/cron_jobs" target=_blank>More information here.</a>
         bottom : > 
                 Add this task in your Linux or Windows task scheduler : php bin/console myddleware:jobScheduler --env=background <BR>
                 For example with Linux, add this command in your crontab if you want to run Myddleware scheduler every 5 minutes : <BR>
@@ -1120,9 +1169,48 @@ management_smtp:
     error: Failed to save SMTP config
     api_key_already_in_env: This API key is already in the .env file.
     api_key_too_short: The API key is too short. Are you sure it's an BREVO API key in the form ? Be careful about your browser autofilling.
+    api_key_required: API key is required for Brevo/Sendinblue.
+    sendtestmail_error: Failed to send test email
 management_smtp_sendmail:
     subject: Myddleware - email configuration test
     textMail: This test message has been sent by Myddleware.
+
+settings:
+    title: System Settings
+    save: Save
+    tabs:
+        general: Preferences
+        smtp: SMTP Management
+    table_settings:
+        title: Table settings
+        description: Configure how tables display data across the application.
+        rows_per_page: Rows per page
+        maximum_results: Maximum results
+    search_settings:
+        title: Search Settings
+        description: Configure search behavior and Elasticsearch integration.
+        elasticsearch_label: Elasticsearch Status
+        enable_elasticsearch: Enable Elastic Search
+        elasticsearch_hint: Elasticsearch enables greater performance when searching for strings among very large amounts of document (+100k)
+    logs:
+        title: Logs
+        enable_debug: Enable Debug Logs
+        debug_hint: When enabled, detailed debug information (API responses, SQL queries) will be written to the log file.
+        choose_level: Choose debug logs
+        level_hint: Select the minimum log level. Lower levels include more detail but generate larger log files.
+        download_logs: Download Latest Logs
+        empty_logs: Empty Log File
+        confirm_empty_logs: Are you sure you want to empty the log file? This action cannot be undone.
+    messages:
+        save_success: Settings saved successfully
+        save_error: Failed to save settings
+        elasticsearch_enabled: Elasticsearch has been enabled
+        elasticsearch_disabled: Elasticsearch has been disabled
+        debug_enabled: Debug logging has been enabled
+        debug_disabled: Debug logging has been disabled
+        log_level_updated: Log level updated to %level%
+        logs_emptied: Logs emptied successfully
+        logs_empty_error: Failed to empty logs
 
 login:
     title: Connection
@@ -1180,12 +1268,13 @@ install:
     database_setup: Setting up your database
     test_button: Connect to database
     requirements_checker: Myddleware Requirements Checker
-    system_status_ready: Your system is ready to run Myddleware 
+    system_status_ready: Your system is ready to run Myddleware
     system_status_not_ready: Your system is not ready to run Myddleware yet
     user_setup: Create your Myddleware user login details
-    next_step: You can now go to the next page to set up your Myddleware user 
+    next_step: You can now go to the next page to set up your Myddleware user
     role_admin: Please note that these credentials will have administrator access rights to Myddleware
-    check_button: Check now 
+    super_admin: Make this user a Super Admin
+    check_button: Check now
     next: Next
     setup_database_button: Setup database
     previous: Previous
@@ -1254,10 +1343,9 @@ variable:
   updated_successfully: "Variable updated successfully."
   deleted_successfully: "Variable deleted successfully."
   name_already_exists: The name of the variable already exists. Please choose another name.
-  edit: Editing of a variable
-  back_to_list: Back to the list
+  edit: Edit variable
   save: Save
-  editing: Editing of a variable
+  editing: Edit variable
   total: Total of Variables
   btn:
     edit: Edit
@@ -1374,6 +1462,7 @@ rule_execute_by_id:
 new_workflow_view:
     save: Save
     created_successfully: Workflow created successfully.
+    condition_error: The condition is incomplete or empty.
 
 delete_workflow_view:
     deleted_successfully: Workflow deleted successfully.

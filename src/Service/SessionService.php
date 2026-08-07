@@ -409,6 +409,14 @@ class SessionService
         return isset($myddlewareSession['param']['myddleware']['connector']['values']);
     }
 
+    public function setParamRuleDescription(int $key, ?string $description): void
+    {
+        $myddlewareSession = $this->getMyddlewareSession();
+        $myddlewareSession['param']['rule'][$key]['description'] = $description ?? '';
+
+        $session = $this->getSession();
+        $session->set(self::MYDDLEWARE_SESSION_INDEX, $myddlewareSession);
+    }
     //############ CONNECTOR ###################
 
     //############ MAILCHIMP ###################
@@ -978,10 +986,18 @@ class SessionService
         $myddlewareSession = $this->getMyddlewareSession();
         $customWhere = null;
         if (!empty($myddlewareSession['flux_filter']['customWhere'])) {
-            $customWhere = $myddlewareSession['flux_filter'];
+            $customWhere = $myddlewareSession['flux_filter']['customWhere'];
         }
 
         return $customWhere;
+    }
+
+    public function removeFluxFilterWhere()
+    {
+        $myddlewareSession = $this->getMyddlewareSession();
+        unset($myddlewareSession['flux_filter']['customWhere']);
+
+        $this->getSession()->set(self::MYDDLEWARE_SESSION_INDEX, $myddlewareSession);
     }
 
     public function setFluxFilterRuleName($ruleName)
@@ -1538,6 +1554,7 @@ class SessionService
         if (isset($myddlewareSession['flux_filter']['c'])) {
             $myddlewareSession['flux_filter']['c'] = [];
         }
+        unset($myddlewareSession['flux_filter']['customWhere']);
 
         $this->getSession()->set(self::MYDDLEWARE_SESSION_INDEX, $myddlewareSession);
     }
