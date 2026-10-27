@@ -47,6 +47,9 @@ use Exception;
  *      @ORM\Index(name="index_job_lock", columns={"job_lock"})
  * })
  */
+ 
+ #[ORM\Index(name: 'index_rule_data_cleared', columns: ['rule_id', 'deleted', 'data_cleared', 'global_status', 'date_created'])]
+ 
 class Document
 {
     /**
@@ -133,6 +136,10 @@ class Document
      */
     private bool $deleted;
 
+    // Set to 1 by the cleardata job once the documentdata and logs of the document have been removed
+    #[ORM\Column(name: 'data_cleared', type: 'boolean', options: ['default' => 0])]
+    private bool $dataCleared = false;
+	
     /**
      * @ORM\OneToMany(targetEntity="DocumentData", mappedBy="doc_id")
      */
