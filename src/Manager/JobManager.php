@@ -76,9 +76,9 @@ class JobManager
 
     protected int $limitDelete = 100000;
     protected int $nbCallMaxDelete = 5;
-    // Number of documents cleared per transaction by the cleardata job (ids sent in a IN clause)
-    protected int $limitClearDocument = 10000;
-    protected int $nbCallMaxClearDocument = 50;
+    // Keep it low: above range_optimizer_max_mem_size (8MB by default, ~1.5KB per id) MySQL stops using the primary key and scans the whole table
+    protected int $limitClearDocument = 1000;
+    protected int $nbCallMaxClearDocument = 500;
     protected int $checkJobPeriod = 900;
 
     private ParameterBagInterface $parameterBagInterface;
