@@ -1379,7 +1379,10 @@ class JobManager
 						try {
 							$countDocumentData += $this->connection->executeStatement($deleteDocumentDataSql, ['docIds' => $documentIds], $arrayTypes);
 							$countLog += $this->connection->executeStatement($deleteLogSql, ['docIds' => $documentIds], $arrayTypes);
-							$this->connection->executeStatement($flagDocumentsSql, ['docIds' => $documentIds], $arrayTypes);
+							// document.id is a long key: a big IN list exceeds range_optimizer_max_mem_size and MySQL scans the whole table
+							foreach (array_chunk($documentIds, 100) as $documentIdsChunk) {
+								$this->connection->executeStatement($flagDocumentsSql, ['docIds' => $documentIdsChunk], $arrayTypes);
+							}
 							$this->connection->commit();
 							$countDocuments += count($documentIds);
 						} catch (\Throwable $e) {
