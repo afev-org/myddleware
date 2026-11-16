@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Entity\Config;
 use App\Form\ManagementSMTPType;
 use App\Repository\ConfigRepository;
 use App\Service\DebugLogger;
@@ -13,10 +12,12 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[Route('/settings')]
+#[IsGranted('ROLE_ADMIN')]
 class SystemSettingsController extends AbstractController
 {
     private EntityManagerInterface $entityManager;
