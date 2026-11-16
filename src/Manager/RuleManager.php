@@ -415,7 +415,6 @@ class RuleManager
                     $params['ids'][$value['name']] = ['id' => $value['id'], 'conn_id' => $value['conn_id']];
                 }
             }
-
             // Connect to the application
             if ('source' == $type) {
                 $this->solutionSource = $this->solutionManager->get($this->rule['solution_source_name']);
@@ -1356,7 +1355,7 @@ class RuleManager
 	/**
      * @throws \Doctrine\DBAL\Exception
      */
-    protected function rerunWorkflowDocument($id_document)
+    protected function rerunWorkflowDocument($id_document, $message=null)
     {
 		$this->debugLogger?->logStart(__CLASS__, __FUNCTION__, ['id_document' => $id_document]);
 		try {
@@ -1368,8 +1367,8 @@ class RuleManager
 			// Set the param values and clear all document attributes
 			$this->documentManager->setParam($param, true);
 			// Set the message that could be used in workflow
-			if (!empty($param['error'])) {
-				$this->documentManager->setMessage($param['error']);
+			if (!empty($message)) {
+				$this->documentManager->setMessage($message);
 			}
 			$this->documentManager->runWorkflow(true);
 			$this->documentManager->updateWorkflowError(0);
@@ -1831,7 +1830,6 @@ class RuleManager
                     throw new \Exception('Failed to connect to the target application.');
                 }
             }
-
 			// Run workflow after send
 			if (
 					!empty($response)
@@ -1840,7 +1838,8 @@ class RuleManager
 			) {
 				foreach($response as $docId => $value) {
 					if (!empty($value)) {
-						$this->rerunWorkflowDocument($docId);
+						$error = (empty($value['error']) ? '' : $value['error']);
+						$this->rerunWorkflowDocument($docId, $error);
 					}
 				}
 			}
