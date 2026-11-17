@@ -76,6 +76,7 @@ class JobManager
 
     protected int $limitDelete = 100000;
     protected int $nbCallMaxDelete = 5;
+    // Number of documents cleared per transaction by the cleardata job (ids sent in a IN clause)
     // Keep it low: above range_optimizer_max_mem_size (8MB by default, ~1.5KB per id) MySQL stops using the primary key and scans the whole table
     protected int $limitClearDocument = 1000;
     protected int $nbCallMaxClearDocument = 500;
@@ -651,7 +652,6 @@ class JobManager
             $result = $stmt->executeQuery();
             $documents = $result->fetchAllAssociative();
 
-            // include_once 'rule.php';
             if (!empty($documents)) {
                 $param['ruleId'] = '';
                 foreach ($documents as $document) {  
@@ -1288,7 +1288,6 @@ class JobManager
     {
         $this->debugLogger->logStart(__CLASS__, __FUNCTION__, ['output' => $output]);
         try {
-        // $upgrade = new Upgrade($this->logger, $this->container, $this->connection);
         $upgrade = $this->upgrade;
         $this->message = $upgrade->processUpgrade($output);
     } finally {
@@ -1845,7 +1844,7 @@ class JobManager
             $stmt = $this->connection->prepare($query_header);
             $stmt->bindValue(':created', $now);
             $stmt->bindValue(':typeError', $type);
-            $stmt->bindValue(':message', str_replace("'", '', utf8_encode($message)));
+            $stmt->bindValue(':message', str_replace("'", '', $message));
             $stmt->bindValue(':job_id', $this->id);
             $result = $stmt->executeQuery();
         } catch (\Exception $e) {
