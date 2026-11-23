@@ -2,13 +2,13 @@
 
 namespace App\Premium\Manager;
 
-use App\Entity\Job;
-use App\Entity\Document;
+use App\Manager\DocumentManager;
+use App\Manager\RuleManager;
 use App\Entity\Workflow;
 use App\Entity\WorkflowLog;
-use App\Manager\RuleManager;
 use App\Entity\WorkflowAction;
-use App\Manager\DocumentManager;
+use App\Entity\Document;
+use App\Entity\Job;
 
 class DocumentManagerPremium extends DocumentManager
 {
@@ -169,7 +169,15 @@ class DocumentManagerPremium extends DocumentManager
 										case 'generateDocument':
 											// Set default value if empty
 											$searchField = (!empty($arguments['searchField']) ? $arguments['searchField'] : 'id');
-											$searchValue = ((!empty($arguments['searchValue']) AND !empty($this->sourceData[$arguments['searchValue']])) ? $this->sourceData[$arguments['searchValue']] : '');
+											if ($arguments['searchField'] == 'targetId') {
+												if (!empty($this->targetId)) {
+													$searchValue = $this->getTargetId();
+												} else {
+													throw new \Exception('Workflow with targetId requested but targetId is empty. ');
+												}
+											} else {
+												$searchValue = ((!empty($arguments['searchValue']) AND !empty($this->sourceData[$arguments['searchValue']])) ? $this->sourceData[$arguments['searchValue']] : '');
+											}
 											$rerun = (!empty($arguments['rerun']) ? true : false);
 											$this->generateDocument($arguments['ruleId'],$searchValue, $searchField ,$rerun, $action);
 											break;
@@ -280,7 +288,7 @@ class DocumentManagerPremium extends DocumentManager
 	}
 	
 	protected function setWorkflowNotificationArguments($action) {
-		$arguments = unserialize($action['arguments']);
+		$arguments = json_decode($action['arguments'], true) ?? [];
 		// In case of notification, we add informations on the message
 		if ($action['action'] == 'sendNotification') {
 			$arguments['message'] .= '<br><br>Document ID : '.$this->id.'<br><br>';
