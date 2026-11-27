@@ -861,7 +861,6 @@ class mysqlcustom extends mysql {
 		    		WHERE conn_id = :connId";
 		    $stmt = $this->connection->prepare($sql);
 			$stmt->bindValue(":connId", $this->suitecrmConnId);
-		    $stmt->execute();	    
 			$resultConn = $stmt->executeQuery();
             $tab_params = $resultConn->fetchAllAssociative();
 			
