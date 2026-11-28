@@ -469,6 +469,7 @@ view_connector:
 
 edit_connector:
     saved_successfully: Connecteur enregistré avec succès
+    decrypt_error: "Certains paramètres n'ont pas pu être déchiffrés (le secret APP_SECRET a probablement changé) : %params%. Ils sont affichés vides et doivent être ressaisis, ou rechiffrés avec la commande myddleware:rotate-secret."
 
 delete_connector:
         success: Connecteur supprimé avec succès

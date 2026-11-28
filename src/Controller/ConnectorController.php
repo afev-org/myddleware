@@ -606,7 +606,7 @@ class ConnectorController extends AbstractController
      * @throws NonUniqueResultException
      */
     #[Route('/connector/view/{id}', name: 'connector_open')]
-    public function connectorOpen(Request $request, $id)
+    public function connectorOpen(Request $request, $id, ConnectorService $connectorService)
     {
         $this->debugLogger->logStart(__CLASS__, __FUNCTION__, ['request' => $request, 'id' => $id]);
         $__debugReturn = null;
@@ -633,6 +633,18 @@ class ConnectorController extends AbstractController
             $fieldsLogin = $this->solutionManager->get($connector->getSolution()->getName())->getFieldsLogin();
         } else {
             $fieldsLogin = [];
+        }
+
+        // Warn the user when some params were encrypted with another secret (APP_SECRET changed):
+        // they are displayed empty and must be re-entered.
+        // Must be checked before createForm(): the form transformer replaces the encrypted values with the decrypted ones
+        if ('GET' == $request->getMethod()) {
+            $undecryptable = $connectorService->getUndecryptableParams($connector, $this->getParameter('secret'));
+            if (!empty($undecryptable)) {
+                $this->addFlash('connector.edit.warning', $this->translator->trans('edit_connector.decrypt_error', [
+                    '%params%' => htmlspecialchars(implode(', ', $undecryptable)),
+                ]));
+            }
         }
 
         $form = $this->createForm(ConnectorType::class, $connector, [
@@ -753,14 +765,17 @@ class ConnectorController extends AbstractController
             ];
 
             // Add connector parameters (decrypted)
+            $data['decryptErrors'] = [];
             foreach ($connector->getConnectorParams() as $param) {
                 $value = $param->getValue();
                 // Try to decrypt the value
                 if (!empty($value)) {
                     try {
                         $value = $encrypter->decrypt($value);
-                    } catch (Exception $e) {
-                       return $__debugReturn = $this->json(['success' => false, 'message' => 'Error with the Decryption'], 500);
+                    } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                        // Encrypted with another secret (APP_SECRET changed): the user has to re-enter it
+                        $value = '';
+                        $data['decryptErrors'][] = $param->getName();
                     }
                 }
                 $data['params'][$param->getName()] = $value;

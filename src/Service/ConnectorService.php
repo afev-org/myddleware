@@ -45,6 +45,29 @@ class ConnectorService
     }
 
     /**
+     * Return the names of the connector params that can't be decrypted with the given secret
+     * (typically because APP_SECRET has been changed since the connector was saved).
+     */
+    public function getUndecryptableParams(Connector $connector, string $secret): array
+    {
+        $encrypter = new Encrypter(substr($secret, -16));
+        $names = [];
+        foreach ($connector->getConnectorParams() as $param) {
+            $value = $param->getValue();
+            if (!is_string($value) || '' === $value) {
+                continue;
+            }
+            try {
+                $encrypter->decrypt($value);
+            } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                $names[] = $param->getName();
+            }
+        }
+
+        return $names;
+    }
+
+    /**
      * Return the connector only if the user is allowed to access it:
      * admins can access every connector, other users only the connectors they created.
      */
