@@ -33,6 +33,7 @@ use App\Form\ConnectorType;
 use App\Manager\SolutionManager;
 use App\Manager\ToolsManager;
 use App\Repository\RuleRepository;
+use App\Service\ConnectorService;
 use App\Service\SessionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\NonUniqueResultException;
@@ -605,7 +606,7 @@ class ConnectorController extends AbstractController
      * @throws NonUniqueResultException
      */
     #[Route('/connector/view/{id}', name: 'connector_open')]
-    public function connectorOpen(Request $request, $id)
+    public function connectorOpen(Request $request, $id, ConnectorService $connectorService)
     {
         $this->debugLogger->logStart(__CLASS__, __FUNCTION__, ['request' => $request, 'id' => $id]);
         $__debugReturn = null;
@@ -632,6 +633,18 @@ class ConnectorController extends AbstractController
             $fieldsLogin = $this->solutionManager->get($connector->getSolution()->getName())->getFieldsLogin();
         } else {
             $fieldsLogin = [];
+        }
+
+        // Warn the user when some params were encrypted with another secret (APP_SECRET changed):
+        // they are displayed empty and must be re-entered.
+        // Must be checked before createForm(): the form transformer replaces the encrypted values with the decrypted ones
+        if ('GET' == $request->getMethod()) {
+            $undecryptable = $connectorService->getUndecryptableParams($connector, $this->getParameter('secret'));
+            if (!empty($undecryptable)) {
+                $this->addFlash('connector.edit.warning', $this->translator->trans('edit_connector.decrypt_error', [
+                    '%params%' => htmlspecialchars(implode(', ', $undecryptable)),
+                ]));
+            }
         }
 
         $form = $this->createForm(ConnectorType::class, $connector, [
@@ -752,14 +765,17 @@ class ConnectorController extends AbstractController
             ];
 
             // Add connector parameters (decrypted)
+            $data['decryptErrors'] = [];
             foreach ($connector->getConnectorParams() as $param) {
                 $value = $param->getValue();
                 // Try to decrypt the value
                 if (!empty($value)) {
                     try {
                         $value = $encrypter->decrypt($value);
-                    } catch (Exception $e) {
-                       return $__debugReturn = $this->json(['success' => false, 'message' => 'Error with the Decryption'], 500);
+                    } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                        // Encrypted with another secret (APP_SECRET changed): the user has to re-enter it
+                        $value = '';
+                        $data['decryptErrors'][] = $param->getName();
                     }
                 }
                 $data['params'][$param->getName()] = $value;
@@ -827,36 +843,39 @@ class ConnectorController extends AbstractController
     }
 
     #[Route('/connector/{id}/detail', name: 'connector_detail')]
-    public function detailAction(int $id)
+    public function detailAction(int $id, ConnectorService $connectorService)
     {
         $this->debugLogger->logStart(__CLASS__, __FUNCTION__, ['id' => $id]);
         $__debugReturn = null;
         try {
-        $sensitiveFields = !empty($_ENV['SENSITIVE_FIELDS']) ? explode(',', $_ENV['SENSITIVE_FIELDS']) : [];
-        
-        $connector = $this->entityManager->getRepository(Connector::class)->find($id);
+        // Same access rule as the edit page: admin, or the user who created the connector
+        $connector = $connectorService->findAccessibleConnector($id, $this->getUser());
 
         if (!$connector) {
             throw $this->createNotFoundException('The connector does not exist');
         }
 
+        $sensitiveFields = $connectorService->getSensitiveKeys($connector);
+
         $paramConnexion = [];
-    
-        foreach ($connector->getConnectorParams() as $param) {
-            $paramConnexion[$param->getName()] = $param->getValue();
-        }
         $encrypter = new \Illuminate\Encryption\Encrypter(substr($this->getParameter('secret'), -16));
-        foreach ($paramConnexion as $key => $value) {
+        foreach ($connector->getConnectorParams() as $param) {
+            $key = $param->getName();
+            $value = $param->getValue();
+            // Secrets are never decrypted for display: the view only receives a mask
+            if (in_array(strtolower($key), $sensitiveFields, true)) {
+                $paramConnexion[$key] = (null === $value || '' === $value) ? $value : ConnectorService::SECRET_MASK;
+                continue;
+            }
             if (is_string($value)) {
                 try {
-                    $paramConnexion[$key] = $encrypter->decrypt($value);
+                    $value = $encrypter->decrypt($value);
                 } catch (\Exception $e) {
-                
                 }
             }
+            $paramConnexion[$key] = $value;
         }
 
-        // Passez les paramètres décryptés à la vue
         return $__debugReturn = $this->render('Connector/detail/detail.html.twig', [
             'connector' => $connector,
             'paramConnexion' => $paramConnexion, 

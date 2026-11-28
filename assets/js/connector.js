@@ -106,8 +106,13 @@ $( function() {
                         }
                     });
 
-                    // Show success message
-                    showAlert('Connector data loaded successfully from database', true);
+                    if (data.decryptErrors && data.decryptErrors.length) {
+                        // Some params were encrypted with another secret: they must be re-entered
+                        showAlert('These parameters could not be decrypted (secret changed?) and must be re-entered: ' + $('<div>').text(data.decryptErrors.join(', ')).html(), false);
+                    } else {
+                        // Show success message
+                        showAlert('Connector data loaded successfully from database', true);
+                    }
                 } else {
                     // Show error message
                     showAlert('Error: ' + data.message, false);

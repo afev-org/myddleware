@@ -468,6 +468,7 @@ view_connector:
 
 edit_connector:
     saved_successfully: Connector saved successfully
+    decrypt_error: "Some parameters could not be decrypted (APP_SECRET has probably changed): %params%. They are displayed empty and must be re-entered, or re-encrypted with the command myddleware:rotate-secret."
 
 delete_connector:
         success: Connector deleted successfully

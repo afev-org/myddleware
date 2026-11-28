@@ -2,6 +2,7 @@
 
 namespace App\Form\DataTransformer;
 
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Encryption\Encrypter;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Form\DataTransformerInterface;
@@ -41,13 +42,24 @@ class ConnectorParamsValueTransformer implements DataTransformerInterface
             $return_params = [];
             foreach ($tab_params as $key => $value) {
                 if (is_string($value)) {
-                    $return_params[$key] = $encrypter->decrypt($value);
+                    $return_params[$key] = $this->safeDecrypt($encrypter, $value);
                 }
             }
 
             return $return_params;
         }
 
-        return null != $tab_params ? $encrypter->decrypt($tab_params) : null;
+        return null != $tab_params ? $this->safeDecrypt($encrypter, $tab_params) : null;
+    }
+
+    // A value encrypted with another secret (APP_SECRET changed) can't be decrypted:
+    // return an empty value so the user can re-enter it instead of crashing the form
+    private function safeDecrypt(Encrypter $encrypter, string $value): mixed
+    {
+        try {
+            return $encrypter->decrypt($value);
+        } catch (DecryptException $e) {
+            return '';
+        }
     }
 }
